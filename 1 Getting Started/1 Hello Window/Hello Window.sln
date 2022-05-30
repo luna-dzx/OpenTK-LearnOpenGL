@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hello Window", "Hello Window\Hello Window.csproj", "{1907EA16-CED1-478B-A200-E0903F675993}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Object Orientated", "Object Orientated\Object Orientated.csproj", "{41E3A6B4-B9F7-461F-A8C9-C8E7F6F94DC1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{1907EA16-CED1-478B-A200-E0903F675993}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1907EA16-CED1-478B-A200-E0903F675993}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1907EA16-CED1-478B-A200-E0903F675993}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1907EA16-CED1-478B-A200-E0903F675993}.Release|Any CPU.Build.0 = Release|Any CPU
+		{41E3A6B4-B9F7-461F-A8C9-C8E7F6F94DC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{41E3A6B4-B9F7-461F-A8C9-C8E7F6F94DC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{41E3A6B4-B9F7-461F-A8C9-C8E7F6F94DC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{41E3A6B4-B9F7-461F-A8C9-C8E7F6F94DC1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
