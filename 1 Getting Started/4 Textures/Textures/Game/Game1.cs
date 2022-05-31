@@ -29,6 +29,8 @@ public class Game1 : Library.Game
 
     protected override void Load()
     {
+        StbImage.stbi_set_flip_vertically_on_load(1);
+        
         GL.ClearColor(0.2f,0.3f,0.3f,1.0f);
 
         vao = new VertexArray();
@@ -47,8 +49,39 @@ public class Game1 : Library.Game
         texture = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture2D,texture);
         
-        
+        #region Texture Wrapping
+        // S corresponds with the X component of the 2D texture
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
+        // T corresponds with the Y component of the 2D texture
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
+        #endregion
+
+        #region Texture Filtering
+        // Filtering for minifying (render smaller than texture)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
+        // Filtering for magnifying (render bigger than texture)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
+        #endregion
+
+        #region Mipmapping
+        // Mipmapping for minifying (render smaller than texture)
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
+        // (no need to set a mipmapping option for magnifying)
+        #endregion
+
         using (var stream = File.OpenRead("../../../../../../0 Assets/container.jpg"))
+        {
+            ImageResult image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
+            GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
+        }
+        
+        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+
+        int texture1;
+        texture1 = GL.GenTexture();
+        GL.BindTexture(TextureTarget.Texture2D,texture1);
+
+        using (var stream = File.OpenRead("../../../../../../0 Assets/awesomeface.png"))
         {
             ImageResult image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
             GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
@@ -75,9 +108,19 @@ public class Game1 : Library.Game
         #endregion
         
         GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-        
-        GL.BindTexture(TextureTarget.Texture2D,texture);
 
+        shaderProgram.Use();
+        GL.Uniform1(GL.GetUniformLocation(shaderProgram.GetHandle(),"texture0"),0);
+        GL.Uniform1(GL.GetUniformLocation(shaderProgram.GetHandle(),"texture1"),1);
+
+        GL.ActiveTexture(TextureUnit.Texture1);
+        GL.BindTexture(TextureTarget.Texture2D,texture1);
+        
+        GL.ActiveTexture(TextureUnit.Texture0);
+        GL.BindTexture(TextureTarget.Texture2D,texture);
+        
+        shaderProgram.Use();
+        shaderProgram.Uniform("mixValue");
 
     }
 
@@ -85,7 +128,20 @@ public class Game1 : Library.Game
     {
         if (keyInfo.Key == Keys.Escape) Window.Close();
     }
+
+    private float mixValue = 0f;
     
+    protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
+    {
+        if (keyboardState.IsKeyDown(Keys.Up)) mixValue = Math.Clamp(mixValue+(float)args.Time,0f,1f);
+        if (keyboardState.IsKeyDown(Keys.Down)) mixValue = Math.Clamp(mixValue-(float)args.Time,0f,1f);
+    }
+
+    protected override void UpdateFrame(FrameEventArgs args)
+    {
+        GL.Uniform1(shaderProgram.GetUniform("mixValue"),mixValue);
+    }
+
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit);
