@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using Object_Oriented.Library;
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
@@ -22,9 +23,35 @@ public class Game1 : Library.Game
 
     private int vertexColorLocation;
     private int vertexColorLocation2;
+
+    private int testValue;
     
     protected override void Load()
     {
+        testValue = 54;
+
+        var timeBefore = DateTime.Now.Second * 1000 + DateTime.Now.Millisecond;
+        FieldInfo attribPointer = null;
+        for (int i = 0; i < 100000; i++)
+        {
+            attribPointer = this.GetType().GetField("testValue", BindingFlags.NonPublic | BindingFlags.Instance);
+        }
+        var timeAfter = DateTime.Now.Second * 1000 + DateTime.Now.Millisecond;
+        Console.WriteLine("t1:{0}",(timeAfter-timeBefore));
+        
+        timeBefore = DateTime.Now.Second * 1000 + DateTime.Now.Millisecond;
+        int value = 0;
+        for (int i = 0; i < 100000; i++)
+        {
+            value = (int)attribPointer.GetValue(this);
+        }
+
+        timeAfter = DateTime.Now.Second * 1000 + DateTime.Now.Millisecond;
+        Console.WriteLine("t2:{0}",(timeAfter-timeBefore));
+        
+        Console.WriteLine(value);
+        
+
         GL.ClearColor(0.2f,0.3f,0.3f,1.0f);
         
         #region Shape Data
