@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shaders", "Shaders\Shaders.csproj", "{4FEA8FC5-9E7F-47CA-A31A-45B68B92D562}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Object Oriented", "Object Oriented\Object Oriented.csproj", "{FE5B3418-93B7-48A0-BE29-D6CE89B33693}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{4FEA8FC5-9E7F-47CA-A31A-45B68B92D562}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4FEA8FC5-9E7F-47CA-A31A-45B68B92D562}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4FEA8FC5-9E7F-47CA-A31A-45B68B92D562}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE5B3418-93B7-48A0-BE29-D6CE89B33693}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE5B3418-93B7-48A0-BE29-D6CE89B33693}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE5B3418-93B7-48A0-BE29-D6CE89B33693}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE5B3418-93B7-48A0-BE29-D6CE89B33693}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
