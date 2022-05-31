@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hello Triangle", "Hello Triangle\Hello Triangle.csproj", "{36704E27-B4D9-4A71-80A6-0CEDA76E588C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Object Orientated", "Object Orientated\Object Orientated.csproj", "{F4781C81-DFD2-460A-9022-3193DDFFA633}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{36704E27-B4D9-4A71-80A6-0CEDA76E588C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{36704E27-B4D9-4A71-80A6-0CEDA76E588C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{36704E27-B4D9-4A71-80A6-0CEDA76E588C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4781C81-DFD2-460A-9022-3193DDFFA633}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4781C81-DFD2-460A-9022-3193DDFFA633}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4781C81-DFD2-460A-9022-3193DDFFA633}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4781C81-DFD2-460A-9022-3193DDFFA633}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
