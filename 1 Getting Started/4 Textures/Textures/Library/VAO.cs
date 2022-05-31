@@ -67,7 +67,7 @@ public class VertexArray
 
         return buffer;
     }
-    
+
     /// <summary>
     /// Stores data in memory along with setting up memory for data reading/writing
     /// </summary>
@@ -76,12 +76,13 @@ public class VertexArray
     /// <param name="target">the type of data we are sending</param>
     /// <param name="buffer">what VBO to load this data to (-1 means create new buffer)</param>
     /// <param name="dataSize">number of variables per one group of data</param>
+    /// <param name="stride">number of variable between each group of data</param>
     /// <param name="offset">number of variables to offset the start of the reading from</param>
     /// <param name="normalized">sets all data to length 1</param>
     /// <typeparam name="T">general type for loading up any variable type</typeparam>
     /// <returns>the VBO id that this data was loaded to</returns>
     /// <exception cref="Exception">length of data must be > 0</exception>
-    public int LoadData<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int buffer = -1, int dataSize=3, int offset=0, bool normalized = false) where T : struct
+    public int LoadData<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int buffer = -1, int dataSize=3, int stride = 3, int offset=0, bool normalized = false) where T : struct
     {
         if (data.Length < 1) throw new Exception("Invalid Input Data (data length must be > 0)");
         if (buffer == -1) { buffer = GL.GenBuffer(); }
@@ -93,10 +94,10 @@ public class VertexArray
             dataSize, // size (num values)
             Utils.GetAttribPointerType(data[0]), // variable type
             normalized, // normalize data (set to "length 1")
-            dataSize*Utils.GetSizeInBytes(data[0]), // space in bytes between each vertex attrib
-            new IntPtr(offset*Utils.GetSizeInBytes(data[0])) // data offset
+            stride*Utils.GetSizeInBytes(data[0]), // space in bytes between each vertex attrib
+            offset*Utils.GetSizeInBytes(data[0]) // data offset
         );
-        
+
         GL.EnableVertexAttribArray(layoutLocation);
 
         return buffer;
@@ -108,13 +109,14 @@ public class VertexArray
     /// <param name="data">the data to send to the GPU</param>
     /// <param name="target">the type of data we are sending</param>
     /// <param name="dataSize">number of variables per one group of data</param>
+    /// <param name="stride">number of variable between each group of data</param>
     /// <param name="offset">number of variables to offset the start of the reading from</param>
     /// <param name="normalized">sets all data to length 1</param>
     /// <typeparam name="T">general type for loading up any variable type</typeparam>
     /// <returns>the new VBO id that the data was loaded to</returns>
-    public int Add<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int dataSize = 3, int offset = 0, bool normalized = false) where T : struct
+    public int Add<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int dataSize = 3, int stride = 3, int offset = 0, bool normalized = false) where T : struct
     {
-        int buffer = LoadData(layoutLocation, data, target, -1, dataSize, offset, normalized);
+        int buffer = LoadData(layoutLocation, data, target, -1, dataSize, stride, offset, normalized);
         _arrayObjects.Add(buffer);
         return buffer;
     }
