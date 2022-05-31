@@ -9,131 +9,136 @@ namespace Object_Oriented.Library;
 public class VertexArray
 {
     private readonly int handle;
-    private int shaderLayoutLocation;
-
+    private List<int> _arrayObjects;
     private BufferUsageHint _bufferUsageHint;
-    private int vertexBuffer;
-    private int indexBuffer;
 
     /// <summary>
-    /// General VAO with a shader binding location - for specific use cases
-    /// that don't use these, just call the OpenTK functions directly
+    /// Self-handled VAO for multiple or dynamic VBOs
     /// </summary>
-    /// <param name="layoutLocation"></param>
-    public VertexArray(int layoutLocation, BufferUsageHint bufferUsage = BufferUsageHint.StaticDraw)
+    /// <param name="usage">how frequently this data is to be used</param>
+    public VertexArray(BufferUsageHint usage = BufferUsageHint.StaticDraw)
     {
+        _arrayObjects = new List<int>();
+        _bufferUsageHint = usage;
         handle = GL.GenVertexArray();
-        shaderLayoutLocation = layoutLocation;
-        _bufferUsageHint = bufferUsage;
+        this.Use();
     }
 
     /// <summary>
     /// Setup a VAO for static loading of standard vertices
     /// </summary>
-    /// <param name="vertices">array of vertices to load</param>
     /// <param name="layoutLocation">shader layout location of vertex input</param>
-    public VertexArray(float[] vertices, int layoutLocation, BufferUsageHint bufferUsage = BufferUsageHint.StaticDraw) : this(layoutLocation,bufferUsage)
+    /// <param name="vertices">array of vertices to load</param>
+    /// <param name="usage">how frequently this data is to be used</param>
+    public VertexArray(int layoutLocation, float[] vertices, BufferUsageHint usage = BufferUsageHint.StaticDraw) : this(usage)
     {
-        _bufferUsageHint = bufferUsage;
-        this.Use();
-        StoreVertices(vertices);
-        SetupMemory(layoutLocation);
-        GL.EnableVertexAttribArray(shaderLayoutLocation);
+        _arrayObjects.Add(LoadData(layoutLocation, vertices));
     }
 
     /// <summary>
-    /// Setup a VAO for static loading of standard elements (vertices + indices)
+    /// Setup a VAO for loading standard elements (vertices + indices)
     /// </summary>
+    /// <param name="layoutLocation">shader layout location of vertex input</param>
     /// <param name="vertices">array of vertices to load</param>
     /// <param name="indices">array of indices connecting the vertices as triangles</param>
-    /// <param name="layoutLocation">shader layout location of vertex input</param>
-    /// <param name="bufferUsage">specifies how frequently data is written to</param>
-    public VertexArray(float[] vertices, int[] indices, int layoutLocation, BufferUsageHint bufferUsage = BufferUsageHint.StaticDraw) : this(layoutLocation)
+    /// <param name="usage">how frequently this data is to be used</param>
+    public VertexArray(int layoutLocation, float[] vertices, int[] indices, BufferUsageHint usage = BufferUsageHint.StaticDraw) : this(layoutLocation,vertices, usage)
     {
-        _bufferUsageHint = bufferUsage;
-        this.Use();
-        StoreVertices(vertices);
-        StoreIndices(indices);
-        SetupMemory(layoutLocation);
-        GL.EnableVertexAttribArray(shaderLayoutLocation);
+        _arrayObjects.Add(StoreData(indices, BufferTarget.ElementArrayBuffer));
     }
 
     /// <summary>
-    /// Store standard VBO for static writing
+    /// 
     /// </summary>
-    /// <param name="vertices">polygon vertices</param>
-    private void StoreVertices(float[] vertices)
+    /// <param name="data">the data to send to the GPU</param>
+    /// <param name="target">the type of data we are sending</param>
+    /// <param name="buffer">what VBO to load this data to (-1 means create new buffer)</param>
+    /// <typeparam name="T">general type for loading up any variable type</typeparam>
+    /// <returns>the VBO id that this data was loaded to</returns>
+    public int StoreData<T>(T[] data,BufferTarget target, int buffer = -1) where T : struct
     {
-        // create and bind vertex buffer for storing data
-        vertexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ArrayBuffer,vertexBuffer);
+        if (buffer == -1) { buffer = GL.GenBuffer(); }
         
-        // copy vertex data to buffer memory
-        GL.BufferData(BufferTarget.ArrayBuffer,vertices.Length*sizeof(float),vertices,_bufferUsageHint);
-    }
+        // bind buffer for storing data
+        GL.BindBuffer(target,buffer);
 
-    /// <summary>
-    /// Store standard VBO for dynamic writing
-    /// </summary>
-    /// <param name="vertices">polygon vertices</param>
-    /// <param name="buffer">the vertex buffer object handle</param>
-    public void StoreVertices(float[] vertices, int buffer)
-    {
-        if (_bufferUsageHint != BufferUsageHint.DynamicDraw) throw new Exception("Incorrect VBO usage - VAO must be dynamic");
-        
-        // ind vertex buffer for storing data
-        GL.BindBuffer(BufferTarget.ArrayBuffer,buffer);
-        
         // copy vertex data to buffer memory
-        GL.BufferData(BufferTarget.ArrayBuffer,vertices.Length*sizeof(float),vertices,_bufferUsageHint);
+        GL.BufferData(target,data.Length*Utils.GetSizeInBytes(data[0]),data,_bufferUsageHint);
+
+        return buffer;
     }
     
     /// <summary>
-    /// Store standard EBO for static writing
+    /// Stores data in memory along with setting up memory for data reading/writing
     /// </summary>
-    /// <param name="indices">polygon connection indices</param>
-    private void StoreIndices(int[] indices)
+    /// <param name="layoutLocation">shader layout location of data input</param>
+    /// <param name="data">the data to send to the GPU</param>
+    /// <param name="target">the type of data we are sending</param>
+    /// <param name="buffer">what VBO to load this data to (-1 means create new buffer)</param>
+    /// <param name="dataSize">number of variables per one group of data</param>
+    /// <param name="offset">number of variables to offset the start of the reading from</param>
+    /// <param name="normalized">sets all data to length 1</param>
+    /// <typeparam name="T">general type for loading up any variable type</typeparam>
+    /// <returns>the VBO id that this data was loaded to</returns>
+    /// <exception cref="Exception">length of data must be > 0</exception>
+    public int LoadData<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int buffer = -1, int dataSize=3, int offset=0, bool normalized = false) where T : struct
     {
-        // create and bind element buffer for storing index data
-        indexBuffer = GL.GenBuffer();
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer,indexBuffer);
+        if (data.Length < 1) throw new Exception("Invalid Input Data (data length must be > 0)");
+        if (buffer == -1) { buffer = GL.GenBuffer(); }
         
-        // copy index data to buffer memory
-        GL.BufferData(BufferTarget.ElementArrayBuffer,indices.Length*sizeof(int),indices,_bufferUsageHint);
-    }
-    
-    /// <summary>
-    /// Store standard EBO for dynamic writing
-    /// </summary>
-    /// <param name="indices">polygon connection indices</param>
-    /// <param name="buffer">the element buffer object handle</param>
-    public void StoreIndices(int[] indices, int buffer)
-    {
-        if (_bufferUsageHint != BufferUsageHint.DynamicDraw) throw new Exception("Incorrect VBO usage - VAO must be dynamic");
-        
-        // bind element buffer for storing index data
-        GL.BindBuffer(BufferTarget.ElementArrayBuffer,buffer);
-        
-        // copy index data to buffer memory
-        GL.BufferData(BufferTarget.ElementArrayBuffer,indices.Length*sizeof(int),indices,_bufferUsageHint);
-    }
+        StoreData(data,target,buffer);
 
-    /// <summary>
-    /// Tell OpenGL how to interpret the data in memory (for standard vertex passing)
-    /// </summary>
-    /// <param name="location">shader layout location of vertex input</param>
-    private void SetupMemory(int location)
-    {
         GL.VertexAttribPointer(
-            location, // shader layout location
-            3, // size (num values)
-            VertexAttribPointerType.Float, // variable type
-            false, // normalize data (set to "length 1")
-            3*sizeof(float), // space in bytes between each vertex attrib
-            IntPtr.Zero // data offset
+            layoutLocation, // shader layout location
+            dataSize, // size (num values)
+            Utils.GetAttribPointerType(data[0]), // variable type
+            normalized, // normalize data (set to "length 1")
+            dataSize*Utils.GetSizeInBytes(data[0]), // space in bytes between each vertex attrib
+            new IntPtr(offset*Utils.GetSizeInBytes(data[0])) // data offset
         );
+        
+        GL.EnableVertexAttribArray(layoutLocation);
+
+        return buffer;
     }
-    
+
+    /// <summary>
+    /// Add new VBO from data
+    /// </summary>
+    /// <param name="data">the data to send to the GPU</param>
+    /// <param name="target">the type of data we are sending</param>
+    /// <param name="dataSize">number of variables per one group of data</param>
+    /// <param name="offset">number of variables to offset the start of the reading from</param>
+    /// <param name="normalized">sets all data to length 1</param>
+    /// <typeparam name="T">general type for loading up any variable type</typeparam>
+    /// <returns>the new VBO id that the data was loaded to</returns>
+    public int Add<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int dataSize = 3, int offset = 0, bool normalized = false) where T : struct
+    {
+        int buffer = LoadData(layoutLocation, data, target, -1, dataSize, offset, normalized);
+        _arrayObjects.Add(buffer);
+        return buffer;
+    }
+    /// <summary>
+    /// Add new VBO from data
+    /// </summary>
+    /// <param name="data">the data to send to the GPU</param>
+    /// <param name="target">the type of data we are sending</param>
+    /// <typeparam name="T">general type for loading up any variable type</typeparam>
+    /// <returns>the new VBO id that the data was loaded to</returns>
+    public int Add<T>(T[] data,BufferTarget target) where T : struct
+    {
+        int buffer = StoreData(data, target);
+        _arrayObjects.Add(buffer);
+        return buffer;
+    }
+
+    /// <summary>
+    /// Add pre existing VBO
+    /// </summary>
+    /// <param name="vboHandle"></param>
+    public void AddVbo(int vboHandle) { _arrayObjects.Add(vboHandle); }
+
+
     /// <summary>
     /// Activate this VAO for reading/writing
     /// </summary>
@@ -141,7 +146,7 @@ public class VertexArray
     {
         GL.BindVertexArray(handle);
     }
-    
+
 
     /// <summary>
     /// Remove VAO from video memory

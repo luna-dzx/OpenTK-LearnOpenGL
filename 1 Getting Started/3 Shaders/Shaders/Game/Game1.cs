@@ -22,6 +22,8 @@ public class Game1 : Library.Game
     private const string ShaderLocation = "../../../Game/Shaders/";
 
     private int vertexColorLocation;
+    private int triangleXposLocation;
+    private float triangleXpos;
 
     protected override void Load()
     {
@@ -69,8 +71,18 @@ public class Game1 : Library.Game
      
         vertexColorLocation = GL.GetUniformLocation((int)shaderProgram, "inputColour");
         ErrorCode error = GL.GetError();
+        if (error != ErrorCode.NoError) throw new Exception(error.ToString());     
+        
+        triangleXposLocation = GL.GetUniformLocation((int)shaderProgram2, "triangleXpos");
+        error = GL.GetError();
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
 
+    }
+
+    protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
+    {
+        if (keyboardState.IsKeyDown(Keys.Right)) triangleXpos+=(float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.Left)) triangleXpos-=(float)args.Time;
     }
 
     protected override void KeyDown(KeyboardKeyEventArgs keyInfo)
@@ -100,6 +112,7 @@ public class Game1 : Library.Game
         
         // draw rainbow triangle
         shaderProgram2.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Fill);
+        GL.Uniform1(triangleXposLocation,triangleXpos);
         vao2.Use();
         GL.DrawArrays(PrimitiveType.Triangles,0,triangleVertices.Length);
         

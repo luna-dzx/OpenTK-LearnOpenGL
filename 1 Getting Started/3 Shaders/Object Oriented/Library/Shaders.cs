@@ -1,4 +1,6 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System.Reflection;
+using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace Object_Oriented.Library;
 
@@ -39,6 +41,8 @@ public class Shader
 public class ShaderProgram
 {
     private readonly int handle;
+    private Dictionary<string, int> uniforms;
+    private Dictionary<string, (FieldInfo ,int)> syncedUniforms;
 
     /// <summary>
     /// Most common shader combination - loads from glsl files
@@ -47,10 +51,13 @@ public class ShaderProgram
     /// <param name="fragmentPath">path to the fragment shader file</param>
     public ShaderProgram(string vertexPath, string fragmentPath)
     {
+        handle = GL.CreateProgram();
+        uniforms = new Dictionary<string, int>();
+        syncedUniforms = new Dictionary<string, (FieldInfo, int)>();
+        
         var vert = new Shader(vertexPath,ShaderType.VertexShader);
         var frag = new Shader(fragmentPath,ShaderType.FragmentShader);
-
-        handle = GL.CreateProgram();
+        
         GL.AttachShader(handle,(int)vert);
         GL.AttachShader(handle,(int)frag);
         
@@ -69,8 +76,11 @@ public class ShaderProgram
     /// <param name="shaderIDs">the OpenGL handles of the shaders</param>
     public ShaderProgram(int[] shaderIDs)
     {
-        handle = GL.CreateProgram();
         
+        handle = GL.CreateProgram();
+        uniforms = new Dictionary<string, int>();
+        syncedUniforms = new Dictionary<string, (FieldInfo, int)>();
+
         // attach to program
         foreach (int id in shaderIDs) 
         { GL.AttachShader(handle,id); }
@@ -109,6 +119,85 @@ public class ShaderProgram
     /// <param name="program">the shader program to cast</param>
     /// <returns>the OpenGL shader program handle</returns>
     public static explicit operator int(ShaderProgram program) => program.GetHandle();
+
+    public void Uniform(string name)
+    {
+        uniforms.Add(name,GL.GetUniformLocation(handle,name));
+        ErrorCode error = GL.GetError();
+        if (error != ErrorCode.NoError) throw new Exception(error.ToString());
+    }
+
+    public int GetUniform(string name)
+    {
+        this.Use();
+        return uniforms[name];
+    }
     
+    
+    #region Synced Uniforms
+    
+    // NOTE: using these isn't very good practice and isn't very efficient, however for small projects
+    // where maximum efficiency isn't necessary they can sometimes slightly reduce the programming workload
+
+    
+    /// <summary>
+    /// Use reflections to sync variables between C# and glsl based on their names - only supports simple vectors and scalars
+    /// </summary>
+    /// <param name="name">variable name</param>
+    /// <param name="game">game class containing the variable</param>
+    public void SyncUniform(string name, Game game)
+    {
+        syncedUniforms[name] = (
+            game.GetType().GetField(name, BindingFlags.NonPublic | BindingFlags.Instance),
+            GL.GetUniformLocation(handle,name)
+        )!;
+    }
+
+    /// <summary>
+    /// Loads all synced uniforms to the GPU
+    /// </summary>
+    /// <param name="game">game class containing the synced uniforms</param>
+    public void UpdateSyncedUniforms(Game game)
+    {
+        foreach (string name in syncedUniforms.Keys)
+        {
+            UpdateSyncedUniform(game, name);
+        }
+    }
+
+    /// <summary>
+    /// Loads specific synced uniform to the GPU
+    /// </summary>
+    /// <param name="game">game class containing the synced uniform</param>
+    /// <param name="name">the name of the specific synced uniform</param>
+    /// <exception cref="Exception">unsupported synced uniform type</exception>
+    public void UpdateSyncedUniform(Game game, string name)
+    {
+        this.Use();
+        var (variable, uniformId) = syncedUniforms[name];
+        object value = variable.GetValue(game)!;
+        Type t = value.GetType();
+        
+        #region scalars
+        // Uniform 1
+        if (t == typeof(float)) { GL.Uniform1(uniformId,(float)value); return;}
+        if (t == typeof(int)) { GL.Uniform1(uniformId,(int)value); return;}
+        if (t == typeof(uint)) { GL.Uniform1(uniformId,(uint)value); return;}
+        if (t == typeof(double)) { GL.Uniform1(uniformId,(double)value); return;}
+        #endregion
+        
+        #region vectors
+        // Uniform 2
+        if (t == typeof(Vector2)) { GL.Uniform2(uniformId,(Vector2)value); return;}
+        // Uniform 3
+        if (t == typeof(Vector3)) { GL.Uniform3(uniformId,(Vector3)value); return;}
+        // Uniform 4
+        if (t == typeof(Vector4)) { GL.Uniform4(uniformId,(Vector4)value); return;}
+        #endregion
+
+        throw new Exception("Invalid synced uniform type");
+    }
+    
+    #endregion
     
 }

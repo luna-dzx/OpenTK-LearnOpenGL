@@ -133,7 +133,7 @@ public abstract class Game : IDisposable
     /// Called every frame for processing keyboard game inputs
     /// </summary>
     /// <param name="keyboardState">information about which keys are pressed</param>
-    protected virtual void KeyboardHandling(KeyboardState keyboardState) {}
+    protected virtual void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState) {}
 
     /// <summary>
     /// Called only on the frame when a key is released
@@ -151,7 +151,7 @@ public abstract class Game : IDisposable
     /// Called every frame for processing mouse game inputs
     /// </summary>
     /// <param name="mouseState">information about the mouse</param>
-    protected virtual void MouseHandling(MouseState mouseState) {}
+    protected virtual void MouseHandling(FrameEventArgs args, MouseState mouseState) {}
     
     /// <summary>
     /// Called only on the frame where the mouse moves from being off the screen to being on the screen
@@ -194,8 +194,8 @@ public abstract class Game : IDisposable
     /// <param name="args">contains delta time</param>
     private void ExtraPerFrameFunctions(FrameEventArgs args)
     {
-        KeyboardHandling(Window.KeyboardState);
-        MouseHandling(Window.MouseState);
+        KeyboardHandling(args,Window.KeyboardState);
+        MouseHandling(args,Window.MouseState);
     }
 
     /// <summary>
