@@ -21,6 +21,7 @@ public class Game1 : Library.Game
     private const string ShaderLocation = "../../../Game/Shaders/";
 
     private int vertexColorLocation;
+    private int vertexColorLocation2;
     
     protected override void Load()
     {
@@ -57,9 +58,14 @@ public class Game1 : Library.Game
         shaderProgram = new ShaderProgram(ShaderLocation+"vertex.glsl",ShaderLocation+"fragment.glsl");
         shaderProgram2 = new ShaderProgram(ShaderLocation+"vertex2.glsl",ShaderLocation+"fragment2.glsl");
         
-        vertexColorLocation = GL.GetUniformLocation((int)shaderProgram2, "inputColour");
+     
+        vertexColorLocation = GL.GetUniformLocation((int)shaderProgram, "inputColour");
         ErrorCode error = GL.GetError();
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
+        
+        vertexColorLocation2 = GL.GetUniformLocation((int)shaderProgram2, "inputColour2");
+        error = GL.GetError();
+        if (error != ErrorCode.NoError) throw new Exception(error.ToString());   
         
     }
 
@@ -84,12 +90,13 @@ public class Game1 : Library.Game
         
         // draw orange wireframe rect
         shaderProgram.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Line);
+        GL.Uniform3(vertexColorLocation,1f,0.5f,0.2f);
         vao1.Use();
         GL.DrawElements(PrimitiveType.Triangles,quadIndices.Length,DrawElementsType.UnsignedInt,0);
         
         // draw green triangle
         shaderProgram2.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Fill);
-        GL.Uniform3(vertexColorLocation,0f,greenValue,0f);
+        GL.Uniform3(vertexColorLocation2,0f,greenValue,0f);
         vao2.Use();
         GL.DrawArrays(PrimitiveType.Triangles,0,triangleVertices.Length);
         
