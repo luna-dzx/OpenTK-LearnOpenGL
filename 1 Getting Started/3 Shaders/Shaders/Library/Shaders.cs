@@ -59,8 +59,8 @@ public class ShaderProgram
         string infoLog = GL.GetProgramInfoLog(handle);
         if (!string.IsNullOrEmpty(infoLog)) throw new Exception(infoLog);
 
-        vert.Delete();
-        frag.Delete();
+        GL.DetachShader(handle,(int)vert);vert.Delete();
+        GL.DetachShader(handle,(int)frag);frag.Delete();
     }
 
     /// <summary>
@@ -78,8 +78,8 @@ public class ShaderProgram
         GL.LinkProgram(handle);
         
         // delete from memory
-        foreach (int id in shaderIDs) 
-        { GL.DeleteShader(id); }
+        foreach (int id in shaderIDs)
+        { GL.DetachShader(handle,id); GL.DeleteShader(id); }
         
     }
 
@@ -99,6 +99,16 @@ public class ShaderProgram
         ErrorCode error = GL.GetError();
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
     }
+
+    public int GetHandle() => handle;
+    
+    
+    /// <summary>
+    /// Override (int) cast to return the handle
+    /// </summary>
+    /// <param name="program">the shader program to cast</param>
+    /// <returns>the OpenGL shader program handle</returns>
+    public static explicit operator int(ShaderProgram program) => program.GetHandle();
     
     
 }

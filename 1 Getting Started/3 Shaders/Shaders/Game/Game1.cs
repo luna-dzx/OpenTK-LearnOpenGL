@@ -3,6 +3,7 @@ using Shaders.Library;
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
 namespace Shaders.Game;
 public class Game1 : Library.Game
@@ -18,6 +19,8 @@ public class Game1 : Library.Game
     private ShaderProgram shaderProgram2;
     
     private const string ShaderLocation = "../../../Game/Shaders/";
+
+    private int vertexColorLocation;
     
     protected override void Load()
     {
@@ -48,16 +51,16 @@ public class Game1 : Library.Game
         
         #endregion
         
-        vao1 = new VertexArray(triangleVertices,0);
-        vao2 = new VertexArray(quadVertices,quadIndices,0);
+        vao1 = new VertexArray(quadVertices,quadIndices,0);
+        vao2 = new VertexArray(triangleVertices,0);
 
-        var vert = new Shader(ShaderLocation+"vertex.glsl",ShaderType.VertexShader);
-        var frag = new Shader(ShaderLocation+"fragment.glsl",ShaderType.FragmentShader);
-        var frag2 = new Shader(ShaderLocation+"fragment2.glsl",ShaderType.FragmentShader);
+        shaderProgram = new ShaderProgram(ShaderLocation+"vertex.glsl",ShaderLocation+"fragment.glsl");
+        shaderProgram2 = new ShaderProgram(ShaderLocation+"vertex2.glsl",ShaderLocation+"fragment2.glsl");
         
-        shaderProgram = new ShaderProgram(new int[] { vert.ID,frag.ID });
-        shaderProgram2 = new ShaderProgram(new int[] { vert.ID,frag2.ID });
-
+        vertexColorLocation = GL.GetUniformLocation((int)shaderProgram2, "inputColour");
+        ErrorCode error = GL.GetError();
+        if (error != ErrorCode.NoError) throw new Exception(error.ToString());
+        
     }
 
     protected override void KeyDown(KeyboardKeyEventArgs keyInfo)
@@ -65,19 +68,31 @@ public class Game1 : Library.Game
         if (keyInfo.Key == Keys.Escape) Window.Close();
     }
 
+    private double totalTime = 0.0;
+    private float greenValue;
+    
+    protected override void UpdateFrame(FrameEventArgs args)
+    {
+        totalTime += args.Time;
+        greenValue = (float)((Math.Sin(totalTime) / 2.0) + 0.5);
+    }
+
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
-        // draw yellow triangle
-        shaderProgram2.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Fill);
-        vao1.Use();
-        GL.DrawArrays(PrimitiveType.Triangles,0,triangleVertices.Length);
         
         // draw orange wireframe rect
         shaderProgram.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Line);
-        vao2.Use();
+        vao1.Use();
         GL.DrawElements(PrimitiveType.Triangles,quadIndices.Length,DrawElementsType.UnsignedInt,0);
+        
+        // draw green triangle
+        shaderProgram2.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Fill);
+        GL.Uniform3(vertexColorLocation,0f,greenValue,0f);
+        vao2.Use();
+        GL.DrawArrays(PrimitiveType.Triangles,0,triangleVertices.Length);
+        
         
         // unbind
         GL.BindVertexArray(0);
@@ -88,6 +103,9 @@ public class Game1 : Library.Game
     protected override void Unload()
     {
         // TODO: make this only check for errors in debug mode and make error checks fancier
+        
+        GL.BindVertexArray(0);
+        GL.UseProgram(0);
         
         vao1.Delete();
         vao2.Delete();
