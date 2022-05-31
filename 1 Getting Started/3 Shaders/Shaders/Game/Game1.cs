@@ -9,6 +9,7 @@ namespace Shaders.Game;
 public class Game1 : Library.Game
 {
     private float[] triangleVertices;
+    private float[] triangleColours;
     private float[] quadVertices;
     private int[] quadIndices;
 
@@ -21,8 +22,7 @@ public class Game1 : Library.Game
     private const string ShaderLocation = "../../../Game/Shaders/";
 
     private int vertexColorLocation;
-    private int vertexColorLocation2;
-    
+
     protected override void Load()
     {
         GL.ClearColor(0.2f,0.3f,0.3f,1.0f);
@@ -34,6 +34,13 @@ public class Game1 : Library.Game
             -0.5f, -0.5f, 0.0f,
             0.5f, -0.5f, 0.0f,
             0.0f,  0.5f, 0.0f
+        };      
+        
+        triangleColours = new float[]
+        {
+            1f,0f,0f,
+            0f,1f,0f,
+            0f,0f,1f,
         };
         
         quadVertices = new float[]
@@ -52,8 +59,9 @@ public class Game1 : Library.Game
         
         #endregion
         
-        vao1 = new VertexArray(quadVertices,quadIndices,0);
-        vao2 = new VertexArray(triangleVertices,0);
+        vao1 = new VertexArray(0,quadVertices,quadIndices);
+        vao2 = new VertexArray(0,triangleVertices);
+        vao2.Add(1, triangleColours);
 
         shaderProgram = new ShaderProgram(ShaderLocation+"vertex.glsl",ShaderLocation+"fragment.glsl");
         shaderProgram2 = new ShaderProgram(ShaderLocation+"vertex2.glsl",ShaderLocation+"fragment2.glsl");
@@ -62,11 +70,7 @@ public class Game1 : Library.Game
         vertexColorLocation = GL.GetUniformLocation((int)shaderProgram, "inputColour");
         ErrorCode error = GL.GetError();
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
-        
-        vertexColorLocation2 = GL.GetUniformLocation((int)shaderProgram2, "inputColour2");
-        error = GL.GetError();
-        if (error != ErrorCode.NoError) throw new Exception(error.ToString());   
-        
+
     }
 
     protected override void KeyDown(KeyboardKeyEventArgs keyInfo)
@@ -88,15 +92,14 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
         
-        // draw orange wireframe rect
+        // draw green wireframe rect
         shaderProgram.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Line);
-        GL.Uniform3(vertexColorLocation,1f,0.5f,0.2f);
+        GL.Uniform3(vertexColorLocation,0f,greenValue,0f);
         vao1.Use();
         GL.DrawElements(PrimitiveType.Triangles,quadIndices.Length,DrawElementsType.UnsignedInt,0);
         
-        // draw green triangle
+        // draw rainbow triangle
         shaderProgram2.Use(); GL.PolygonMode(MaterialFace.FrontAndBack,PolygonMode.Fill);
-        GL.Uniform3(vertexColorLocation2,0f,greenValue,0f);
         vao2.Use();
         GL.DrawArrays(PrimitiveType.Triangles,0,triangleVertices.Length);
         
