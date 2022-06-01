@@ -27,6 +27,9 @@ public class Game1 : Library.Game
 
     private const string ShaderLocation = "../../../Game/Shaders/";
 
+    private Texture texture0;
+    private Texture texture1;
+
     protected override void Load()
     {
         StbImage.stbi_set_flip_vertically_on_load(1);
@@ -43,84 +46,19 @@ public class Game1 : Library.Game
         
         
         shaderProgram = new ShaderProgram(ShaderLocation+"vertex.glsl",ShaderLocation+"fragment.glsl"); shaderProgram.Use();
+
         
+        texture0 = new Texture(0,"../../../../../../0 Assets/container.jpg");
+        texture1 = new Texture(1,"../../../../../../0 Assets/awesomeface.png");
+        texture1.Mipmapping(TextureMinFilter.LinearMipmapLinear);
 
-        int texture;
-        texture = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D,texture);
-        
-        #region Texture Wrapping
-        // S corresponds with the X component of the 2D texture
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-        // T corresponds with the Y component of the 2D texture
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-        #endregion
-
-        #region Texture Filtering
-        // Filtering for minifying (render smaller than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-        // Filtering for magnifying (render bigger than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-        #endregion
-
-        #region Mipmapping
-        // Mipmapping for minifying (render smaller than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
-        // (no need to set a mipmapping option for magnifying)
-        #endregion
-
-        using (var stream = File.OpenRead("../../../../../../0 Assets/container.jpg"))
-        {
-            ImageResult image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
-            GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
-        }
-        
-        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
-
-        int texture1;
-        texture1 = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D,texture1);
-
-        using (var stream = File.OpenRead("../../../../../../0 Assets/awesomeface.png"))
-        {
-            ImageResult image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
-            GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
-        }
-        
-        #region Texture Wrapping
-        // S corresponds with the X component of the 2D texture
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.Repeat);
-        // T corresponds with the Y component of the 2D texture
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.Repeat);
-        #endregion
-
-        #region Texture Filtering
-        // Filtering for minifying (render smaller than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.Nearest);
-        // Filtering for magnifying (render bigger than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)TextureMagFilter.Linear);
-        #endregion
-
-        #region Mipmapping
-        // Mipmapping for minifying (render smaller than texture)
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)TextureMinFilter.LinearMipmapLinear);
-        // (no need to set a mipmapping option for magnifying)
-        #endregion
-        
-        GL.GenerateMipmap(GenerateMipmapTarget.Texture2D);
+        texture0.LoadUniform(shaderProgram.GetHandle(),"texture0");
+        texture1.LoadUniform(shaderProgram.GetHandle(),"texture1");
 
         shaderProgram.Use();
-        GL.Uniform1(GL.GetUniformLocation(shaderProgram.GetHandle(),"texture0"),0);
-        GL.Uniform1(GL.GetUniformLocation(shaderProgram.GetHandle(),"texture1"),1);
-
-        GL.ActiveTexture(TextureUnit.Texture1);
-        GL.BindTexture(TextureTarget.Texture2D,texture1);
         
-        GL.ActiveTexture(TextureUnit.Texture0);
-        GL.BindTexture(TextureTarget.Texture2D,texture);
-        
-        shaderProgram.Use();
         shaderProgram.Uniform("mixValue");
+
 
     }
 
@@ -157,5 +95,7 @@ public class Game1 : Library.Game
         
         vao.Delete();
         shaderProgram.Delete();
+        texture0.Delete();
+        texture1.Delete();
     }
 }
