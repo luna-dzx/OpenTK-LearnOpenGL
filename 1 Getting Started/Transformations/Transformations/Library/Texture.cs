@@ -30,8 +30,9 @@ public class Texture
     /// <param name="textureUnit">the GPU texture unit to pass this texture to</param>
     /// <param name="path">path to the image file</param>
     /// <param name="textureTarget">the type of texture to store</param>
-    public Texture(int textureUnit, string path, TextureTarget textureTarget = TextureTarget.Texture2D) : this(textureUnit,textureTarget)
+    public Texture(int textureUnit, string path, TextureTarget textureTarget = TextureTarget.Texture2D, bool flipOnLoad = true) : this(textureUnit,textureTarget)
     {
+        StbImage.stbi_set_flip_vertically_on_load((flipOnLoad)?1:0);
         this.Use();
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);

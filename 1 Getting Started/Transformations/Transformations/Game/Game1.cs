@@ -2,7 +2,6 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using StbImageSharp;
 
 namespace Transformations.Game;
 public class Game1 : Library.Game
@@ -32,8 +31,6 @@ public class Game1 : Library.Game
 
     protected override void Load()
     {
-        StbImage.stbi_set_flip_vertically_on_load(1);
-        
         GL.ClearColor(0.2f,0.3f,0.3f,1.0f);
 
         vao = new VertexArray();
