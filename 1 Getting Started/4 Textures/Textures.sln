@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Textures", "Textures\Textures.csproj", "{A17D720D-D289-4B25-B1F3-4B2942811DB9}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Object Oriented", "Object Oriented\Object Oriented.csproj", "{C48BD6F3-648A-4C4D-A1CC-0C19EFBFD262}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{A17D720D-D289-4B25-B1F3-4B2942811DB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A17D720D-D289-4B25-B1F3-4B2942811DB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A17D720D-D289-4B25-B1F3-4B2942811DB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C48BD6F3-648A-4C4D-A1CC-0C19EFBFD262}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C48BD6F3-648A-4C4D-A1CC-0C19EFBFD262}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C48BD6F3-648A-4C4D-A1CC-0C19EFBFD262}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C48BD6F3-648A-4C4D-A1CC-0C19EFBFD262}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
