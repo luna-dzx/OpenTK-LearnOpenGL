@@ -1,6 +1,7 @@
 ﻿using Transformations.Library;
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Transformations.Game;
@@ -55,9 +56,14 @@ public class Game1 : Library.Game
         shaderProgram.Use();
         
         shaderProgram.Uniform("mixValue");
-
+        shaderProgram.Uniform("transform");
 
     }
+    
+    private Matrix4 transform = Matrix4.Identity;
+    private float rotationAngle = 0f;
+    private Vector3 translate = Vector3.Zero;
+    
 
     protected override void KeyDown(KeyboardKeyEventArgs keyInfo)
     {
@@ -70,11 +76,22 @@ public class Game1 : Library.Game
     {
         if (keyboardState.IsKeyDown(Keys.Up)) mixValue = Math.Clamp(mixValue+(float)args.Time,0f,1f);
         if (keyboardState.IsKeyDown(Keys.Down)) mixValue = Math.Clamp(mixValue-(float)args.Time,0f,1f);
+
+        if (keyboardState.IsKeyDown(Keys.Right)) rotationAngle -= 3f*(float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.Left)) rotationAngle += 3f*(float)args.Time;
+
+        if (keyboardState.IsKeyDown(Keys.W)) translate.Y += (float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.A)) translate.X -= (float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.S)) translate.Y -= (float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.D)) translate.X += (float)args.Time;
     }
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
         GL.Uniform1(shaderProgram.GetUniform("mixValue"),mixValue);
+        
+        transform = Matrix4.CreateRotationZ(rotationAngle) * Matrix4.CreateTranslation(translate);
+        GL.UniformMatrix4(shaderProgram.GetUniform("transform"),false,ref transform);
     }
 
     protected override void RenderFrame(FrameEventArgs args)
