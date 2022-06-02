@@ -3,6 +3,7 @@ using System.Diagnostics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Coordinate_Systems.Library;
 
@@ -199,6 +200,14 @@ public abstract class Game : IDisposable
     }
 
     /// <summary>
+    /// Fixes resizing to also adjust the viewport for rendering
+    /// </summary>
+    private void AdjustViewport(ResizeEventArgs newSize)
+    {
+        GL.Viewport(0,0,newSize.Size.X,newSize.Size.Y);
+    }
+
+    /// <summary>
     /// Adds the functions from the <b>Game</b> class to the OpenTK window
     /// </summary>
     private void SetFunctions()
@@ -214,6 +223,7 @@ public abstract class Game : IDisposable
         Window.Minimized += Minimized;
         Window.Move += Move;
         Window.Refresh += Refresh;
+        Window.Resize += AdjustViewport;
         Window.Resize += Resize;
         Window.FileDrop += FileDrop;
         Window.FocusedChanged += FocusedChanged;
