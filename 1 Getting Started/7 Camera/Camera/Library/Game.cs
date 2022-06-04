@@ -5,7 +5,7 @@ using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Coordinate_Systems.Library;
+namespace Camera.Library;
 
 public abstract class Game : IDisposable
 {

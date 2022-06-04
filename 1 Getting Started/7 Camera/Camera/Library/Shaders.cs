@@ -2,7 +2,7 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 
-namespace Coordinate_Systems.Library;
+namespace Camera.Library;
 
 public class Shader
 {

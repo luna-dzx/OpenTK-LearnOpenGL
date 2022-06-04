@@ -1,10 +1,10 @@
-﻿using Coordinate_Systems.Library;
+﻿using Camera.Library;
 using OpenTK.Windowing.Common;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Coordinate_Systems.Game;
+namespace Camera.Game;
 public class Game1 : Library.Game
 {
     private float[] vertices =

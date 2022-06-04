@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Coordinate_Systems.Library;
+namespace Camera.Library;
 
 public class Utils
 {

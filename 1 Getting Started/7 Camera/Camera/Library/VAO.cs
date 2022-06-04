@@ -1,7 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
 
-namespace Coordinate_Systems.Library;
+namespace Camera.Library;
 
 /// <summary>
 /// Simplifying VAOs and VBOs (for managing large amounts of data on the GPU)

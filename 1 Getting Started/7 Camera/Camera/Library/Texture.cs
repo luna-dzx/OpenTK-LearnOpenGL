@@ -1,7 +1,7 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using StbImageSharp;
 
-namespace Coordinate_Systems.Library;
+namespace Camera.Library;
 
 /// <summary>
 /// Class for handling OpenGL texture objects

@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Coordinate_Systems.Game;
+namespace Camera.Game;
 
 internal static class Program
 {
