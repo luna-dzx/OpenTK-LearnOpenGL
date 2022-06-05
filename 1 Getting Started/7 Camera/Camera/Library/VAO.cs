@@ -9,7 +9,6 @@ namespace Camera.Library;
 public class VertexArray
 {
     private readonly int handle;
-    private List<int> _arrayObjects;
     private BufferUsageHint _bufferUsageHint;
 
     /// <summary>
@@ -18,7 +17,6 @@ public class VertexArray
     /// <param name="usage">how frequently this data is to be used</param>
     public VertexArray(BufferUsageHint usage = BufferUsageHint.StaticDraw)
     {
-        _arrayObjects = new List<int>();
         _bufferUsageHint = usage;
         handle = GL.GenVertexArray();
         this.Use();
@@ -32,7 +30,7 @@ public class VertexArray
     /// <param name="usage">how frequently this data is to be used</param>
     public VertexArray(int layoutLocation, float[] vertices, BufferUsageHint usage = BufferUsageHint.StaticDraw) : this(usage)
     {
-        _arrayObjects.Add(LoadData(layoutLocation, vertices));
+        LoadData(layoutLocation, vertices);
     }
 
     /// <summary>
@@ -44,7 +42,7 @@ public class VertexArray
     /// <param name="usage">how frequently this data is to be used</param>
     public VertexArray(int layoutLocation, float[] vertices, int[] indices, BufferUsageHint usage = BufferUsageHint.StaticDraw) : this(layoutLocation,vertices, usage)
     {
-        _arrayObjects.Add(StoreData(indices, BufferTarget.ElementArrayBuffer));
+        StoreData(indices, BufferTarget.ElementArrayBuffer);
     }
 
     /// <summary>
@@ -117,7 +115,6 @@ public class VertexArray
     public int Add<T>(int layoutLocation, T[] data, BufferTarget target = BufferTarget.ArrayBuffer, int dataSize = 3, int stride = 3, int offset = 0, bool normalized = false) where T : struct
     {
         int buffer = LoadData(layoutLocation, data, target, -1, dataSize, stride, offset, normalized);
-        _arrayObjects.Add(buffer);
         return buffer;
     }
     /// <summary>
@@ -130,15 +127,8 @@ public class VertexArray
     public int Add<T>(T[] data,BufferTarget target) where T : struct
     {
         int buffer = StoreData(data, target);
-        _arrayObjects.Add(buffer);
         return buffer;
     }
-
-    /// <summary>
-    /// Add pre existing VBO
-    /// </summary>
-    /// <param name="vboHandle"></param>
-    public void AddVbo(int vboHandle) { _arrayObjects.Add(vboHandle); }
 
 
     /// <summary>

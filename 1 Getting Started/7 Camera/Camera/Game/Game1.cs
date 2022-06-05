@@ -9,48 +9,88 @@ public class Game1 : Library.Game
 {
     private float[] vertices =
     {
-        // positions        // texture coords
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+        // positions
+        -0.5f, -0.5f, -0.5f, 
+        0.5f, -0.5f, -0.5f, 
+        0.5f,  0.5f, -0.5f, 
+        0.5f,  0.5f, -0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
 
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f, 
+        0.5f, -0.5f,  0.5f, 
+        0.5f,  0.5f,  0.5f, 
+        0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
 
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
 
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        0.5f,  0.5f,  0.5f, 
+        0.5f,  0.5f, -0.5f, 
+        0.5f, -0.5f, -0.5f, 
+        0.5f, -0.5f, -0.5f, 
+        0.5f, -0.5f,  0.5f, 
+        0.5f,  0.5f,  0.5f, 
 
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f, 
+        0.5f, -0.5f, -0.5f, 
+        0.5f, -0.5f,  0.5f, 
+        0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f, -0.5f, 
 
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-        0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+        -0.5f,  0.5f, -0.5f, 
+        0.5f,  0.5f, -0.5f, 
+        0.5f,  0.5f,  0.5f, 
+        0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+    };
+
+    private float[] texCoords =
+    {
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        1.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        0.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f,
+        1.0f, 0.0f,
+        1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
     };
     
     Vector3[] cubePositions = {
@@ -65,9 +105,9 @@ public class Game1 : Library.Game
         new Vector3( 1.5f,  0.2f, -1.5f), 
         new Vector3(-1.3f,  1.0f, -1.5f)  
     };
-    
-    
-    private VertexArray vao;
+
+
+    private Model cube;
     private ShaderProgram shaderProgram;
 
     private const string ShaderLocation = "../../../Game/Shaders/";
@@ -87,12 +127,10 @@ public class Game1 : Library.Game
     {
         GL.ClearColor(0.2f,0.3f,0.3f,1.0f);
 
-        vao = new VertexArray();
+        cube = new Model();
+        cube.LoadVertices(0,vertices);
+        cube.LoadTexCoords(1,texCoords);
         
-        // I absolutely hate this way of doing it but I'm just proving it's possible in my engine
-        vao.Add(0, vertices, BufferTarget.ArrayBuffer, 3,5,0);
-        vao.Add(1, vertices, BufferTarget.ArrayBuffer, 2,5,3);
-
 
         shaderProgram = new ShaderProgram(ShaderLocation+"vertex.glsl",ShaderLocation+"fragment.glsl"); shaderProgram.Use();
 
@@ -142,14 +180,6 @@ public class Game1 : Library.Game
     protected override void MouseScroll(MouseWheelEventArgs scroll)
     {
         fov = Math.Clamp(fov + 0.05f * scroll.OffsetY,0.1f,3.13f);
-    }
-
-    protected override void MouseHandling(FrameEventArgs args, MouseState mouseState)
-    {
-        if (mouseState.IsButtonDown(OpenTK.Windowing.GraphicsLibraryFramework.MouseButton.Button3))
-        {
-            Console.WriteLine("scrolly");
-        }
     }
 
     protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
@@ -222,7 +252,7 @@ public class Game1 : Library.Game
         {
             model = Matrix4.CreateRotationX(rotation) * Matrix4.CreateRotationY(rotation*0.3f) * Matrix4.CreateRotationZ(rotation*0.5f) * Matrix4.CreateTranslation(pos);
             GL.UniformMatrix4(shaderProgram.GetUniform("model"),false,ref model);
-            GL.DrawArrays(PrimitiveType.Triangles,0,vertices.Length/3);
+            cube.Draw();
             rotation += MathHelper.Pi / 18f;
         }
         
@@ -235,7 +265,7 @@ public class Game1 : Library.Game
         GL.BindVertexArray(0);
         GL.UseProgram(0);
         
-        vao.Delete();
+        cube.Delete();
         shaderProgram.Delete();
         texture0.Delete();
         texture1.Delete();
