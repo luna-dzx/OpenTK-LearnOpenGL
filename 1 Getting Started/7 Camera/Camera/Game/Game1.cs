@@ -153,10 +153,8 @@ public class Game1 : Library.Game
 
     }
 
-    private float mixValue = 0f;
+    private float mixValue;
     
-    
-
     protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
     {
         if (keyboardState.IsKeyDown(Keys.Up)) mixValue = Math.Clamp(mixValue+(float)args.Time,0f,1f);
@@ -165,8 +163,6 @@ public class Game1 : Library.Game
 
 
     protected override void Resize(ResizeEventArgs newWin) => player.Camera.Resize(newWin.Size);
-
-    private const float mouseSens = 1/20f;
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
