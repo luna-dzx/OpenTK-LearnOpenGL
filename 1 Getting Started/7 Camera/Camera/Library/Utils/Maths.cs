@@ -1,6 +1,6 @@
 ﻿using OpenTK.Mathematics;
 
-namespace Camera.Library.Utils;
+namespace Camera.Library;
 
 public class Maths
 {

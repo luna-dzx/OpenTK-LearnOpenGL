@@ -1,6 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
-using Camera.Library.Utils;
 
 namespace Camera.Library;
 

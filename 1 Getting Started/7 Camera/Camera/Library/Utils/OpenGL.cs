@@ -1,7 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Camera.Library.Utils;
+namespace Camera.Library;
 
 public class OpenGL
 {

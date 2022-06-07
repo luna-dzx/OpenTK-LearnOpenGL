@@ -62,7 +62,7 @@ public class Model : VertexArray
 
     public void UpdateTransformation(Vector3 translation, Vector3 rotation, Vector3 scale)
     {
-        transform = Utils.Maths.CreateTransformation(translation, rotation, scale);
+        transform = Maths.CreateTransformation(translation, rotation, scale);
     }
 
     public void Draw()
