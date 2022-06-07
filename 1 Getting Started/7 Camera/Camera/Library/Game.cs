@@ -4,6 +4,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace Camera.Library;
 
@@ -34,6 +35,20 @@ public abstract class Game : IDisposable
         Window?.Dispose();
         GC.SuppressFinalize(this);
     }
+    
+    private Vector2 startMousePos = Vector2.Zero;
+
+    /// <summary>
+    /// Set the mouse origin for relative mouse movements
+    /// </summary>
+    public void SetMouseOrigin() => startMousePos = Window.MousePosition;
+    
+    /// <summary>
+    /// Get the mouse pos relative to an origin (default origin is the start mouse pos upon window creation)
+    /// </summary>
+    /// <returns>mouse position</returns>
+    public Vector2 GetRelativeMouse() => Window.MousePosition - startMousePos;
+    
     
     #region Functions To Override
     
@@ -213,6 +228,7 @@ public abstract class Game : IDisposable
     private void SetFunctions()
     {
         Window.Load += Load;
+        Window.Load += SetMouseOrigin;
         Window.Unload += Unload;
         Window.RenderFrame += RenderFrame;
         Window.UpdateFrame += ExtraPerFrameFunctions;

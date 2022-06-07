@@ -1,4 +1,5 @@
 ﻿using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 
 namespace Camera.Library;
 
@@ -20,6 +21,9 @@ public class Model : VertexArray
     private float[]? _texCoords;
     private int[]? _indices;
 
+    private int uTransform;
+    private Matrix4 transform = Matrix4.Identity;
+
     public float[]? GetVertices => _vertices;
     public float[]? GetTexCoords => _texCoords;
     public int[]? GetIndices => _indices;
@@ -28,8 +32,9 @@ public class Model : VertexArray
     private PrimitiveType renderMode;
 
 
-    public Model(PrimitiveType primitiveType = PrimitiveType.Triangles)
+    public Model(int modelMatrixBinding = -1, PrimitiveType primitiveType = PrimitiveType.Triangles)
     {
+        uTransform = modelMatrixBinding;
         renderMode = primitiveType;
     }
 
@@ -54,12 +59,21 @@ public class Model : VertexArray
     }
 
     public void SetPrimitiveType(PrimitiveType primitiveType) => renderMode = primitiveType;
-    
+
+    public void UpdateTransformation(Vector3 translation, Vector3 rotation, Vector3 scale)
+    {
+        transform = Utils.Maths.CreateTransformation(translation, rotation, scale);
+    }
 
     public void Draw()
     {
         Use();
-        
+
+        if (uTransform != -1)
+        {
+            GL.UniformMatrix4(uTransform,false,ref transform);
+        }
+    
         switch (drawType)
         {
             case DrawType.VertexArray:

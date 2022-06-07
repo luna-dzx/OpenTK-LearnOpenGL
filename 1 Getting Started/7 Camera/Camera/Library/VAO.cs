@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using ErrorCode = OpenTK.Graphics.OpenGL4.ErrorCode;
+using Camera.Library.Utils;
 
 namespace Camera.Library;
 
@@ -61,7 +62,7 @@ public class VertexArray
         GL.BindBuffer(target,buffer);
 
         // copy vertex data to buffer memory
-        GL.BufferData(target,data.Length*Utils.GetSizeInBytes(data[0]),data,_bufferUsageHint);
+        GL.BufferData(target,data.Length*OpenGL.GetSizeInBytes(data[0]),data,_bufferUsageHint);
 
         return buffer;
     }
@@ -90,10 +91,10 @@ public class VertexArray
         GL.VertexAttribPointer(
             layoutLocation, // shader layout location
             dataSize, // size (num values)
-            Utils.GetAttribPointerType(data[0]), // variable type
+            OpenGL.GetAttribPointerType(data[0]), // variable type
             normalized, // normalize data (set to "length 1")
-            stride*Utils.GetSizeInBytes(data[0]), // space in bytes between each vertex attrib
-            offset*Utils.GetSizeInBytes(data[0]) // data offset
+            stride*OpenGL.GetSizeInBytes(data[0]), // space in bytes between each vertex attrib
+            offset*OpenGL.GetSizeInBytes(data[0]) // data offset
         );
 
         GL.EnableVertexAttribArray(layoutLocation);

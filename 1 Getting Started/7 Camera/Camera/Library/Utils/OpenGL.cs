@@ -1,9 +1,9 @@
 ﻿using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 
-namespace Camera.Library;
+namespace Camera.Library.Utils;
 
-public class Utils
+public class OpenGL
 {
     /// <summary>
     /// Finds the equivalent OpenGL type of an object
