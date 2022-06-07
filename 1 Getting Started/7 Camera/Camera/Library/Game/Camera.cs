@@ -70,9 +70,9 @@ public class Camera
         UpdateProjection();
     }
 
-    public void UpdateView()
+    public void UpdateView(bool flipCamera = false)
     {
-        view = Matrix4.LookAt(Position, Position + Direction, up);
+        view = Matrix4.LookAt(Position, Position + Direction, ((flipCamera)?-1:1) * up);
         GL.UniformMatrix4(uView,false,ref view);
     }
 
