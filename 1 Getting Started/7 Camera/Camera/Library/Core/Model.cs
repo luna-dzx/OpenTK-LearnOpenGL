@@ -73,13 +73,13 @@ public class Model : VertexArray
         {
             GL.UniformMatrix4(uTransform,false,ref transform);
         }
-    
+
         switch (drawType)
         {
             case DrawType.VertexArray:
                 GL.DrawArrays(renderMode,0,_vertices.Length/3); break;
             case DrawType.ElementArray:
-                GL.DrawElements(renderMode,_indices.Length,DrawElementsType.UnsignedByte,0); break;
+                GL.DrawElements(renderMode,_indices.Length,DrawElementsType.UnsignedInt,0); break;
             case DrawType.None: default:
                 throw new Exception("No data to draw");
         }
