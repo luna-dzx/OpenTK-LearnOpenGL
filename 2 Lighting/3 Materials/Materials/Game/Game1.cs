@@ -22,7 +22,17 @@ public class Game1 : Library.Game
         shader = new ShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl")
             .EnableAutoProjection()
             .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
-            .Uniform3("lightColour", 1.0f, 1.0f, 1.0f);
+            .Uniform3("lightColour", 1.0f, 1.0f, 1.0f)
+
+            .Uniform3("material.ambient", 0.0f,0.05f,0.0f)
+            .Uniform3("material.diffuse", 0.4f,0.5f,0.4f)
+            .Uniform3("material.specular", 0.04f,0.7f,0.04f)
+            .Uniform1("material.shininess", 10f)
+
+            .Uniform3("light.position", lightPos)
+            .Uniform3("light.ambient", 1.0f, 1.0f, 1.0f)
+            .Uniform3("light.diffuse", 1.0f, 1.0f, 1.0f)
+            .Uniform3("light.specular", 1.0f, 1.0f, 1.0f);
 
         player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
