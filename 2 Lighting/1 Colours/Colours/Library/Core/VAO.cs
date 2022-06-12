@@ -150,6 +150,10 @@ public class VertexArray
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
     }
 
+    /// <summary>
+    /// Get the VAOs handle
+    /// </summary>
+    /// <returns>the OpenGL VAO handle</returns>
     public int GetHandle() => handle;
     
 

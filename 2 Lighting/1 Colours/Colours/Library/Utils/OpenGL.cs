@@ -1,5 +1,5 @@
-﻿using System.Runtime.InteropServices;
-using OpenTK.Graphics.OpenGL4;
+﻿using OpenTK.Graphics.OpenGL4;
+using Half = OpenTK.Mathematics.Half;
 
 namespace Library;
 

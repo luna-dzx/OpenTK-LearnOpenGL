@@ -10,16 +10,22 @@ namespace Library;
 
 public abstract class Game : IDisposable
 {
-    protected GameWindow? Window;
-    
-    protected Game() { }
+    protected GameWindow Window;
 
+    /// <summary>
+    /// Create a new window based on settings
+    /// </summary>
+    /// <param name="gameWindowSettings"></param>
+    /// <param name="nativeWindowSettings"></param>
     public void InitWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
     {
         Window = new GameWindow(gameWindowSettings, nativeWindowSettings);
         SetFunctions();
     }
     
+    /// <summary>
+    /// Start the window as well as the game functions (such as the main render loop)
+    /// </summary>
     public void Run()
     {
         if (Window == null)
@@ -30,6 +36,9 @@ public abstract class Game : IDisposable
         Window.Run();
     }
 
+    /// <summary>
+    /// Free up the resources used by the window when it was open
+    /// </summary>
     public void Dispose()
     {
         Window?.Dispose();
@@ -148,6 +157,7 @@ public abstract class Game : IDisposable
     /// <summary>
     /// Called every frame for processing keyboard game inputs
     /// </summary>
+    /// <param name="args">contains delta time</param>
     /// <param name="keyboardState">information about which keys are pressed</param>
     protected virtual void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState) {}
 
@@ -166,6 +176,7 @@ public abstract class Game : IDisposable
     /// <summary>
     /// Called every frame for processing mouse game inputs
     /// </summary>
+    /// <param name="args">contains delta time</param>
     /// <param name="mouseState">information about the mouse</param>
     protected virtual void MouseHandling(FrameEventArgs args, MouseState mouseState) {}
     

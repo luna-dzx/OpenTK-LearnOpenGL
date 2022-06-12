@@ -4,6 +4,13 @@ namespace Library;
 
 public class Maths
 {
+    /// <summary>
+    /// Creates a combined matrix of translation, rotation and scale transformation matrices
+    /// </summary>
+    /// <param name="translate">the position of the transform</param>
+    /// <param name="rotate">the rotation of the transform</param>
+    /// <param name="scale">the scale of the transform</param>
+    /// <returns></returns>
     public static Matrix4 CreateTransformation(Vector3 translate, Vector3 rotate, Vector3 scale)
     {
         Vector3 sin = new Vector3(MathF.Sin(rotate.X), MathF.Sin(rotate.Y), MathF.Sin(rotate.Z));

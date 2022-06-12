@@ -12,22 +12,44 @@ public abstract class Player
     public Vector3 Position;
     public Camera Camera;
     
-    
+    /// <summary>
+    /// Create new player and create camera based off window size
+    /// </summary>
+    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
+    /// <param name="viewBinding">the uniform location of the view matrix</param>
+    /// <param name="windowSize">the screen's size</param>
+    /// <param name="fov">the camera's field of view in radians</param>
     public Player(int projectionBinding, int viewBinding, Vector2i windowSize, float fov = MathHelper.PiOver3)
     {
         Camera = new Camera(projectionBinding, viewBinding, windowSize, fov);
     }    
     
+    /// <summary>
+    /// Create new player and create camera based off aspect ratio
+    /// </summary>
+    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
+    /// <param name="viewBinding">the uniform location of the view matrix</param>
+    /// <param name="aspectRatio">the screen's aspect ratio</param>
+    /// <param name="fov">the camera's field of view in radians</param>
     public Player(int projectionBinding, int viewBinding, float aspectRatio, float fov = MathHelper.PiOver3)
     {
         Camera = new Camera(projectionBinding, viewBinding, aspectRatio, fov);
     }    
     
+    /// <summary>
+    /// Create a new player with a pre-existing camera
+    /// </summary>
+    /// <param name="camera">the camera to attach to the player</param>
     public Player(ref Camera camera)
     {
         Camera = camera;
     }
     
+    /// <summary>
+    /// Update the camera's view
+    /// </summary>
+    /// <param name="flipCamera">if ture, the camera will be upside down</param>
+    /// <param name="renderingPaused">setting this to true exclusively updates the player and not the camera</param>
     protected void Update(bool flipCamera = false, bool renderingPaused = false)
     {
         if (!renderingPaused) Camera.UpdateView(flipCamera);
@@ -47,11 +69,42 @@ public class FirstPersonPlayer : Player
     private Vector3 unitGravity = -Vector3.UnitY;
     public void SetGravity(Vector3 direction) => unitGravity = direction;
 
+    /// <summary>
+    /// Create first person player with [wasd + space/ctrl] controls
+    /// </summary>
+    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
+    /// <param name="viewBinding">the uniform location of the view matrix</param>
+    /// <param name="windowSize">the screen's size</param>
+    /// <param name="fov">the camera's field of view in radians</param>
+    /// <param name="sensitivity">the mouse sensitivity</param>
+    /// <param name="speed">player's speed</param>
     public FirstPersonPlayer(int projectionBinding, int viewBinding, Vector2i windowSize, float fov = MathHelper.PiOver3, float sensitivity = 1/20f, float speed = 5f)
         : base(projectionBinding,viewBinding,windowSize,fov)
     {
         Sensitivity = sensitivity;
         Speed = speed;
+    }
+
+    /// <summary>
+    /// Manually set the player's position
+    /// </summary>
+    /// <param name="position">new player position</param>
+    /// <returns>current object for ease of use</returns>
+    public FirstPersonPlayer SetPosition(Vector3 position)
+    {
+        Position = position;
+        return this;
+    }
+        
+    /// <summary>
+    /// Manually set the camera's direction
+    /// </summary>
+    /// <param name="direction">new camera direction</param>
+    /// <returns>current object for ease of use</returns>
+    public FirstPersonPlayer SetDirection(Vector3 direction)
+    {
+        Direction = direction;
+        return this;
     }
 
     private readonly Matrix3 rightTransform = Matrix3.CreateRotationY(MathHelper.PiOver2);
@@ -62,6 +115,12 @@ public class FirstPersonPlayer : Player
 
     private bool capPitch = true;
     
+    /// <summary>
+    /// Move and rotate the player and camera, as well as updating the camera's view
+    /// </summary>
+    /// <param name="args">args from the window's update function</param>
+    /// <param name="keyboardState">the keyboard state to check inputs from</param>
+    /// <param name="relativeMousePos">the relative mouse pos from the last call of SetMouseOrigin()</param>
     public void Update(FrameEventArgs args, KeyboardState keyboardState, Vector2 relativeMousePos)
     {
         var input = Input.DirectionWASD(keyboardState) * Speed * (float)args.Time;
@@ -91,7 +150,9 @@ public class FirstPersonPlayer : Player
         lastMousePos = relativeMousePos;
     }
 
-
+    /// <summary>
+    /// Direction handled in the player's camera
+    /// </summary>
     public Vector3 Direction
     {
         get => Camera.Direction;
@@ -99,6 +160,3 @@ public class FirstPersonPlayer : Player
     }
     
 }
-
-
-

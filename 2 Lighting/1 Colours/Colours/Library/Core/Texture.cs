@@ -61,6 +61,11 @@ public class Texture
         GL.BindTexture(target,handle);
     }
 
+    /// <summary>
+    /// Set parameters for how textures handle texture coordinates when they lie outside of the range of 0->1
+    /// </summary>
+    /// <param name="paramName">set wrapping for x,y,z components of the texture separately</param>
+    /// <param name="wrapMode">how to wrap the texture when texture coordinates lie outside of the range of 0->1</param>
     public void Wrapping(TextureParameterName paramName, TextureWrapMode wrapMode) { this.Use(); GL.TexParameter(target, paramName, (int)wrapMode); }
 
     /// <summary>

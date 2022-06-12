@@ -2,10 +2,16 @@
 using OpenTK.Mathematics;
 
 namespace Library;
+
 public class Input
 {
     private static readonly float OneOverRoot2 = 1f/(float)Math.Sqrt(2);
         
+    /// <summary>
+    /// Gets the unit vector in x,z of the w,a,s,d inputs for player controllers
+    /// </summary>
+    /// <param name="keyboardState">the current state of the keyboard to check</param>
+    /// <returns>a 3D vector representing the direction pressed</returns>
     public static Vector3 DirectionWASD(KeyboardState keyboardState)
     {
         int forwards = (keyboardState.IsKeyDown(Keys.W)) ? 1 : 0;
