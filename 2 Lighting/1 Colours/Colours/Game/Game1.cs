@@ -20,7 +20,8 @@ public class Game1 : Library.Game
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         shader = new ShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl")
-            .EnableAutoProjection();
+            .EnableAutoProjection()
+            .Uniform3("colour", 1.0f, 0.5f, 0.31f);
 
         player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
@@ -28,10 +29,6 @@ public class Game1 : Library.Game
             
         cube = new Model(shader.DefaultModel)
             .LoadVertices(0,PresetMesh.Cube.Vertices);
-            
-        shader.Uniform3("colour", 1.0f, 0.5f, 0.31f);
-
-        Window.CursorState = CursorState.Grabbed;
     }
         
     protected override void Resize(ResizeEventArgs newWin) => player.Camera.Resize(newWin.Size);

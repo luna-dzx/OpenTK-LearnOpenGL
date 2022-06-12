@@ -415,25 +415,29 @@ public class ShaderProgram
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">value</param>
-    public void Uniform1(string name, double v0) => GL.Uniform1(GetUniform(name), v0);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform1(string name, double v0) { GL.Uniform1(GetUniform(name), v0); return this; }
     /// <summary>
     /// Set a uniform variable's value on the gpu
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">value</param>
-    public void Uniform1(string name, float v0) => GL.Uniform1(GetUniform(name), v0);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform1(string name, float v0) { GL.Uniform1(GetUniform(name), v0); return this; }
     /// <summary>
     /// Set a uniform variable's value on the gpu
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">value</param>
-    public void Uniform1(string name, int v0) => GL.Uniform1(GetUniform(name), v0);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform1(string name, int v0) { GL.Uniform1(GetUniform(name), v0); return this; }
     /// <summary>
     /// Set a uniform variable's value on the gpu
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">value</param>
-    public void Uniform1(string name, uint v0) => GL.Uniform1(GetUniform(name), v0);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform1(string name, uint v0) { GL.Uniform1(GetUniform(name), v0); return this; }
         
     #endregion
         
@@ -444,35 +448,40 @@ public class ShaderProgram
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="vector">vector value</param>
-    public void Uniform2(string name, Vector2 vector) => GL.Uniform2(GetUniform(name), vector);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform2(string name, Vector2 vector) { GL.Uniform2(GetUniform(name), vector); return this; }
     /// <summary>
     /// Set a 2d uniform variable's value on the gpu (vec2)
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
-    public void Uniform2(string name, double v0, double v1) => GL.Uniform2(GetUniform(name), v0,v1);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform2(string name, double v0, double v1) { GL.Uniform2(GetUniform(name), v0,v1); return this; }
     /// <summary>
     /// Set a 2d uniform variable's value on the gpu (vec2)
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
-    public void Uniform2(string name, float v0, float v1) => GL.Uniform2(GetUniform(name), v0,v1);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform2(string name, float v0, float v1) { GL.Uniform2(GetUniform(name), v0,v1); return this; }
     /// <summary>
     /// Set a 2d uniform variable's value on the gpu (vec2)
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
-    public void Uniform2(string name, int v0, int v1) => GL.Uniform2(GetUniform(name), v0,v1);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform2(string name, int v0, int v1) { GL.Uniform2(GetUniform(name), v0,v1); return this; }
     /// <summary>
     /// Set a 2d uniform variable's value on the gpu (vec2)
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
-    public void Uniform2(string name, uint v0, uint v1) => GL.Uniform2(GetUniform(name), v0,v1);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform2(string name, uint v0, uint v1) { GL.Uniform2(GetUniform(name), v0,v1); return this; }
         
     #endregion
         
@@ -483,7 +492,8 @@ public class ShaderProgram
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="vector">vector value</param>
-    public void Uniform3(string name, Vector3 vector) => GL.Uniform3(GetUniform(name), vector);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform3(string name, Vector3 vector) { GL.Uniform3(GetUniform(name), vector); return this; }
     /// <summary>
     /// Set a 3d uniform variable's value on the gpu (vec3)
     /// </summary>
@@ -491,7 +501,8 @@ public class ShaderProgram
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
-    public void Uniform3(string name, double v0, double v1, double v2) => GL.Uniform3(GetUniform(name), v0,v1,v2);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform3(string name, double v0, double v1, double v2) { GL.Uniform3(GetUniform(name), v0,v1,v2); return this; }
     /// <summary>
     /// Set a 3d uniform variable's value on the gpu (vec3)
     /// </summary>
@@ -499,7 +510,8 @@ public class ShaderProgram
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
-    public void Uniform3(string name, float v0, float v1, float v2) => GL.Uniform3(GetUniform(name), v0,v1,v2);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform3(string name, float v0, float v1, float v2) { GL.Uniform3(GetUniform(name), v0,v1,v2); return this; }
     /// <summary>
     /// Set a 3d uniform variable's value on the gpu (vec3)
     /// </summary>
@@ -507,7 +519,8 @@ public class ShaderProgram
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
-    public void Uniform3(string name, int v0, int v1, int v2) => GL.Uniform3(GetUniform(name), v0,v1,v2);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform3(string name, int v0, int v1, int v2) { GL.Uniform3(GetUniform(name), v0,v1,v2); return this; }
     /// <summary>
     /// Set a 3d uniform variable's value on the gpu (vec3)
     /// </summary>
@@ -515,7 +528,8 @@ public class ShaderProgram
     /// <param name="v0">x component value</param>
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
-    public void Uniform3(string name, uint v0, uint v1, uint v2) => GL.Uniform3(GetUniform(name), v0,v1,v2);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform3(string name, uint v0, uint v1, uint v2) { GL.Uniform3(GetUniform(name), v0,v1,v2); return this; }
         
     #endregion
         
@@ -526,7 +540,8 @@ public class ShaderProgram
     /// </summary>
     /// <param name="name">the uniform variable's name</param>
     /// <param name="vector">vector value</param>
-    public void Uniform4(string name, Vector4 vector) => GL.Uniform4(GetUniform(name), vector);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform4(string name, Vector4 vector) { GL.Uniform4(GetUniform(name), vector); return this; }
     /// <summary>
     /// Set a 4d uniform variable's value on the gpu (vec4)
     /// </summary>
@@ -535,7 +550,8 @@ public class ShaderProgram
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
     /// <param name="v3">w component value</param>
-    public void Uniform4(string name, double v0, double v1, double v2, double v3) => GL.Uniform4(GetUniform(name), v0,v1,v2,v3);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform4(string name, double v0, double v1, double v2, double v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
     /// <summary>
     /// Set a 4d uniform variable's value on the gpu (vec4)
     /// </summary>
@@ -544,7 +560,8 @@ public class ShaderProgram
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
     /// <param name="v3">w component value</param>
-    public void Uniform4(string name, float v0, float v1, float v2, float v3) => GL.Uniform4(GetUniform(name), v0,v1,v2,v3);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform4(string name, float v0, float v1, float v2, float v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
     /// <summary>
     /// Set a 4d uniform variable's value on the gpu (vec4)
     /// </summary>
@@ -553,7 +570,8 @@ public class ShaderProgram
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
     /// <param name="v3">w component value</param>
-    public void Uniform4(string name, int v0, int v1, int v2, int v3) => GL.Uniform4(GetUniform(name), v0,v1,v2,v3);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform4(string name, int v0, int v1, int v2, int v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
     /// <summary>
     /// Set a 4d uniform variable's value on the gpu (vec4)
     /// </summary>
@@ -562,7 +580,8 @@ public class ShaderProgram
     /// <param name="v1">y component value</param>
     /// <param name="v2">z component value</param>
     /// <param name="v3">w component value</param>
-    public void Uniform4(string name, uint v0, uint v1, uint v2, uint v3) => GL.Uniform4(GetUniform(name), v0,v1,v2,v3);
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Uniform4(string name, uint v0, uint v1, uint v2, uint v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
         
     #endregion
         

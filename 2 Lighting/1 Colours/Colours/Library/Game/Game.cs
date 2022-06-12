@@ -17,10 +17,12 @@ public abstract class Game : IDisposable
     /// </summary>
     /// <param name="gameWindowSettings"></param>
     /// <param name="nativeWindowSettings"></param>
-    public void InitWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
+    /// <returns>window object for ease of use</returns>
+    public GameWindow InitWindow(GameWindowSettings gameWindowSettings, NativeWindowSettings nativeWindowSettings)
     {
         Window = new GameWindow(gameWindowSettings, nativeWindowSettings);
         SetFunctions();
+        return Window;
     }
     
     /// <summary>
