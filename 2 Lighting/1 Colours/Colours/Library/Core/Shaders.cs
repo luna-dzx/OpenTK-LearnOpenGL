@@ -46,49 +46,240 @@ public class Shader
 
 }
 
+
 public class ShaderProgram
 {
-    protected readonly int handle;
+    
+    private readonly int handle;
     private Dictionary<string, int> uniforms;
     private Dictionary<string, (FieldInfo ,int)> syncedUniforms;
 
+    private Dictionary<ShaderType, List<string>> sections;
+    private Dictionary<ShaderType, bool> usesCustomSynax;
+    private List<int> shaders;
+
+    // only works if using custom syntax on a vertex shader
+    private bool autoProjection = false;
+
     /// <summary>
-    /// Most common shader combination - loads from glsl files
+    /// Enables the automatic calculation of lx_Transform
     /// </summary>
-    /// <param name="vertexPath">path to the vertex shader file</param>
-    /// <param name="fragmentPath">path to the fragment shader file</param>
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram EnableAutoProjection()
+    {
+        Uniform1("lx_AutoProjection",1);
+        autoProjection = true;
+        return this;
+    }
+    /// <summary>
+    /// Disables the automatic calculation of lx_Transform
+    /// </summary>
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram DisableAutoProjection()
+    {
+        Uniform1("lx_AutoProjection",0);
+        autoProjection = false;
+        return this;
+    }
+
+    /// <summary>
+    /// Uses the engine's custom glsl syntax to format a shader
+    /// </summary>
+    /// <param name="shaderText">the original shader's text</param>
+    /// <param name="shaderType">the type of OpenGL shader to compile this as</param>
+    /// <returns>the shader formatted to be compiled as glsl</returns>
+    private string FormatShader(string shaderText, ShaderType shaderType)
+    {
+        string[] lines = shaderText.Split('\n');
+
+        if (lines[0].Substring(9, 7) != "luma-dx") return shaderText;
+
+        lines[0] = "#version 330 core";
+
+        usesCustomSynax[shaderType] = true;
+        if (shaderType == ShaderType.FragmentShaderArb) usesCustomSynax[ShaderType.FragmentShader] = true;
+        if (shaderType == ShaderType.VertexShaderArb) usesCustomSynax[ShaderType.VertexShader] = true;
+
+        if (shaderType == ShaderType.FragmentShader)
+        {
+            lines[0] += "\nuniform int active" + shaderType + "Id;\nout vec4 lx_FragColour;\n";
+        }
+        
+        if (shaderType == ShaderType.VertexShader)
+        {
+            lines[0] += "\nuniform mat4 lx_Model;\nuniform mat4 lx_View;\nuniform mat4 lx_Proj;\nuniform int lx_AutoProjection;\nmat4 lx_Transform;\n";
+        }
+
+        string outputText = "";
+        string currentText = "";
+
+        sections[shaderType] = new List<string>();
+        // first section contains no main functions, this makes the first section section 0
+        int currentId = -1;
+
+        foreach (string line in lines)
+        {
+            int firstCharIndex = 0;
+            int lastCharIndex = 0;
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (line[i] == ' ') continue;
+                firstCharIndex = i; break;
+            }
+
+            for (int i = line.Length-1; i > -1; i--)
+            {
+                if (line[i] == ' ') continue;
+                lastCharIndex = i-1; break;
+            }
+
+            if (line[firstCharIndex] == '[' && line[lastCharIndex] == ']')
+            {
+
+                string test = String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
+                outputText += test;
+
+                string sectionName = line.Substring(firstCharIndex+1, lastCharIndex - firstCharIndex - 1);
+                currentText = "";
+                sections[shaderType].Add(sectionName);
+
+                currentId++;
+            }
+            else
+            {
+                currentText += line+"\n";
+            }
+        }
+
+
+        if (currentId == -1) // no sections
+        {
+            outputText += String.ReplaceAll(currentText, "main", "lx_program0_main");
+        }
+        else
+        {
+            outputText += String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
+        }
+
+        outputText += "\nvoid main(){";
+
+        if (shaderType == ShaderType.VertexShader)
+        {
+            outputText += "\nif (lx_AutoProjection == 1){lx_Transform = lx_Proj * lx_View * lx_Model;}";
+        }
+        
+        if (currentId == -1) // no sections
+        {
+            outputText += "\nlx_program0_main();";
+        }
+        else
+        {
+            for (int i = 0; i < sections[shaderType].Count; i++)
+            {
+                outputText += "\nif (active" + shaderType + "Id == "+i+") {lx_program" + i + "_main(); return;}";
+            }
+        }
+
+            
+        outputText += "\n}";
+        
+        Console.WriteLine("\n\n"+shaderType+"\n\n"+outputText);
+
+        return outputText;
+    }
+
+    /// <summary>
+    /// Create an empty shader program for configuration outside the constructor
+    /// </summary>
+    public ShaderProgram()
+    {
+        handle = GL.CreateProgram();
+        uniforms = new Dictionary<string, int>();
+        syncedUniforms = new Dictionary<string, (FieldInfo, int)>();
+        
+        usesCustomSynax = new Dictionary<ShaderType, bool>
+        {
+            [ShaderType.ComputeShader] = false,
+            [ShaderType.FragmentShader] = false,
+            [ShaderType.GeometryShader] = false,
+            [ShaderType.VertexShader] = false,
+            [ShaderType.FragmentShaderArb] = false,
+            [ShaderType.TessControlShader] = false,
+            [ShaderType.TessEvaluationShader] = false,
+            [ShaderType.VertexShaderArb] = false
+        };
+
+        sections = new Dictionary<ShaderType, List<string>>();
+        shaders = new List<int>();
+    }
+
+    /// <summary>
+    /// Create a generic shader program based on a vertex and fragment shader
+    /// </summary>
+    /// <param name="vertexPath">the path to a glsl vertex shader file</param>
+    /// <param name="fragmentPath">the path to a glsl fragment shader file</param>
     public ShaderProgram(string vertexPath, string fragmentPath) : this()
     {
+        LoadShader(vertexPath, ShaderType.VertexShader);
+        LoadShader(fragmentPath, ShaderType.FragmentShader);
+        Compile();
+    }
+    
+    /// <summary>
+    /// Assign this shader pipeline for rendering
+    /// </summary>
+    public void Use() => GL.UseProgram(handle);
 
-        var vert = Shader.FromFile(vertexPath,ShaderType.VertexShader);
-        var frag = Shader.FromFile(fragmentPath,ShaderType.FragmentShader);
+    /// <summary>
+    /// Load shader from file then format custom syntax and load to the shader program
+    /// </summary>
+    /// <param name="path">path to the glsl shader file</param>
+    /// <param name="shaderType">the type of shader to use this as in the shader pipeline</param>
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram LoadShader(string path,ShaderType shaderType) => LoadShaderText(File.ReadAllText(path),shaderType);
         
-        GL.AttachShader(handle,(int)vert);
-        GL.AttachShader(handle,(int)frag);
+    /// <summary>
+    /// Format custom syntax in a shader (in plaintext) and load to the shader program
+    /// </summary>
+    /// <param name="shaderText">plaintext glsl shader</param>
+    /// <param name="shaderType">the type of shader to use this as in the shader pipeline</param>
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram LoadShaderText(string shaderText,ShaderType shaderType)
+    {
+        shaderText = FormatShader(shaderText,shaderType);
+        Shader shader = new Shader(shaderText, shaderType);
+        shaders.Add(shader.ID);
+        return this;
+    }
         
-        GL.LinkProgram(handle);
-        
-        string infoLog = GL.GetProgramInfoLog(handle);
-        if (!string.IsNullOrEmpty(infoLog)) throw new Exception(infoLog);
-
-        GL.DetachShader(handle,(int)vert);vert.Delete();
-        GL.DetachShader(handle,(int)frag);frag.Delete();
+    /// <summary>
+    /// Add an existing shader to the shader program
+    /// </summary>
+    /// <param name="shaderId">the OpenGL shader handle</param>
+    /// <returns>current object for ease of use</returns>
+    /// <remarks>cannot get interpreted as a multi-shader</remarks>
+    public ShaderProgram AddShader(int shaderId)
+    {
+        shaders.Add(shaderId);
+        return this;
     }
 
     /// <summary>
-    /// Create a new shader program based on pre-existing shaders which have already been created
+    /// Compile any shaders which were loaded before this function call
     /// </summary>
-    /// <param name="shaderIDs">the OpenGL handles of the shaders</param>
-    public ShaderProgram(int[] shaderIDs) : this()
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram Compile()
     {
-        LoadShaders(shaderIDs);
+        LoadShaders(shaders.ToArray());
+        return this;
     }
-
+    
     /// <summary>
     /// Load pre-existing shaders which have already been created
     /// </summary>
     /// <param name="shaderIDs">the OpenGL handles of the shaders</param>
-    protected void LoadShaders(int[] shaderIDs)
+    public void LoadShaders(int[] shaderIDs)
     {
         // attach to program
         foreach (int id in shaderIDs) 
@@ -102,20 +293,24 @@ public class ShaderProgram
     }
 
     /// <summary>
-    /// Empty constructor for handling shaders differently in classes that inherit from this
+    /// Set the active shader within a certain multi-shader (based on the shader type)
     /// </summary>
-    protected ShaderProgram()
+    /// <param name="shader">the type of shader to set</param>
+    /// <param name="sectionName">the title of the section that contains the main function of the desired shader to switch to</param>
+    /// <returns>current object for ease of use</returns>
+    /// <remarks>this cannot work for a standard shader, only ones with #version luma-dx</remarks>
+    public ShaderProgram SetActive(ShaderType shader, string sectionName)
     {
-        handle = GL.CreateProgram();
-        uniforms = new Dictionary<string, int>();
-        syncedUniforms = new Dictionary<string, (FieldInfo, int)>();
-    }
+        if (!sections.ContainsKey(shader)) throw new Exception("No multi-shader sections in shader of type "+shader);
         
-    /// <summary>
-    /// Assign this shader pipeline for rendering
-    /// </summary>
-    public void Use() => GL.UseProgram(handle);
+        GL.Uniform1(
+            GL.GetUniformLocation(handle,"active" + shader + "Id"),
+            sections[shader].IndexOf(sectionName)
+        );
 
+        return this;
+    }
+    
     
     /// <summary>
     /// Remove shader program from video memory
@@ -156,6 +351,62 @@ public class ShaderProgram
         if (error != ErrorCode.NoError) throw new Exception(error.ToString());
         return uniforms[name];
     }
+
+    /// <summary>
+    /// The uniform location of the standard projection matrix
+    /// </summary>
+    /// <returns>uniform location of the lx_Proj variable or -1 if the
+    /// vertex shader is not configured with custom syntax or if auto projection is disabled</returns>
+    public int DefaultProjection
+    {
+        get
+        {
+            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            {
+                return GL.GetUniformLocation(handle, "lx_Proj");
+            }
+            
+            return -1;
+        }
+
+    }
+
+    /// <summary>
+    /// The uniform location of the standard model matrix
+    /// </summary>
+    /// <returns>uniform location of the lx_Model variable or -1 if the
+    /// vertex shader is not configured with custom syntax or if auto projection is disabled</returns>
+    public int DefaultModel
+    {
+        get
+        {
+            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            {
+                return GL.GetUniformLocation(handle, "lx_Model");
+            }
+
+            return -1;
+        }
+    }
+
+    /// <summary>
+    /// The uniform location of the standard view matrix
+    /// </summary>
+    /// <returns>uniform location of the lx_View variable or -1 if the
+    /// vertex shader is not configured with custom syntax or if auto projection is disabled</returns>
+    public int DefaultView
+    {
+        get
+        {
+            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            {
+                return GL.GetUniformLocation(handle, "lx_View");
+            }
+
+            return -1;
+        }
+    }
+
 
 
     #region Uniform Functions
@@ -384,175 +635,6 @@ public class ShaderProgram
     }
     
     #endregion
-    
-}
-    
-
-public class MultiShaderProgram : ShaderProgram
-{
-
-    private Dictionary<ShaderType, List<string>> sections;
-    private List<int> shaders;
-
-    /// <summary>
-    /// Uses the engine's custom glsl syntax to format a multi-shader
-    /// </summary>
-    /// <param name="shaderText">the original shader's text</param>
-    /// <param name="shaderType">the type of OpenGL shader to compile this as</param>
-    /// <returns>the shader formatted to be compiled as glsl</returns>
-    private string FormatShader(string shaderText, ShaderType shaderType)
-    {
-        string[] lines = shaderText.Split('\n');
-        if (shaderType == ShaderType.FragmentShader)
-        {
-            lines[0] += "\nuniform int active" + shaderType + "Id;\nout vec4 lx_FragColour;\n";
-        }
-
-        string outputText = "";
-        string currentText = "";
-
-        sections[shaderType] = new List<string>();
-        // first section contains no main functions, this makes the first section section 0
-        int currentId = -1;
-
-        foreach (string line in lines)
-        {
-            int firstCharIndex = 0;
-            int lastCharIndex = 0;
-
-            for (int i = 0; i < line.Length; i++)
-            {
-                if (line[i] == ' ') continue;
-                firstCharIndex = i; break;
-            }
-
-            for (int i = line.Length-1; i > -1; i--)
-            {
-                if (line[i] == ' ') continue;
-                lastCharIndex = i-1; break;
-            }
-
-            if (line[firstCharIndex] == '[' && line[lastCharIndex] == ']')
-            {
-
-                string test = String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
-                outputText += test;
-
-                string sectionName = line.Substring(firstCharIndex+1, lastCharIndex - firstCharIndex - 1);
-                currentText = "";
-                sections[shaderType].Add(sectionName);
-
-                currentId++;
-            }
-            else
-            {
-                currentText += line+"\n";
-            }
-        }
-
-
-
-        if (sections[shaderType].Count > 0)
-        {
-            outputText += String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
-
-            outputText += "\nvoid main(){";
-
-            for (int i = 0; i < sections[shaderType].Count; i++)
-            {
-                outputText += "if (active" + shaderType + "Id == "+i+") {lx_program" + i + "_main(); return;}";
-            }
-                
-            outputText += "}";
-        }
-        else
-        {
-            outputText += currentText;
-        }
-
-        return outputText;
-    }
-
-    /// <summary>
-    /// Create an empty multi-shader program for configuration outside the constructor
-    /// </summary>
-    public MultiShaderProgram() : base()
-    {
-        sections = new Dictionary<ShaderType, List<string>>();
-        shaders = new List<int>();
-    }
-
-    /// <summary>
-    /// Create a generic multi-shader program based on a vertex and fragment shader
-    /// </summary>
-    /// <param name="vertexPath">the path to a glsl vertex shader file</param>
-    /// <param name="fragmentPath">the path to a glsl fragment shader file</param>
-    public MultiShaderProgram(string vertexPath, string fragmentPath) : this()
-    {
-        LoadShader(vertexPath, ShaderType.VertexShader);
-        LoadShader(fragmentPath, ShaderType.FragmentShader);
-        Compile();
-    }
-
-    /// <summary>
-    /// Load shader from file then format as a multi-shader and load to the shader program
-    /// </summary>
-    /// <param name="path">path to the glsl shader file</param>
-    /// <param name="shaderType">the type of shader to use this as in the shader pipeline</param>
-    /// <returns>current object for ease of use</returns>
-    public MultiShaderProgram LoadShader(string path,ShaderType shaderType) => LoadShaderText(File.ReadAllText(path),shaderType);
-        
-    /// <summary>
-    /// Format a shader (in plaintext) as a multi-shader and load to the shader program
-    /// </summary>
-    /// <param name="shaderText">plaintext glsl shader</param>
-    /// <param name="shaderType">the type of shader to use this as in the shader pipeline</param>
-    /// <returns>current object for ease of use</returns>
-    public MultiShaderProgram LoadShaderText(string shaderText,ShaderType shaderType)
-    {
-        shaderText = FormatShader(shaderText,shaderType);
-        Shader shader = new Shader(shaderText, shaderType);
-        shaders.Add(shader.ID);
-        return this;
-    }
-        
-    /// <summary>
-    /// Add an existing shader to the shader program
-    /// </summary>
-    /// <param name="shaderId">the OpenGL shader handle</param>
-    /// <returns>current object for ease of use</returns>
-    /// <remarks>does not get interpreted as a multi-shader</remarks>
-    public MultiShaderProgram AddShader(int shaderId)
-    {
-        shaders.Add(shaderId);
-        return this;
-    }
-
-    /// <summary>
-    /// Compile any shaders which were loaded before this function call
-    /// </summary>
-    /// <returns>current object for ease of use</returns>
-    public MultiShaderProgram Compile()
-    {
-        LoadShaders(shaders.ToArray());
-        return this;
-    }
-
-    /// <summary>
-    /// Set the active shader within a certain multi-shader (based on the shader type)
-    /// </summary>
-    /// <param name="shader">the type of shader to set</param>
-    /// <param name="sectionName">the title of the section that contains the main function of the desired shader to switch to</param>
-    /// <returns>current object for ease of use</returns>
-    public MultiShaderProgram SetActive(ShaderType shader, string sectionName)
-    {
-        GL.Uniform1(
-            GL.GetUniformLocation(handle,"active" + shader + "Id"),
-            sections[shader].IndexOf(sectionName)
-        );
-
-        return this;
-    }
         
         
         

@@ -1,4 +1,4 @@
-﻿#version 330 core
+﻿#version luma-dx
 
 uniform vec3 colour;
 

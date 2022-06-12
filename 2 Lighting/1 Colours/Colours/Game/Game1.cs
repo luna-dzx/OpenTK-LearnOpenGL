@@ -8,7 +8,7 @@ namespace Colours.Game;
 public class Game1 : Library.Game
 {
     private const string ShaderLocation = "../../../Game/Shaders/";
-    private MultiShaderProgram shaderProgram;
+    private ShaderProgram shader;
 
     private FirstPersonPlayer player;
     private Model cube;
@@ -18,17 +18,18 @@ public class Game1 : Library.Game
     protected override void Load()
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-            
-        shaderProgram = new MultiShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl");
 
-        player = new FirstPersonPlayer(shaderProgram.GetUniform("proj"), shaderProgram.GetUniform("view"), Window.Size)
+        shader = new ShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl")
+            .EnableAutoProjection();
+
+        player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
             
-        cube = new Model(shaderProgram.GetUniform("model"))
+        cube = new Model(shader.DefaultModel)
             .LoadVertices(0,PresetMesh.Cube.Vertices);
             
-        shaderProgram.Uniform3("colour", 1.0f, 0.5f, 0.31f);
+        shader.Uniform3("colour", 1.0f, 0.5f, 0.31f);
 
         Window.CursorState = CursorState.Grabbed;
     }
@@ -42,11 +43,11 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
             
             
-        shaderProgram.SetActive(ShaderType.FragmentShader, "lightShader");
+        shader.SetActive(ShaderType.FragmentShader, "lightShader");
         cube.Transform(lightPos, Vector3.Zero, 0.3f);
         cube.Draw();
 
-        shaderProgram.SetActive(ShaderType.FragmentShader, "shader");
+        shader.SetActive(ShaderType.FragmentShader, "shader");
         cube.Transform(Vector3.Zero, Vector3.Zero, 0.3f);
         cube.Draw();
             
@@ -60,7 +61,7 @@ public class Game1 : Library.Game
         GL.UseProgram(0);
     
         cube.Delete();
-        shaderProgram.Delete();
+        shader.Delete();
     }
     
 }
