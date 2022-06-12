@@ -183,8 +183,6 @@ public class ShaderProgram
 
             
         outputText += "\n}";
-        
-        Console.WriteLine("\n\n"+shaderType+"\n\n"+outputText);
 
         return outputText;
     }

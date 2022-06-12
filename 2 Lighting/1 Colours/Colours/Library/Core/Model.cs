@@ -137,7 +137,7 @@ public class Model : VertexArray
     public Model LoadNormals(int layoutLocation, float[] normals)
     {
         mesh.Normals = normals;
-        //TODO: actually load normals to the vao
+        Add(layoutLocation, normals);
         return this;
     }
 

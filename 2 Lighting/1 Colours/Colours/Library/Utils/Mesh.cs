@@ -162,5 +162,63 @@ public class PresetMesh
         }
 
     );
+    
+    
+    
+    public static readonly Mesh Triangle = new Mesh
+    (
+        vertices: new float[]
+        {
+            -1, -1, 0, 
+            1, -1, 0, 
+            0,  1, 0,
+            
+        },
+
+        texCoords: new float[]
+        {
+            0,0, 1,0, 0.5f,1,
+        },
+            
+        normals: new float[]
+        {
+            0,0,-1,
+            0,0,-1,
+            0,0,-1,
+        }
+
+    );    
+    
+    public static readonly Mesh Square = new Mesh
+    (
+        vertices: new float[]
+        {
+            -1, -1, 0, 
+            1, -1, 0, 
+            -1,  1, 0,
+            
+            1, -1, 0, 
+            -1,  1, 0,
+            1,  1, 0,
+            
+        },
+
+        texCoords: new float[]
+        {
+            0,0, 1,0, 0,1,
+            1,0, 0,1, 1,1,
+        },
+            
+        normals: new float[]
+        {
+            0,0,-1,
+            0,0,-1,
+            0,0,-1,
+            0,0,-1,
+            0,0,-1,
+            0,0,-1,
+        }
+
+    );
         
 }
