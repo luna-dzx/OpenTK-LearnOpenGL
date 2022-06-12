@@ -103,6 +103,7 @@ public class ShaderProgram
         if (shaderType == ShaderType.FragmentShader)
         {
             lines[0] += "\nuniform int active" + shaderType + "Id;\nout vec4 lx_FragColour;\n";
+            lines[0] += File.ReadAllText("../../../Library/Shaders/fragment.glsl");
         }
         
         if (shaderType == ShaderType.VertexShader)

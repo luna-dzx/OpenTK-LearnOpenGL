@@ -12,28 +12,7 @@ in vec3 vLightPos;
 
 void main()
 {
-    // ambient
-    float ambientStrength = 0.1;
-    vec3 ambient = ambientStrength * lightColour;
-    
-    // diffuse
-    vec3 norm = normalize(vNormal);
-    vec3 lightDir = normalize(vLightPos - vFragPos);
-    
-    float diff = max(dot(norm,lightDir),0.0);
-    vec3 diffuse = diff * lightColour;
-    
-    // specular
-    
-    float specularStrength = 0.5;
-    vec3 viewDir = normalize(-vFragPos);
-    vec3 reflectDir = reflect(-lightDir,norm); // lightDir is negative to make this point towards the light
-    
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32);
-    vec3 specular = specularStrength * spec * lightColour;
-    
-    
-    vec3 result = (ambient+diffuse+specular) * objectColour;
+    vec3 result = (0.1+lx_ViewPhong(vFragPos,vLightPos,vNormal,0.5,32)) *lightColour *objectColour;
     lx_FragColour = vec4(result,1.0);
 }
 

@@ -9,7 +9,6 @@ out vec3 vNormal;
 out vec3 vFragPos;
 out vec3 vLightPos;
 
-
 void main()
 {
     // apply normal matrix to fix non uniform scaling
