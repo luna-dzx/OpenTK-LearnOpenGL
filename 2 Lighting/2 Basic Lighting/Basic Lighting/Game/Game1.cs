@@ -21,18 +21,28 @@ public class Game1 : Library.Game
 
         shader = new ShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl")
             .EnableAutoProjection()
-            .Uniform3("colour", 1.0f, 0.5f, 0.31f);
+            .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
+            .Uniform3("lightColour", 1.0f, 1.0f, 1.0f);
 
         player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
-            
-        cube = new Model(shader.DefaultModel)
-            .LoadVertices(0,PresetMesh.Cube.Vertices);
+
+        cube = new Model(PresetMesh.Cube, shader.DefaultModel);
     }
         
     protected override void Resize(ResizeEventArgs newWin) => player.Camera.Resize(newWin.Size);
-    protected override void UpdateFrame(FrameEventArgs args) => player.Update(args,Window.KeyboardState,GetRelativeMouse());
+
+    private float angle;
+    protected override void UpdateFrame(FrameEventArgs args)
+    {
+        player.Update(args,Window.KeyboardState,GetRelativeMouse());
+
+        lightPos = 4 * (Matrix3.CreateRotationZ(0.05f*angle) * Matrix3.CreateRotationY(0.5f*angle) * Vector3.UnitZ);
+        angle += (float)args.Time;
+        
+        shader.Uniform3("lightPos", lightPos);
+    }
 
     protected override void RenderFrame(FrameEventArgs args)
     {
@@ -41,11 +51,11 @@ public class Game1 : Library.Game
             
             
         shader.SetActive(ShaderType.FragmentShader, "lightShader");
-        cube.Transform(lightPos, Vector3.Zero, 0.3f);
+        cube.Transform(lightPos, Vector3.Zero, 0.1f);
         cube.Draw();
 
         shader.SetActive(ShaderType.FragmentShader, "shader");
-        cube.Transform(Vector3.Zero, Vector3.Zero, 0.3f);
+        cube.ResetTransform();
         cube.Draw();
             
 
