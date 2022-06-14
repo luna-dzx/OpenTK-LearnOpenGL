@@ -1,6 +1,10 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Reflection;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using static Library.Objects;
 
 namespace Library;
 
@@ -100,6 +104,8 @@ public class ShaderProgram
         if (shaderType == ShaderType.FragmentShaderArb) usesCustomSynax[ShaderType.FragmentShader] = true;
         if (shaderType == ShaderType.VertexShaderArb) usesCustomSynax[ShaderType.VertexShader] = true;
 
+        lines[0] += "\n" + File.ReadAllText("../../../Library/Shaders/global.glsl");
+            
         if (shaderType == ShaderType.FragmentShader)
         {
             lines[0] += "\nuniform int active" + shaderType + "Id;\nout vec4 lx_FragColour;\n";
@@ -583,6 +589,28 @@ public class ShaderProgram
     /// <param name="v3">w component value</param>
     /// <returns>current object for ease of use</returns>
     public ShaderProgram Uniform4(string name, uint v0, uint v1, uint v2, uint v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
+        
+    #endregion
+        
+    #region Engine Specific
+
+    public ShaderProgram UniformMaterial(string name, Material material)
+    {
+        Uniform3(name + ".ambient", material.Ambient);
+        Uniform3(name + ".diffuse", material.Diffuse);
+        Uniform3(name + ".specular", material.Specular);
+        Uniform1(name + ".shininess", material.Shininess);
+        return this;
+    }
+        
+    public ShaderProgram UniformLight(string name, Light light)
+    {
+        Uniform3(name + ".position", light.Position);
+        Uniform3(name + ".ambient", light.Ambient);
+        Uniform3(name + ".diffuse", light.Diffuse);
+        Uniform3(name + ".specular", light.Specular);
+        return this;
+    }
         
     #endregion
         

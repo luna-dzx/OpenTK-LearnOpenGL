@@ -3,25 +3,8 @@
 uniform vec3 objectColour;
 uniform vec3 lightColour;
 
-struct Material 
-{
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-    float shininess;
-};
-
-
-struct Light {
-    vec3 position;
-    vec3 ambient;
-    vec3 diffuse;
-    vec3 specular;
-};
-
-
-uniform Material material;
-uniform Light light;
+uniform lx_Material material;
+uniform lx_Light light;
 
 // view space vectors (where camera position is the origin)
 in vec3 vNormal;

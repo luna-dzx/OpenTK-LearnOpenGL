@@ -1,5 +1,7 @@
-﻿using OpenTK.Graphics.OpenGL4;
+﻿using System;
+using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using static Library.Objects;
 
 namespace Library;
 
