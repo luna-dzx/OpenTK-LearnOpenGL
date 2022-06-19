@@ -1,4 +1,8 @@
-﻿float lx_ViewPhong(vec3 lx_fragPos, vec3 lx_lightPos, vec3 lx_normal, float lx_specularStrength, int lx_specularExponent)
+﻿out vec4 lx_FragColour;
+
+// TODO: redo these functions for the new structs
+
+float lx_ViewPhong(vec3 lx_fragPos, vec3 lx_lightPos, vec3 lx_normal, float lx_specularStrength, int lx_specularExponent)
 {
     vec3 lx_lightDir = normalize(lx_lightPos - lx_fragPos);
 

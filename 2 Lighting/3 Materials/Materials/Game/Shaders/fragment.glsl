@@ -25,6 +25,9 @@ void main()
     vec3 reflectDir = reflect(-lightDir, vNormal);  
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
     vec3 specular = light.specular * (spec * material.specular);  
+    
+    // fix buggy lighting
+    if (abs(diffuse.x)+abs(diffuse.y)+abs(diffuse.z) == 0){specular*=0;}
 
     vec3 result = ambient + diffuse + specular;
     lx_FragColour = vec4(result,1.0);

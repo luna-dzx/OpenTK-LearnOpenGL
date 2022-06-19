@@ -33,7 +33,7 @@ public class Game1 : Library.Game
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
 
         light = new Light();
-        material = PresetMaterial.GreenRubber;
+        material = PresetMaterial.Emerald;
             
         shader.UniformLight("light", light).UniformMaterial("material", material);
 

@@ -59,7 +59,7 @@ public class ShaderProgram
     private Dictionary<string, (FieldInfo ,int)> syncedUniforms;
 
     private Dictionary<ShaderType, List<string>> sections;
-    private Dictionary<ShaderType, bool> usesCustomSynax;
+    private Dictionary<int, bool> usesCustomSynax;
     private List<int> shaders;
 
     // only works if using custom syntax on a vertex shader
@@ -86,6 +86,36 @@ public class ShaderProgram
         return this;
     }
 
+
+    private const string ShaderFileLocation = "../../../Library/Shaders/";
+    
+    private static (string,string) ReadEngineShader(ShaderType type)
+    {
+        string mainFileDirectory = 
+            ShaderFileLocation +
+               (int)type switch
+               {
+                   35632 => "fragment.glsl",
+                   35633 => "vertex.glsl",
+                   36313 => "geometry.glsl",
+                   36487 => "tessEval.glsl",
+                   36488 => "tessCtrl.glsl",
+                   37305 => "compute.glsl",
+                   _ => throw new Exception("Invalid ShaderType")
+               };
+
+        string[] splitMainFile = { "", "" };
+        if (File.Exists(mainFileDirectory)) 
+            splitMainFile = File.ReadAllText(mainFileDirectory).Split("[main]");
+        
+        string[] splitBaseFile = { "", "" };
+        if (File.Exists(ShaderFileLocation + "global.glsl")) 
+            splitBaseFile = File.ReadAllText(ShaderFileLocation + "global.glsl").Split("[main]");
+
+        return (splitBaseFile[0]+"\n"+splitMainFile[0],
+            (splitBaseFile.Length > 1 ? splitBaseFile[1] : "")+"\n"+(splitMainFile.Length > 1 ? splitMainFile[1] : ""));
+    }
+
     /// <summary>
     /// Uses the engine's custom glsl syntax to format a shader
     /// </summary>
@@ -98,24 +128,12 @@ public class ShaderProgram
 
         if (lines[0].Substring(9, 7) != "luma-dx") return shaderText;
 
-        lines[0] = "#version 330 core";
-
-        usesCustomSynax[shaderType] = true;
-        if (shaderType == ShaderType.FragmentShaderArb) usesCustomSynax[ShaderType.FragmentShader] = true;
-        if (shaderType == ShaderType.VertexShaderArb) usesCustomSynax[ShaderType.VertexShader] = true;
-
-        lines[0] += "\n" + File.ReadAllText("../../../Library/Shaders/global.glsl");
-            
-        if (shaderType == ShaderType.FragmentShader)
-        {
-            lines[0] += "\nuniform int active" + shaderType + "Id;\nout vec4 lx_FragColour;\n";
-            lines[0] += File.ReadAllText("../../../Library/Shaders/fragment.glsl");
-        }
+        usesCustomSynax[(int)shaderType] = true;
         
-        if (shaderType == ShaderType.VertexShader)
-        {
-            lines[0] += "\nuniform mat4 lx_Model;\nuniform mat4 lx_View;\nuniform mat4 lx_Proj;\nuniform int lx_AutoProjection;\nmat4 lx_Transform;\n";
-        }
+        var (engineShader,engineShaderMain) = ReadEngineShader(shaderType);
+
+        lines[0] = engineShader;
+        lines[0] += "\nuniform int active"+shaderType+"Id;\n";
 
         string outputText = "";
         string currentText = "";
@@ -160,23 +178,18 @@ public class ShaderProgram
         }
 
 
-        if (currentId == -1) // no sections
-        {
-            outputText += String.ReplaceAll(currentText, "main", "lx_program0_main");
-        }
-        else
-        {
-            outputText += String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
-        }
+        if (currentId == -1) currentId = 0;// no sections 
 
-        outputText += "\nvoid main(){";
-
-        if (shaderType == ShaderType.VertexShader)
-        {
-            outputText += "\nif (lx_AutoProjection == 1){lx_Transform = lx_Proj * lx_View * lx_Model;}";
-        }
+        outputText += String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");
         
-        if (currentId == -1) // no sections
+        
+        outputText += "\nvoid main(){";
+        
+        outputText += engineShaderMain;
+        
+        // shader sections:
+
+        if (sections[shaderType].Count == 0) // no sections
         {
             outputText += "\nlx_program0_main();";
         }
@@ -187,8 +200,7 @@ public class ShaderProgram
                 outputText += "\nif (active" + shaderType + "Id == "+i+") {lx_program" + i + "_main(); return;}";
             }
         }
-
-            
+        
         outputText += "\n}";
 
         return outputText;
@@ -203,16 +215,16 @@ public class ShaderProgram
         uniforms = new Dictionary<string, int>();
         syncedUniforms = new Dictionary<string, (FieldInfo, int)>();
         
-        usesCustomSynax = new Dictionary<ShaderType, bool>
+        usesCustomSynax = new Dictionary<int, bool>
         {
-            [ShaderType.ComputeShader] = false,
-            [ShaderType.FragmentShader] = false,
-            [ShaderType.GeometryShader] = false,
-            [ShaderType.VertexShader] = false,
-            [ShaderType.FragmentShaderArb] = false,
-            [ShaderType.TessControlShader] = false,
-            [ShaderType.TessEvaluationShader] = false,
-            [ShaderType.VertexShaderArb] = false
+            [(int)ShaderType.ComputeShader] = false,
+            [(int)ShaderType.FragmentShader] = false,
+            [(int)ShaderType.GeometryShader] = false,
+            [(int)ShaderType.VertexShader] = false,
+            [(int)ShaderType.FragmentShaderArb] = false,
+            [(int)ShaderType.TessControlShader] = false,
+            [(int)ShaderType.TessEvaluationShader] = false,
+            [(int)ShaderType.VertexShaderArb] = false
         };
 
         sections = new Dictionary<ShaderType, List<string>>();
@@ -366,7 +378,7 @@ public class ShaderProgram
     {
         get
         {
-            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            if (usesCustomSynax[(int)ShaderType.VertexShader] && autoProjection)
             {
                 return GL.GetUniformLocation(handle, "lx_Proj");
             }
@@ -385,7 +397,7 @@ public class ShaderProgram
     {
         get
         {
-            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            if (usesCustomSynax[(int)ShaderType.VertexShader] && autoProjection)
             {
                 return GL.GetUniformLocation(handle, "lx_Model");
             }
@@ -403,7 +415,7 @@ public class ShaderProgram
     {
         get
         {
-            if (usesCustomSynax[ShaderType.VertexShader] && autoProjection)
+            if (usesCustomSynax[(int)ShaderType.VertexShader] && autoProjection)
             {
                 return GL.GetUniformLocation(handle, "lx_View");
             }

@@ -164,10 +164,11 @@ public class Model : VertexArray
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
     /// <param name="scale">scale in x,y and z</param>
-    public void Transform(Vector3 translation, Vector3 rotation, Vector3 scale)
+    public Model Transform(Vector3 translation, Vector3 rotation, Vector3 scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, scale);
         UpdateTransformation();
+        return this;
     }
         
     /// <summary>
@@ -176,12 +177,12 @@ public class Model : VertexArray
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
     /// <param name="scale">scale of the overall object in all 3 dimensions</param>
-    public void Transform(Vector3 translation, Vector3 rotation, float scale)
+    public Model Transform(Vector3 translation, Vector3 rotation, float scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, new Vector3(scale,scale,scale));
         UpdateTransformation();
+        return this;
     }
-
 
     /// <summary>
     /// Multiply the current object's scale by this value and load the model matrix to the gpu
@@ -207,10 +208,11 @@ public class Model : VertexArray
     /// <summary>
     /// Sets the transform to default (at origin, no rotation, scale 1) and load the model matrix to the gpu
     /// </summary>
-    public void ResetTransform()
+    public Model ResetTransform()
     {
         transform = Matrix4.Identity;
         UpdateTransformation();
+        return this;
     }
 
 

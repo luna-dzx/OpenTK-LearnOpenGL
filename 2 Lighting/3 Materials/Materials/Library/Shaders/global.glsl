@@ -1,3 +1,5 @@
+#version 330 core
+
 struct lx_Material 
 {
     vec3 ambient;
