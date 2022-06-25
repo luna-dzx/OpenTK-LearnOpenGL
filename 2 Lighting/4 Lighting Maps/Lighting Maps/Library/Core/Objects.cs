@@ -54,10 +54,13 @@ public static class Objects
 
         public Material SetAmbient(Vector3 ambient) { Ambient = ambient; return this; }
         public Material SetAmbient(float r, float g, float b) { Ambient = new Vector3(r,g,b); return this; }
+        public Material SetAmbient(float value) { Ambient = new Vector3(value,value,value); return this; }
         public Material SetDiffuse(Vector3 diffuse) { Diffuse = diffuse; return this; }
         public Material SetDiffuse(float r, float g, float b) { Diffuse = new Vector3(r,g,b); return this; }
+        public Material SetDiffuse(float value) { Diffuse = new Vector3(value,value,value); return this; }
         public Material SetSpecular(Vector3 specular) { Specular = specular; return this; }
         public Material SetSpecular(float r, float g, float b) { Specular = new Vector3(r,g,b); return this; }
+        public Material SetSpecular(float value) { Specular = new Vector3(value,value,value); return this; }
         public Material SetShininess(float shininess) { Shininess = shininess; return this; }
             
     }

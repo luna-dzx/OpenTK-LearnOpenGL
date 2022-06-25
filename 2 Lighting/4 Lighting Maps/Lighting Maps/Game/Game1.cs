@@ -17,6 +17,7 @@ public class Game1 : Library.Game
     private Objects.Material material;
         
     private Texture texture;
+    private Texture textureSpecular;
 
     protected override void Load()
     {
@@ -31,23 +32,24 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
 
-        texture = new Texture("../../../../../../0 Assets/container.jpg");
-            
+        texture = new Texture("../../../../../../0 Assets/container2.png",0);
+        textureSpecular = new Texture("../../../../../../0 Assets/container2_specular.png",1);
+
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
 
-        light = new Objects.Light()
-            .SetAmbient(1f,1f,1f)
-            .SetDiffuse(2f,1f,1f)
-            .SetSpecular(2f,0f,0f);
+        light = new Objects.Light();
 
-        material = PresetMaterial.WhitePlastic;
-
+        material = new Objects.Material()
+            .SetAmbient(0.2f)
+            .SetDiffuse(1f)
+            .SetSpecular(1f)
+            .SetShininess(16f);
+        
         shader
             .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
-            .Uniform3("lightColour", 1.0f, 0.0f, 0.0f)
             .UniformLight("light", light)
-            .UniformMaterial("material", material)
-            .UniformTexture("boxTexture", texture);
+            .UniformSpecTexMaterial("material", material, texture, textureSpecular);
+
 
     }
         

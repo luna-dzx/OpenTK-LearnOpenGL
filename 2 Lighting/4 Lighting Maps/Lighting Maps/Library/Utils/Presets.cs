@@ -206,6 +206,14 @@ public static class PresetMaterial
 {
         
     // http://devernay.free.fr/cours/opengl/materials.html
+    
+    
+    public static readonly Material Default = new Material(
+        0.5f,0.5f,0.5f,
+        1f,1f,1f,
+        1f,1f,1f,
+        64f
+    );
         
     public static readonly Material Emerald = new Material(
         0.0215f,0.1745f,0.0215f,

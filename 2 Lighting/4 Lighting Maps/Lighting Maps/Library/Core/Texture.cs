@@ -31,7 +31,7 @@ public class Texture
     /// /// <param name="path">path to the image file</param>
     /// <param name="textureUnit">the GPU texture unit to pass this texture to</param>
     /// <param name="textureTarget">the type of texture to store</param>
-    public Texture(string path, int textureUnit = 0, TextureTarget textureTarget = TextureTarget.Texture2D, bool flipOnLoad = true) : this(textureUnit,textureTarget)
+    public Texture(string path, int textureUnit, TextureTarget textureTarget = TextureTarget.Texture2D, bool flipOnLoad = true) : this(textureUnit,textureTarget)
     {
         LoadFile(path,flipOnLoad);
     }
@@ -54,9 +54,9 @@ public class Texture
     /// <param name="name">the variable name of the sampler in glsl</param>
     public Texture Uniform(int program, string name)
     {
+        this.Use();
         GL.UseProgram(program);
         GL.Uniform1(GL.GetUniformLocation(program,name),unit);
-        this.Use();
         return this;
     }
 
@@ -110,6 +110,12 @@ public class Texture
     /// </summary>
     /// <returns>OpenGL texture handle</returns>
     public int GetHandle() => handle;
+    
+    /// <summary>
+    /// Get the OpenGL texture unit of the texture
+    /// </summary>
+    /// <returns>OpenGL texture unit</returns>
+    public int GetUnit() => unit;
     
     /// <summary>
     /// Override (int) cast to return texture handle

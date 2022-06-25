@@ -95,12 +95,12 @@ public class ShaderProgram
             ShaderFileLocation +
                (int)type switch
                {
-                   35632 => "fragment.glsl",
-                   35633 => "vertex.glsl",
-                   36313 => "geometry.glsl",
-                   36487 => "tessEval.glsl",
-                   36488 => "tessCtrl.glsl",
-                   37305 => "compute.glsl",
+                   35632 => "lxFragment.glsl",
+                   35633 => "lxVertex.glsl",
+                   36313 => "lxGeometry.glsl",
+                   36487 => "lxTessEval.glsl",
+                   36488 => "lxTessCtrl.glsl",
+                   37305 => "lxCompute.glsl",
                    _ => throw new Exception("Invalid ShaderType")
                };
 
@@ -109,8 +109,8 @@ public class ShaderProgram
             splitMainFile = File.ReadAllText(mainFileDirectory).Split("[main]");
         
         string[] splitBaseFile = { "", "" };
-        if (File.Exists(ShaderFileLocation + "global.glsl")) 
-            splitBaseFile = File.ReadAllText(ShaderFileLocation + "global.glsl").Split("[main]");
+        if (File.Exists(ShaderFileLocation + "lxGlobal.glsl")) 
+            splitBaseFile = File.ReadAllText(ShaderFileLocation + "lxGlobal.glsl").Split("[main]");
 
         return (splitBaseFile[0]+"\n"+splitMainFile[0],
             (splitBaseFile.Length > 1 ? splitBaseFile[1] : "")+"\n"+(splitMainFile.Length > 1 ? splitMainFile[1] : ""));
@@ -616,7 +616,7 @@ public class ShaderProgram
         Uniform1(name + ".shininess", material.Shininess);
         return this;
     }
-        
+
     public ShaderProgram UniformLight(string name, Light light)
     {
         Uniform3(name + ".position", light.Position);
@@ -632,7 +632,56 @@ public class ShaderProgram
         texture.Uniform(this, name);
         return this;
     }
+    
+    public ShaderProgram UniformTexMaterial(string name, Material material, Texture texture)
+    {
+        UniformMaterial(name, material);
+        texture.Uniform(this, name+".specTex");
+        return this;
+    }
+    
+    public ShaderProgram UniformTexMaterial(string name, Material material, int textureHandle, int textureUnit = 0, 
+        TextureTarget textureTarget = TextureTarget.Texture2D)
+    {
+        UniformMaterial(name, material);
         
+        GL.ActiveTexture((TextureUnit) (textureUnit + (int)TextureUnit.Texture0));
+        GL.BindTexture(textureTarget,textureHandle);
+
+        GL.UseProgram((int)this);
+        GL.Uniform1(GL.GetUniformLocation((int)this,name+".baseTex"),textureUnit);
+        return this;
+    }
+    
+    public ShaderProgram UniformSpecTexMaterial(string name, Material material, Texture texture, Texture textureSpecular)
+    {
+        UniformMaterial(name, material);
+        texture.Uniform(this, name+".baseTex");
+        textureSpecular.Uniform(this, name+".specTex");
+        return this;
+    }
+    
+    public ShaderProgram UniformSpecTexMaterial(string name, Material material, int baseTexHandle, int specTexHandle, int baseTexUnit = 0, int specTexUnit = 1,
+        TextureTarget baseTexTarget = TextureTarget.Texture2D, TextureTarget specTexTarget = TextureTarget.Texture2D)
+    {
+        UniformMaterial(name, material);
+        
+        GL.ActiveTexture((TextureUnit) (baseTexUnit + (int)TextureUnit.Texture0));
+        GL.BindTexture(baseTexTarget,baseTexHandle);
+
+        GL.UseProgram((int)this);
+        GL.Uniform1(GL.GetUniformLocation((int)this,name+".baseTex"),baseTexUnit);
+
+        
+        GL.ActiveTexture((TextureUnit) (specTexUnit + (int)TextureUnit.Texture0));
+        GL.BindTexture(specTexTarget,specTexHandle);
+
+        GL.UseProgram((int)this);
+        GL.Uniform1(GL.GetUniformLocation((int)this,name+".specTex"),specTexUnit);
+
+        return this;
+    }
+
     #endregion
         
     #endregion
@@ -702,7 +751,6 @@ public class ShaderProgram
     }
     
     #endregion
-        
-        
-        
+
+
 }
