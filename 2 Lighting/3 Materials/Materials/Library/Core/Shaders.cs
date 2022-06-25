@@ -236,11 +236,13 @@ public class ShaderProgram
     /// </summary>
     /// <param name="vertexPath">the path to a glsl vertex shader file</param>
     /// <param name="fragmentPath">the path to a glsl fragment shader file</param>
-    public ShaderProgram(string vertexPath, string fragmentPath) : this()
+    /// <param name="useAutoProjection">enables the automatic calculation of lx_Transform</param>
+    public ShaderProgram(string vertexPath, string fragmentPath,bool useAutoProjection = false) : this()
     {
         LoadShader(vertexPath, ShaderType.VertexShader);
         LoadShader(fragmentPath, ShaderType.FragmentShader);
         Compile();
+        if (useAutoProjection) EnableAutoProjection();
     }
     
     /// <summary>
@@ -621,6 +623,13 @@ public class ShaderProgram
         Uniform3(name + ".ambient", light.Ambient);
         Uniform3(name + ".diffuse", light.Diffuse);
         Uniform3(name + ".specular", light.Specular);
+        return this;
+    }
+    
+    // improve this whole thing pls
+    public ShaderProgram UniformTexture(string name, Texture texture)
+    {
+        texture.Uniform(this, name);
         return this;
     }
         

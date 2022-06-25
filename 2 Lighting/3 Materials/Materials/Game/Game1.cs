@@ -2,7 +2,6 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
-using static Library.Objects;
 
 namespace Materials.Game;
 
@@ -14,28 +13,41 @@ public class Game1 : Library.Game
     private FirstPersonPlayer player;
     private Model cube;
 
-    private Light light;
-    private Material material;
+    private Objects.Light light;
+    private Objects.Material material;
+        
+    private Texture texture;
 
     protected override void Load()
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        shader = new ShaderProgram(ShaderLocation + "vertex.glsl", ShaderLocation + "fragment.glsl")
-            .EnableAutoProjection()
-            .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
-            .Uniform3("lightColour", 1.0f, 1.0f, 1.0f);
+        shader = new ShaderProgram(
+            ShaderLocation + "vertex.glsl", 
+            ShaderLocation + "fragment.glsl",
+            true);
 
         player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
 
+        texture = new Texture("../../../../../../0 Assets/container.jpg");
+            
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
 
-        light = new Light();
-        material = PresetMaterial.Emerald;
-            
-        shader.UniformLight("light", light).UniformMaterial("material", material);
+        light = new Objects.Light()
+            .SetAmbient(1f,1f,1f)
+            .SetDiffuse(2f,1f,1f)
+            .SetSpecular(2f,0f,0f);
+
+        material = PresetMaterial.WhitePlastic;
+
+        shader
+            .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
+            .Uniform3("lightColour", 1.0f, 0.0f, 0.0f)
+            .UniformLight("light", light)
+            .UniformMaterial("material", material)
+            .UniformTexture("boxTexture", texture);
 
     }
         
@@ -59,7 +71,7 @@ public class Game1 : Library.Game
             
             
         shader.SetActive(ShaderType.FragmentShader, "lightShader");
-        cube.Transform(light.Position, Vector3.Zero, 0.1f);
+        cube.Transform(light.Position, Vector3.Zero, 0.2f);
         cube.Draw();
 
         shader.SetActive(ShaderType.FragmentShader, "shader");
@@ -76,6 +88,7 @@ public class Game1 : Library.Game
         GL.UseProgram(0);
     
         cube.Delete();
+        texture.Delete();
         shader.Delete();
     }
     
