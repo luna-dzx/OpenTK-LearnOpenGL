@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 
-namespace Lighting_Maps.Game;
+namespace Light_Casters.Game;
 
 public class Game1 : Library.Game
 {

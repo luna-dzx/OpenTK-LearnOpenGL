@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Lighting_Maps.Game;
+namespace Light_Casters.Game;
 
 internal static class Program
 {
