@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using static Library.Objects;
@@ -22,6 +23,9 @@ public class Shader
         ID = GL.CreateShader(type);
         GL.ShaderSource(ID,text);
         GL.CompileShader(ID);
+        
+        ErrorCode error = GL.GetError();
+        if (error != ErrorCode.NoError) throw new Exception(error.ToString());
         
         string infoLog = GL.GetShaderInfoLog(ID);
         if (!string.IsNullOrEmpty(infoLog)) throw new Exception(infoLog);
@@ -301,10 +305,17 @@ public class ShaderProgram
     public void LoadShaders(int[] shaderIDs)
     {
         // attach to program
-        foreach (int id in shaderIDs) 
-        { GL.AttachShader(handle,id); }
+        foreach (int id in shaderIDs)
+        {
+            GL.AttachShader(handle,id);
+            Console.WriteLine("linked "+id);
+        }
         
         GL.LinkProgram(handle);
+        
+        
+        string error = GL.GetProgramInfoLog(handle);
+        if (error!="") throw new Exception(error);
         
         // delete from memory
         foreach (int id in shaderIDs)
@@ -355,19 +366,18 @@ public class ShaderProgram
     /// <param name="program">the shader program to cast</param>
     /// <returns>the OpenGL shader program handle</returns>
     public static explicit operator int(ShaderProgram program) => program.GetHandle();
-
     /// <summary>
     /// Retrieve the binding of a uniform variable in the shader program
     /// </summary>
     /// <param name="name">the uniform variable's name in glsl</param>
     /// <returns>uniform location of the variable</returns>
-    /// <exception cref="Exception">OpenGL exception</exception>
+    /// <exception cref="Exception">OpenGL exception</exception>s
     public int GetUniform(string name)
     {
         this.Use();
         if (!uniforms.ContainsKey(name))uniforms.Add(name,GL.GetUniformLocation(handle,name));
-        ErrorCode error = GL.GetError();
-        if (error != ErrorCode.NoError) throw new Exception(error.ToString());
+        //ErrorCode error = GL.GetError();
+        //if (error != ErrorCode.NoError) throw new Exception(error.ToString());
         return uniforms[name];
     }
 
@@ -616,34 +626,24 @@ public class ShaderProgram
         Uniform1(name + ".shininess", material.Shininess);
         return this;
     }
-
-    public ShaderProgram UniformLight(string name, Light light)
-    {
-        Uniform3(name + ".position", light.Position);
-        Uniform3(name + ".ambient", light.Ambient);
-        Uniform3(name + ".diffuse", light.Diffuse);
-        Uniform3(name + ".specular", light.Specular);
-        return this;
-    }
     
-    // improve this whole thing pls
-    public ShaderProgram UniformTexture(string name, Texture texture)
+    public ShaderProgram UniformMaterial(string name, Material material, Texture texture)
     {
-        texture.Uniform(this, name);
-        return this;
-    }
-    
-    public ShaderProgram UniformTexMaterial(string name, Material material, Texture texture)
-    {
-        UniformMaterial(name, material);
+        Uniform3(name + ".ambient", material.Ambient);
+        Uniform3(name + ".diffuse", material.Diffuse);
+        Uniform3(name + ".specular", material.Specular);
+        Uniform1(name + ".shininess", material.Shininess);
         texture.Uniform(this, name+".specTex");
         return this;
     }
     
-    public ShaderProgram UniformTexMaterial(string name, Material material, int textureHandle, int textureUnit = 0, 
+    public ShaderProgram UniformMaterial(string name, Material material, int textureHandle, int textureUnit = 0, 
         TextureTarget textureTarget = TextureTarget.Texture2D)
     {
-        UniformMaterial(name, material);
+        Uniform3(name + ".ambient", material.Ambient);
+        Uniform3(name + ".diffuse", material.Diffuse);
+        Uniform3(name + ".specular", material.Specular);
+        Uniform1(name + ".shininess", material.Shininess);
         
         GL.ActiveTexture((TextureUnit) (textureUnit + (int)TextureUnit.Texture0));
         GL.BindTexture(textureTarget,textureHandle);
@@ -653,18 +653,24 @@ public class ShaderProgram
         return this;
     }
     
-    public ShaderProgram UniformSpecTexMaterial(string name, Material material, Texture texture, Texture textureSpecular)
+    public ShaderProgram UniformMaterial(string name, Material material, Texture texture, Texture textureSpecular)
     {
-        UniformMaterial(name, material);
+        Uniform3(name + ".ambient", material.Ambient);
+        Uniform3(name + ".diffuse", material.Diffuse);
+        Uniform3(name + ".specular", material.Specular);
+        Uniform1(name + ".shininess", material.Shininess);
         texture.Uniform(this, name+".baseTex");
         textureSpecular.Uniform(this, name+".specTex");
         return this;
     }
     
-    public ShaderProgram UniformSpecTexMaterial(string name, Material material, int baseTexHandle, int specTexHandle, int baseTexUnit = 0, int specTexUnit = 1,
+    public ShaderProgram UniformMaterial(string name, Material material, int baseTexHandle, int specTexHandle, int baseTexUnit = 0, int specTexUnit = 1,
         TextureTarget baseTexTarget = TextureTarget.Texture2D, TextureTarget specTexTarget = TextureTarget.Texture2D)
     {
-        UniformMaterial(name, material);
+        Uniform3(name + ".ambient", material.Ambient);
+        Uniform3(name + ".diffuse", material.Diffuse);
+        Uniform3(name + ".specular", material.Specular);
+        Uniform1(name + ".shininess", material.Shininess);
         
         GL.ActiveTexture((TextureUnit) (baseTexUnit + (int)TextureUnit.Texture0));
         GL.BindTexture(baseTexTarget,baseTexHandle);
@@ -679,6 +685,27 @@ public class ShaderProgram
         GL.UseProgram((int)this);
         GL.Uniform1(GL.GetUniformLocation((int)this,name+".specTex"),specTexUnit);
 
+        return this;
+    }
+    
+
+    public ShaderProgram UniformLight(string name, Light light)
+    {
+        Uniform3(name + ".position", light.Position);
+        Uniform3(name + ".direction", light.Direction);
+        Uniform1(name + ".cutOff", light.GetCutOff());
+        Uniform1(name + ".outerCutOff", light.GetOuterCutOff());
+        Uniform3(name + ".ambient", light.Ambient);
+        Uniform3(name + ".diffuse", light.Diffuse);
+        Uniform3(name + ".specular", light.Specular);
+        Uniform3(name + ".attenuation", light.Attenuation);
+        return this;
+    }
+
+    // improve this whole thing pls
+    public ShaderProgram UniformTexture(string name, Texture texture)
+    {
+        texture.Uniform(this, name);
         return this;
     }
 

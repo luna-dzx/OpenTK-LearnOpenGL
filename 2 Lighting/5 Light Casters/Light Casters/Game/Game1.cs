@@ -1,4 +1,5 @@
-﻿using Library;
+﻿using System.Runtime.InteropServices;
+using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -7,20 +8,53 @@ namespace Light_Casters.Game;
 
 public class Game1 : Library.Game
 {
-    private const string ShaderLocation = "../../../Game/Shaders/";
-    private ShaderProgram shader;
+    const string ShaderLocation = "../../../Game/Shaders/";
+    ShaderProgram shader;
 
-    private FirstPersonPlayer player;
-    private Model cube;
+    FirstPersonPlayer player;
+    Model cube;
 
-    private Objects.Light light;
-    private Objects.Material material;
+    Objects.Light light;
+    Objects.Material material;
         
-    private Texture texture;
-    private Texture textureSpecular;
+    Texture texture;
+    Texture textureSpecular;
 
+    Matrix4[] cubeTransforms;
+
+    private static void DebugCallback(DebugSource source,
+        DebugType type,
+        int id,
+        DebugSeverity severity,
+        int length,
+        IntPtr message,
+        IntPtr userParam)
+    {
+        string messageString = Marshal.PtrToStringAnsi(message, length);
+
+        Console.WriteLine($"{severity} {type} | {messageString}");
+
+        if (type == DebugType.DebugTypeError)
+        {
+            throw new Exception(messageString);
+        }
+    }
+    
+    private static DebugProc _debugProcCallback = DebugCallback;
+    private static GCHandle _debugProcCallbackHandle;
+    
+    
     protected override void Load()
     {
+        
+        _debugProcCallbackHandle = GCHandle.Alloc(_debugProcCallback);
+
+        GL.DebugMessageCallback(_debugProcCallback, IntPtr.Zero);
+        GL.Enable(EnableCap.DebugOutput);
+        GL.Enable(EnableCap.DebugOutputSynchronous);
+
+
+
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         shader = new ShaderProgram(
@@ -37,19 +71,41 @@ public class Game1 : Library.Game
 
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
 
-        light = new Objects.Light();
+        light = new Objects.Light()
+            //    .SetAttenuation(1,0.09f,0.032f);
+            .SetPosition(0,-4,0)
+            .SetDirection(Vector3.UnitY)
+            .SpotlightMode(MathHelper.DegreesToRadians(20f),MathHelper.DegreesToRadians(25f));
 
-        material = new Objects.Material()
-            .SetAmbient(0.2f)
-            .SetDiffuse(1f)
-            .SetSpecular(1f)
-            .SetShininess(16f);
-        
+        material = PresetMaterial.Silver;
+
         shader
             .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
             .UniformLight("light", light)
-            .UniformSpecTexMaterial("material", material, texture, textureSpecular);
+            .UniformMaterial("material", material, texture, textureSpecular);
 
+        Random random = new Random(1);
+
+        float FloatRand(float lower, float upper)
+        {
+            float diff = upper - lower;
+            return ((float)random.NextDouble() * diff) + lower;
+        }
+
+        Vector3 VecRand(float lower, float upper)
+        {
+            return new Vector3(FloatRand(lower, upper), FloatRand(lower, upper), FloatRand(lower, upper));
+        }
+        
+        cubeTransforms = new Matrix4[16];
+        for (int i = 0; i < 16; i++)
+        {
+            cubeTransforms[i] = Maths.CreateTransformation(
+                VecRand(-6,6),
+                VecRand(-MathF.PI,MathF.PI),
+                Vector3.One
+            );
+        }
 
     }
         
@@ -60,10 +116,11 @@ public class Game1 : Library.Game
     {
         player.Update(args,Window.KeyboardState,GetRelativeMouse());
 
-        light.Position = 4 * (Matrix3.CreateRotationZ(0.05f*angle) * Matrix3.CreateRotationY(0.5f*angle) * Vector3.UnitZ);
-        angle += (float)args.Time;
-        
-        light.UpdatePosition(ref shader, "light");
+        //light.Position = 4 * (Matrix3.CreateRotationZ(0.05f*angle) * Matrix3.CreateRotationY(0.5f*angle) * Vector3.UnitZ);
+        //angle += (float)args.Time;
+
+
+        shader.Uniform3("cameraPos", player.Camera.Position);
     }
 
     protected override void RenderFrame(FrameEventArgs args)
@@ -77,10 +134,13 @@ public class Game1 : Library.Game
         cube.Draw();
 
         shader.SetActive(ShaderType.FragmentShader, "shader");
-        cube.ResetTransform();
-        cube.Draw();
-            
-
+        //cube.ResetTransform();
+        foreach (var transform in cubeTransforms)
+        {
+            cube.UpdateTransformation(transform);
+            cube.Draw();
+        }
+        
         Window.SwapBuffers();
     }
 
@@ -91,6 +151,7 @@ public class Game1 : Library.Game
     
         cube.Delete();
         texture.Delete();
+        textureSpecular.Delete();
         shader.Delete();
     }
     

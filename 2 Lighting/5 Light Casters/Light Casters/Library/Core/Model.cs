@@ -153,9 +153,9 @@ public class Model : VertexArray
     /// <summary>
     /// Load the transformation matrix onto the GPU
     /// </summary>
-    public void UpdateTransformation()
+    public void UpdateTransformation(Matrix4 transformation)
     {
-        GL.UniformMatrix4(uTransform,false,ref transform);
+        GL.UniformMatrix4(uTransform,false,ref transformation);
     }
 
     /// <summary>
@@ -167,10 +167,10 @@ public class Model : VertexArray
     public Model Transform(Vector3 translation, Vector3 rotation, Vector3 scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, scale);
-        UpdateTransformation();
+        UpdateTransformation(transform);
         return this;
     }
-        
+
     /// <summary>
     /// Set a new transformation matrix and load it to the gpu
     /// </summary>
@@ -180,9 +180,11 @@ public class Model : VertexArray
     public Model Transform(Vector3 translation, Vector3 rotation, float scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, new Vector3(scale,scale,scale));
-        UpdateTransformation();
+        UpdateTransformation(transform);
         return this;
     }
+
+
 
     /// <summary>
     /// Multiply the current object's scale by this value and load the model matrix to the gpu
@@ -191,7 +193,7 @@ public class Model : VertexArray
     public void Scale(Vector3 scale)
     {
         transform = Matrix4.CreateScale(scale) * transform;
-        UpdateTransformation();
+        UpdateTransformation(transform);
     }
 
     /// <summary>
@@ -201,7 +203,7 @@ public class Model : VertexArray
     public void Scale(float scale)
     {
         transform = Matrix4.CreateScale(scale,scale,scale) * transform;
-        UpdateTransformation();
+        UpdateTransformation(transform);
     }
 
 
@@ -211,7 +213,7 @@ public class Model : VertexArray
     public Model ResetTransform()
     {
         transform = Matrix4.Identity;
-        UpdateTransformation();
+        UpdateTransformation(transform);
         return this;
     }
 

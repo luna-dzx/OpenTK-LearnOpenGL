@@ -71,7 +71,21 @@ public static class Objects
         public Vector3 Ambient = Vector3.One;
         public Vector3 Diffuse = Vector3.One;
         public Vector3 Specular = Vector3.One;
-
+        public Vector3 Attenuation = Vector3.UnitX;
+        public Vector3 Direction = Vector3.UnitZ;
+        private float cutOff = 1f;
+        private float outerCutOff = 0f;
+        
+        public float GetCutOff() => cutOff;
+        public float GetOuterCutOff() => outerCutOff;
+        
+        public Light PointMode(){cutOff = 1f; return this;}
+        public Light SunMode(){cutOff = 0f; return this;}
+        public Light SpotlightMode(float angle){cutOff = MathF.Cos(angle); outerCutOff = 0; return this;}
+        public Light SpotlightMode(float angle, float outerAngle){cutOff = MathF.Cos(angle);outerCutOff = MathF.Cos(outerAngle); return this;}
+        
+        
+        
         public Light SetPosition(Vector3 position) { Position = position; return this; }
         public Light SetPosition(float x, float y, float z) { Position = new Vector3(x,y,z); return this; }
 
@@ -81,12 +95,23 @@ public static class Objects
             return this;
         }
 
+        public Light SetDirection(Vector3 direction) { Direction = direction; return this; }
+        public Light SetDirection(float x, float y, float z) { Direction = new Vector3(x,y,z); return this; }
+
+        public Light UpdateDirection(ref ShaderProgram shaderProgram, string name)
+        {
+            shaderProgram.Uniform3(name + ".direction", Direction);
+            return this;
+        }
+
         public Light SetAmbient(Vector3 ambient) { Ambient = ambient; return this; }
         public Light SetAmbient(float r, float g, float b) { Ambient = new Vector3(r,g,b); return this; }
         public Light SetDiffuse(Vector3 diffuse) { Diffuse = diffuse; return this; }
         public Light SetDiffuse(float r, float g, float b) { Diffuse = new Vector3(r,g,b); return this; }
         public Light SetSpecular(Vector3 specular) { Specular = specular; return this; }
         public Light SetSpecular(float r, float g, float b) { Specular = new Vector3(r,g,b); return this; }
+        public Light SetAttenuation(Vector3 attenuation) { Attenuation = attenuation; return this; }
+        public Light SetAttenuation(float constant, float linear, float quadratic) { Attenuation = new Vector3(constant,linear,quadratic); return this; }
     }
-    
+
 }

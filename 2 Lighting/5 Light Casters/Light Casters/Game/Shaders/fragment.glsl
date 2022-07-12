@@ -2,13 +2,12 @@
 
 uniform vec3 objectColour;
 
-uniform lx_SpecTexMaterial material;
+uniform lx_Material material;
 uniform lx_Light light;
+uniform vec3 cameraPos;
 
-// view space vectors (where camera position is the origin)
-in vec3 vNormal;
-in vec3 vFragPos;
-in vec3 vLightPos;
+in vec3 normal;
+in vec3 fragPos;
 
 in vec2 texCoords;
 
@@ -16,7 +15,7 @@ in vec2 texCoords;
 
 void main()
 {
-    lx_FragColour = vec4(lx_vPhong(vNormal,vFragPos,vLightPos,texCoords,material,light),1.0);
+    lx_FragColour = vec4(lx_Phong(normal,fragPos,cameraPos,texCoords,texCoords,material,light),1.0);
 }
 
 

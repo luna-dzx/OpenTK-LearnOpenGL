@@ -2,7 +2,7 @@
 uniform mat4 lx_View;
 uniform mat4 lx_Proj;
 uniform int lx_AutoProjection;
-mat4 lx_Transform;
+mat4 lx_Transform = mat4(1.0);
 
 mat3 lx_NormalMatrix()
 {
