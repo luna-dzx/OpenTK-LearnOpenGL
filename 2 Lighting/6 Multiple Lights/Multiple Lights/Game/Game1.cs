@@ -4,7 +4,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 
-namespace Light_Casters.Game;
+namespace Multiple_Lights.Game;
 
 public class Game1 : Library.Game
 {
@@ -15,6 +15,8 @@ public class Game1 : Library.Game
     Model cube;
 
     Objects.Light light;
+    Objects.Light spotLight;
+    Objects.Light sun;
     Objects.Material material;
         
     Texture texture;
@@ -22,39 +24,8 @@ public class Game1 : Library.Game
 
     Matrix4[] cubeTransforms;
 
-    private static void DebugCallback(DebugSource source,
-        DebugType type,
-        int id,
-        DebugSeverity severity,
-        int length,
-        IntPtr message,
-        IntPtr userParam)
-    {
-        string messageString = Marshal.PtrToStringAnsi(message, length);
-
-        Console.WriteLine($"{severity} {type} | {messageString}");
-
-        if (type == DebugType.DebugTypeError)
-        {
-            throw new Exception(messageString);
-        }
-    }
-    
-    private static DebugProc _debugProcCallback = DebugCallback;
-    private static GCHandle _debugProcCallbackHandle;
-    
-    
     protected override void Load()
     {
-        
-        _debugProcCallbackHandle = GCHandle.Alloc(_debugProcCallback);
-
-        GL.DebugMessageCallback(_debugProcCallback, IntPtr.Zero);
-        GL.Enable(EnableCap.DebugOutput);
-        GL.Enable(EnableCap.DebugOutputSynchronous);
-
-
-
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         shader = new ShaderProgram(
@@ -71,42 +42,49 @@ public class Game1 : Library.Game
 
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
 
+        spotLight = new Objects.Light()
+            .SetPosition(0,0,6f)
+            .SetDirection(-Vector3.UnitZ)
+            .SetAmbient(0,0,0)
+            .SetDiffuse(1,1,1)
+            .SetSpecular(1,1,1)
+            .SetAttenuation(1,0.01f,0.01f)
+            .SpotlightMode(MathHelper.DegreesToRadians(12.5f),MathHelper.DegreesToRadians(15f));
+
+        sun = new Objects.Light()
+            .SetDirection(-2,-1,-1)
+            .SetAmbient(0.3f,0.3f,0.3f)
+            .SetDiffuse(0.55f,0.55f,0.55f)
+            .SetSpecular(0.5f,0.5f,0.5f)
+            .SunMode();
+
         light = new Objects.Light()
-            //.SetAttenuation(1,0.09f,0.032f)
-            .SetPosition(0, -4, 0)
-            .PointMode();
-            //.SetDirection(Vector3.UnitY)
-            //.SunMode();
+            .SetPosition(-2f, 3f, -4f);
 
         material = PresetMaterial.Silver;
 
         shader
             .Uniform3("objectColour", 1.0f, 0.5f, 0.31f)
-            .UniformLight("light", light)
+            .UniformLight("lights[0]", sun)
+            .UniformLight("lights[1]", spotLight)
+            .UniformLight("lights[2]", light)
             .UniformMaterial("material", material, texture, textureSpecular);
 
-        Random random = new Random(1);
 
-        float FloatRand(float lower, float upper)
+        cubeTransforms = new []
         {
-            float diff = upper - lower;
-            return ((float)random.NextDouble() * diff) + lower;
-        }
+            Maths.TranslateMatrix( 0.0f,  0.0f,  0.0f),
+            Maths.TranslateMatrix( 2.0f,  5.0f, -15.0f),
+            Maths.TranslateMatrix(-1.5f, -2.2f, -2.5f),
+            Maths.TranslateMatrix(-3.8f, -2.0f, -12.3f),
+            Maths.TranslateMatrix( 2.4f, -0.4f, -3.5f),
+            Maths.TranslateMatrix(-1.7f,  3.0f, -7.5f),
+            Maths.TranslateMatrix( 1.3f, -2.0f, -2.5f),
+            Maths.TranslateMatrix( 1.5f,  2.0f, -2.5f),
+            Maths.TranslateMatrix( 1.6f,  0.2f, -1.5f),
+            Maths.TranslateMatrix(-1.3f,  1.0f, -1.5f)
+        };
 
-        Vector3 VecRand(float lower, float upper)
-        {
-            return new Vector3(FloatRand(lower, upper), FloatRand(lower, upper), FloatRand(lower, upper));
-        }
-        
-        cubeTransforms = new Matrix4[16];
-        for (int i = 0; i < 16; i++)
-        {
-            cubeTransforms[i] = Maths.CreateTransformation(
-                VecRand(-6,6),
-                VecRand(-MathF.PI,MathF.PI),
-                Vector3.One
-            );
-        }
 
     }
         
@@ -131,6 +109,8 @@ public class Game1 : Library.Game
             
             
         shader.SetActive(ShaderType.FragmentShader, "lightShader");
+        cube.Transform(spotLight.Position, Vector3.Zero, 0.2f);
+        cube.Draw();
         cube.Transform(light.Position, Vector3.Zero, 0.2f);
         cube.Draw();
 

@@ -1,7 +1,5 @@
 ﻿#version luma-dx
 
-uniform vec3 objectColour;
-
 uniform lx_Material material;
 uniform lx_Light light;
 uniform vec3 cameraPos;

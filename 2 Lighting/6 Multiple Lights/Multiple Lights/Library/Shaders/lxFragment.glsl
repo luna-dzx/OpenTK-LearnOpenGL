@@ -26,7 +26,7 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     }
     else
     {
-        lightDir = light.direction;
+        lightDir = -light.direction;
     }
     
     float distance = length(lightDir);
@@ -65,8 +65,6 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     ambient  *= attenuation; 
     diffuse  *= attenuation * intensity;
     specular *= attenuation * intensity;
-    
-    return diffuse;
 
     return ambient + diffuse + specular; 
 }
