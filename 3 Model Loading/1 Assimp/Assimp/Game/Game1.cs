@@ -1,5 +1,4 @@
-﻿using System.Runtime.InteropServices;
-using Library;
+﻿using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -16,8 +15,6 @@ public class Game1 : Library.Game
 
     Texture texture;
 
-    Matrix4[] cubeTransforms;
-
     protected override void Load()
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -27,9 +24,9 @@ public class Game1 : Library.Game
             ShaderLocation + "fragment.glsl",
             true);
 
-        player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size);
-            //.SetPosition(new Vector3(0, 0, 3))
-            //.SetDirection(new Vector3(0, 0, -1));
+        player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
+            .SetPosition(new Vector3(0, 0, 3))
+            .SetDirection(new Vector3(0, 0, -1));
 
         texture = new Texture("../../../../../../0 Assets/container2.png",0);
 
