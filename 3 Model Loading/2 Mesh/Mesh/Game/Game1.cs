@@ -1,4 +1,5 @@
-﻿using Library;
+﻿using Assimp;
+using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -34,6 +35,13 @@ public class Game1 : Library.Game
 
         shader.UniformTexture("texture0",texture);
         
+        Scene test;
+        AssimpContext importer = new AssimpContext();
+        //importer.SetConfig(new Assimp.Configs.NormalSmoothingAngleConfig(66.0f));
+        test = importer.ImportFile("../../../../../../0 Assets/backpack/backpack.obj",PostProcessPreset.TargetRealTimeMaximumQuality);
+        
+        Console.WriteLine(test.Meshes.Count);
+
         // attach player functions to window
         Window.UpdateFrame += args => player.Update(args,Window.KeyboardState,GetRelativeMouse());
         Window.Resize += newWin => player.Camera.Resize(newWin.Size);
