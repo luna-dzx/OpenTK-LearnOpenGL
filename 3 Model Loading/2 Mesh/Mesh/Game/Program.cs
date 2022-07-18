@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Assimp.Game;
+namespace MeshProj.Game;
 
 internal static class Program
 {

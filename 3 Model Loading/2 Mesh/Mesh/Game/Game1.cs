@@ -3,7 +3,7 @@ using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 
-namespace Assimp.Game;
+namespace MeshProj.Game;
 
 public class Game1 : Library.Game
 {
