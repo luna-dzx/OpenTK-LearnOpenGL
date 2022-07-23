@@ -1,0 +1,16 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Stencil Testing", "Stencil Testing\Stencil Testing.csproj", "{7AA30AED-859C-4835-A77E-1FC080E6E76F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7AA30AED-859C-4835-A77E-1FC080E6E76F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7AA30AED-859C-4835-A77E-1FC080E6E76F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7AA30AED-859C-4835-A77E-1FC080E6E76F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7AA30AED-859C-4835-A77E-1FC080E6E76F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
