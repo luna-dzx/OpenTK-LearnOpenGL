@@ -163,7 +163,7 @@ public class ShaderProgram
                 lastCharIndex = i-1; break;
             }
 
-            if (line[firstCharIndex] == '[' && line[lastCharIndex] == ']')
+            if (line.Length>0 && line[firstCharIndex] == '[' && line[lastCharIndex] == ']')
             {
 
                 string test = String.ReplaceAll(currentText, "main", "lx_program" + currentId + "_main");

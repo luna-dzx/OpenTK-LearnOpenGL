@@ -16,7 +16,7 @@ internal static class Program
         var gameSettings = GameWindowSettings.Default;
         gameSettings.RenderFrequency = FPS;
         gameSettings.UpdateFrequency = FPS;
-        
+
         var uiSettings = NativeWindowSettings.Default;
         uiSettings.APIVersion = Version.Parse("4.1.0");
         uiSettings.Size = new Vector2i(800,600);
@@ -27,7 +27,7 @@ internal static class Program
         uiSettings.WindowBorder = WindowBorder.Resizable;
         uiSettings.IsEventDriven = false;
         uiSettings.StartFocused = true;
-    
+
         #endregion
 
 

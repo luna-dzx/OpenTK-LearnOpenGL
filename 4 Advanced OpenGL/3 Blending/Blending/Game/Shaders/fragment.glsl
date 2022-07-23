@@ -1,7 +1,10 @@
 ﻿#version luma-dx
 
 uniform sampler2D floorTexture;
-uniform sampler2D cubeTexture;
+uniform sampler2D grassTexture;
+uniform sampler2D glassTexture;
+
+uniform vec3 filterColour;
 
 in vec2 texCoords;
 
@@ -14,16 +17,27 @@ void main()
 }
 
 
-[cube]
+[grass]
 
 void main()
 {
-    lx_FragColour = texture(cubeTexture,texCoords);
+    vec4 colour = texture(grassTexture,texCoords);
+    
+    if (colour.a < 0.1) discard;
+    
+    lx_FragColour = colour;
 }
 
-[flatColour]
+[glass]
 
 void main()
 {
-    lx_FragColour = vec4(0.04, 0.28, 0.26, 1.0);
+    vec4 colour = texture(glassTexture,texCoords);
+    
+    if (colour.r > 0.8)
+    {
+        colour = vec4(filterColour,colour.a);
+    }
+    
+    lx_FragColour = colour;
 }
