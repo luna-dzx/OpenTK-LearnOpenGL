@@ -6,7 +6,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using TextureWrapMode = OpenTK.Graphics.OpenGL4.TextureWrapMode;
 
-namespace Stencil_Testing.Game;
+namespace Blending.Game;
 
 public class Game1 : Library.Game
 {
@@ -84,13 +84,8 @@ public class Game1 : Library.Game
         square.Transform(new Vector3(0f,0f,2f), Vector3.Zero, 1f);
         shader.Uniform3("filterColour", 0f, 1f, 0f);
         square.Draw();
-        
 
         
-        
-        
-
-
         Window.SwapBuffers();
     }
 

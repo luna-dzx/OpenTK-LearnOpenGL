@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Blending.Game;
+namespace Face_Culling.Game;
 
 internal static class Program
 {
