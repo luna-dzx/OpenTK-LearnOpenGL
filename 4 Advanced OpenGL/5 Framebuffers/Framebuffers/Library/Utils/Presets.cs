@@ -179,7 +179,6 @@ public static class PresetMesh
     (
         vertices: new float[]
         {
-             
             -1, -1, 0,
              1, -1, 0, 
             -1,  1, 0,
@@ -187,7 +186,6 @@ public static class PresetMesh
             1, -1, 0, 
              1,  1, 0,
             -1,  1, 0,
-             
         },
 
         texCoords: new float[]

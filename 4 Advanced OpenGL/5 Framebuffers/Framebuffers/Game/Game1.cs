@@ -37,7 +37,7 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
 
-        texture = new Texture("../../../../../../0 Assets/marble.jpg",0);
+        texture = new Texture("../../../../../../0 Assets/awesomeface.png",0);
         
 
         shader.UniformTexture("texture0", texture);
@@ -51,10 +51,12 @@ public class Game1 : Library.Game
         fboTexture = GL.GenTexture();
         GL.BindTexture(TextureTarget.Texture2D,fboTexture);
         
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgb,300,300,0,PixelFormat.Rgb,PixelType.UnsignedByte,IntPtr.Zero);
+        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgb,800,600,0,PixelFormat.Rgb,PixelType.UnsignedByte,IntPtr.Zero);
         
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Linear);
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Linear);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
         
         GL.BindTexture(TextureTarget.Texture2D,0);
         
@@ -69,7 +71,7 @@ public class Game1 : Library.Game
 
         renderBufferHandle = GL.GenRenderbuffer();
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer,renderBufferHandle);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer,RenderbufferStorage.Depth24Stencil8,300,300);
+        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer,RenderbufferStorage.Depth24Stencil8,800,600);
         GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer,0);
         
         GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,RenderbufferTarget.Renderbuffer,renderBufferHandle);
@@ -95,12 +97,8 @@ public class Game1 : Library.Game
         GL.Enable(EnableCap.CullFace);
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,fboHandle);
-        
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        
-        GL.Viewport(0,0,300,300);
-        
+
         GL.Enable(EnableCap.DepthTest);
 
         texture.Use();
@@ -111,15 +109,13 @@ public class Game1 : Library.Game
         cube.Draw();
         
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
-        GL.ClearColor(1f,1f,1f,1f);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         GL.Disable(EnableCap.DepthTest);
-        
-        GL.Viewport(0,0,800,600);
+
         
         GL.BindTexture(TextureTarget.Texture2D,fboTexture);
         
-        shader.SetActive(ShaderType.VertexShader,"scene");
+        shader.SetActive(ShaderType.VertexShader,"quad");
         shader.SetActive(ShaderType.FragmentShader,"quad");
         quad.ResetTransform();
         quad.Draw();
