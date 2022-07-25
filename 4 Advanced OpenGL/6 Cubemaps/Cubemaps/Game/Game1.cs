@@ -14,9 +14,10 @@ public class Game1 : Library.Game
     ShaderProgram shader;
 
     FirstPersonPlayer player;
+    Model backpack;
     Model cube;
-
-    Texture texture;
+    
+    Texture cubeMap;
 
     protected override void Load()
     {
@@ -31,25 +32,53 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
 
-        texture = new Texture("../../../../../../0 Assets/awesomeface.png",0).Use();
-
-        shader.UniformTexture("texture0", texture);
-        cube = new Model(PresetMesh.Cube, shader.DefaultModel);
-        cube.ResetTransform();
         
-        GL.Enable(EnableCap.CullFace);
+        cubeMap = Texture.LoadCubeMap(0,"../../../../../../0 Assets/skybox/",".jpg");
+        
+        shader.UniformTexture("cubemap", cubeMap);
+        
+        backpack = Model.FromFile(
+            "../../../../../../0 Assets/backpack/", "backpack.obj",
+            out var textures,
+            shader.DefaultModel,
+            Array.Empty<TextureType>()
+        );
+        
+        cube = new Model(PresetMesh.Cube, shader.DefaultModel);
+        
+        cube.ResetTransform();
+        backpack.ResetTransform();
+        
         GL.Enable(EnableCap.DepthTest);
 
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(newWin.Size);
-        Window.UpdateFrame += args => player.Update(args,Window.KeyboardState,GetRelativeMouse());
+    }
+
+    protected override void UpdateFrame(FrameEventArgs args)
+    {
+        player.Update(args,Window.KeyboardState,GetRelativeMouse());
+        shader.Uniform3("cameraPos", player.Camera.Position);
     }
 
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        GL.DepthFunc(DepthFunction.Lequal);
+        
+        cubeMap.Use();
 
-        cube.Draw();    
+        GL.Enable(EnableCap.CullFace);
+        shader.SetActive(ShaderType.FragmentShader,"scene");
+        shader.SetActive(ShaderType.VertexShader,"scene");
+        //texture.Use();
+        backpack.Draw();
+        
+        GL.Disable(EnableCap.CullFace);
+        shader.SetActive(ShaderType.FragmentShader,"cubemap");
+        shader.SetActive(ShaderType.VertexShader,"cubemap");
+        
+        cube.Draw();
         
         Window.SwapBuffers();
     }
@@ -59,7 +88,9 @@ public class Game1 : Library.Game
         GL.BindVertexArray(0);
         GL.UseProgram(0);
     
+        backpack.Delete();
         cube.Delete();
+        
         shader.Delete();
     }
 }

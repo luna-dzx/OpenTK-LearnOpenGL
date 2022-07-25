@@ -37,14 +37,44 @@ public class Texture
         LoadFile(path,flipOnLoad);
     }
 
+
+    public static Texture LoadCubeMap(int textureUnit, string filePath, string fileExtension)
+    {
+        return new Texture(textureUnit,TextureTarget.TextureCubeMap)
+                .LoadFile(filePath+"right"+fileExtension,TextureTarget.TextureCubeMapPositiveX,false)
+                .LoadFile(filePath+"left"+fileExtension,TextureTarget.TextureCubeMapNegativeX,false)
+                .LoadFile(filePath+"top"+fileExtension,TextureTarget.TextureCubeMapPositiveY,false)
+                .LoadFile(filePath+"bottom"+fileExtension,TextureTarget.TextureCubeMapNegativeY,false)
+                .LoadFile(filePath+"back"+fileExtension,TextureTarget.TextureCubeMapNegativeZ,false)
+                .LoadFile(filePath+"front"+fileExtension,TextureTarget.TextureCubeMapPositiveZ,false)
+                
+                .MagFilter(TextureMagFilter.Linear)
+                .MinFilter(TextureMinFilter.Linear)
+                .Wrapping(TextureParameterName.TextureWrapS,TextureWrapMode.ClampToEdge)
+                .Wrapping(TextureParameterName.TextureWrapT,TextureWrapMode.ClampToEdge)
+                .Wrapping(TextureParameterName.TextureWrapR,TextureWrapMode.ClampToEdge)
+            ;
+    }
+    
+
     public Texture LoadFile(string path, bool flipOnLoad = true)
     {
         StbImage.stbi_set_flip_vertically_on_load((flipOnLoad)?1:0);
         this.Use();
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
+        GL.TexImage2D(target,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
         GL.GenerateMipmap((GenerateMipmapTarget)target);
+        return this;
+    }
+    
+    public Texture LoadFile(string path, TextureTarget textureTarget, bool flipOnLoad = true)
+    {
+        StbImage.stbi_set_flip_vertically_on_load((flipOnLoad)?1:0);
+        this.Use();
+        using var stream = File.OpenRead(path);
+        var image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
+        GL.TexImage2D(textureTarget,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data);
         return this;
     }
 
