@@ -19,10 +19,7 @@ public class Game1 : Library.Game
 
     Texture texture;
 
-    int fboHandle;
-    TextureBuffer fboTexture;
-
-    //int renderBufferHandle;
+    FrameBuffer frameBuffer;
 
     protected override void Load()
     {
@@ -43,37 +40,8 @@ public class Game1 : Library.Game
         shader.UniformTexture("texture0", texture);
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
         quad = new Model(PresetMesh.Square, shader.DefaultModel);
-
-
-        fboHandle = GL.GenFramebuffer();
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,fboHandle);
         
-
-        fboTexture = new TextureBuffer(PixelFormat.Rgb, Window.Size)
-            .Wrapping(TextureWrapMode.ClampToEdge);
-
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.ColorAttachment0,TextureTarget.Texture2D,fboTexture.Handle,0);
-
-        /*
-        TextureBuffer fboDepthTexture = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil, Window.Size,
-            pixelType: PixelType.UnsignedInt248);
-
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,TextureTarget.Texture2D,fboDepthTexture.Handle,0);
-        */
-        
-        RenderBuffer renderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, Window.Size);
-        
-        GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,RenderbufferTarget.Renderbuffer,renderBuffer.Handle);
-
-        var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
-        if (status != FramebufferErrorCode.FramebufferComplete)
-        {
-            Console.WriteLine("Incomplete Fbo -> "+status);
-        }
-        
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
-
-        texture.Use();
+        frameBuffer = new FrameBuffer(PixelFormat.Rgb,Window.Size);
 
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(newWin.Size);
@@ -82,12 +50,11 @@ public class Game1 : Library.Game
 
     protected override void RenderFrame(FrameEventArgs args)
     {
-        
         GL.Enable(EnableCap.CullFace);
-
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,fboHandle);
+        
+        frameBuffer.WriteMode();
+        
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
         GL.Enable(EnableCap.DepthTest);
 
         texture.Use();
@@ -97,12 +64,13 @@ public class Game1 : Library.Game
         cube.ResetTransform();
         cube.Draw();    
         
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+
+        frameBuffer.ReadMode();
+        
         GL.Clear(ClearBufferMask.ColorBufferBit);
         GL.Disable(EnableCap.DepthTest);
-
-
-        fboTexture.Use();
+        
+        frameBuffer.UseTexture();
         
         shader.SetActive(ShaderType.VertexShader,"quad");
         shader.SetActive(ShaderType.FragmentShader,"quad");
@@ -115,14 +83,11 @@ public class Game1 : Library.Game
 
     protected override void Unload()
     {
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
         GL.BindVertexArray(0);
         GL.UseProgram(0);
     
         cube.Delete();
-        
-        GL.DeleteFramebuffer(fboHandle);
-
+        frameBuffer.Delete();
         shader.Delete();
     }
 }
