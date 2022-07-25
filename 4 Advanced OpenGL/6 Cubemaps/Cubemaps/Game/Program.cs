@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Framebuffers.Game;
+namespace Cubemaps.Game;
 
 internal static class Program
 {

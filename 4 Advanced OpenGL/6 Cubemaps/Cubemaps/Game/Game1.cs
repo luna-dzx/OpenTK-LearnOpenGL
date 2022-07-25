@@ -6,7 +6,7 @@ using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 using TextureWrapMode = OpenTK.Graphics.OpenGL4.TextureWrapMode;
 
-namespace Framebuffers.Game;
+namespace Cubemaps.Game;
 
 public class Game1 : Library.Game
 {
@@ -15,11 +15,8 @@ public class Game1 : Library.Game
 
     FirstPersonPlayer player;
     Model cube;
-    Model quad;
 
     Texture texture;
-
-    FrameBuffer frameBuffer;
 
     protected override void Load()
     {
@@ -34,14 +31,14 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0, 0, 3))
             .SetDirection(new Vector3(0, 0, -1));
 
-        texture = new Texture("../../../../../../0 Assets/awesomeface.png",0);
-        
+        texture = new Texture("../../../../../../0 Assets/awesomeface.png",0).Use();
 
         shader.UniformTexture("texture0", texture);
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
-        quad = new Model(PresetMesh.Square, shader.DefaultModel);
+        cube.ResetTransform();
         
-        frameBuffer = new FrameBuffer(PixelFormat.Rgb,Window.Size);
+        GL.Enable(EnableCap.CullFace);
+        GL.Enable(EnableCap.DepthTest);
 
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(newWin.Size);
@@ -50,34 +47,10 @@ public class Game1 : Library.Game
 
     protected override void RenderFrame(FrameEventArgs args)
     {
-        GL.Enable(EnableCap.CullFace);
-        
-        frameBuffer.WriteMode();
-        
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        GL.Enable(EnableCap.DepthTest);
 
-        texture.Use();
-        
-        shader.SetActive(ShaderType.VertexShader,"scene");
-        shader.SetActive(ShaderType.FragmentShader,"scene");
-        cube.ResetTransform();
         cube.Draw();    
         
-
-        frameBuffer.ReadMode();
-        
-        GL.Clear(ClearBufferMask.ColorBufferBit);
-        GL.Disable(EnableCap.DepthTest);
-        
-        frameBuffer.UseTexture();
-        
-        shader.SetActive(ShaderType.VertexShader,"quad");
-        shader.SetActive(ShaderType.FragmentShader,"quad");
-        quad.ResetTransform();
-        quad.Draw();
-        
-
         Window.SwapBuffers();
     }
 
@@ -87,7 +60,6 @@ public class Game1 : Library.Game
         GL.UseProgram(0);
     
         cube.Delete();
-        frameBuffer.Delete();
         shader.Delete();
     }
 }
