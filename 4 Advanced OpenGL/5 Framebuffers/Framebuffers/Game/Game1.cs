@@ -20,9 +20,9 @@ public class Game1 : Library.Game
     Texture texture;
 
     int fboHandle;
-    int fboTexture;
+    TextureBuffer fboTexture;
 
-    int renderBufferHandle;
+    //int renderBufferHandle;
 
     protected override void Load()
     {
@@ -47,34 +47,23 @@ public class Game1 : Library.Game
 
         fboHandle = GL.GenFramebuffer();
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,fboHandle);
+        
 
-        fboTexture = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D,fboTexture);
-        
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgb,800,600,0,PixelFormat.Rgb,PixelType.UnsignedByte,IntPtr.Zero);
-        
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Linear);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)TextureWrapMode.ClampToEdge);
-        GL.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)TextureWrapMode.ClampToEdge);
-        
-        GL.BindTexture(TextureTarget.Texture2D,0);
-        
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.ColorAttachment0,TextureTarget.Texture2D,fboTexture,0);
+        fboTexture = new TextureBuffer(PixelFormat.Rgb, Window.Size)
+            .Wrapping(TextureWrapMode.ClampToEdge);
+
+        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.ColorAttachment0,TextureTarget.Texture2D,fboTexture.Handle,0);
 
         /*
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Depth24Stencil8,800,600,0,
-            PixelFormat.DepthStencil,PixelType.UnsignedInt248,IntPtr.Zero);
-        
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,TextureTarget.Texture2D,fboTexture,0);
-        */
+        TextureBuffer fboDepthTexture = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil, Window.Size,
+            pixelType: PixelType.UnsignedInt248);
 
-        renderBufferHandle = GL.GenRenderbuffer();
-        GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer,renderBufferHandle);
-        GL.RenderbufferStorage(RenderbufferTarget.Renderbuffer,RenderbufferStorage.Depth24Stencil8,800,600);
-        GL.BindRenderbuffer(RenderbufferTarget.Renderbuffer,0);
+        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,TextureTarget.Texture2D,fboDepthTexture.Handle,0);
+        */
         
-        GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,RenderbufferTarget.Renderbuffer,renderBufferHandle);
+        RenderBuffer renderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, Window.Size);
+        
+        GL.FramebufferRenderbuffer(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,RenderbufferTarget.Renderbuffer,renderBuffer.Handle);
 
         var status = GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
         if (status != FramebufferErrorCode.FramebufferComplete)
@@ -106,14 +95,14 @@ public class Game1 : Library.Game
         shader.SetActive(ShaderType.VertexShader,"scene");
         shader.SetActive(ShaderType.FragmentShader,"scene");
         cube.ResetTransform();
-        cube.Draw();
+        cube.Draw();    
         
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
         GL.Clear(ClearBufferMask.ColorBufferBit);
         GL.Disable(EnableCap.DepthTest);
 
-        
-        GL.BindTexture(TextureTarget.Texture2D,fboTexture);
+
+        fboTexture.Use();
         
         shader.SetActive(ShaderType.VertexShader,"quad");
         shader.SetActive(ShaderType.FragmentShader,"quad");

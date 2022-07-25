@@ -1,5 +1,6 @@
 ﻿using System.IO;
 using OpenTK.Graphics.OpenGL4;
+using OpenTK.Mathematics;
 using StbImageSharp;
 
 namespace Library;
@@ -83,6 +84,18 @@ public class Texture
     public Texture Wrapping(TextureParameterName paramName, TextureWrapMode wrapMode) { this.Use(); GL.TexParameter(target, paramName, (int)wrapMode); return this; }
 
     /// <summary>
+    /// Set parameters for how textures handle texture coordinates when they lie outside of the range of 0->1 (for specifically x and y wrapping)
+    /// </summary>
+    /// <param name="wrapMode">how to wrap the texture when texture coordinates lie outside of the range of 0->1</param>
+    public Texture Wrapping(TextureWrapMode wrapMode)
+    {
+        Wrapping(TextureParameterName.TextureWrapS,wrapMode);
+        Wrapping(TextureParameterName.TextureWrapT,wrapMode);
+        return this;
+    }
+    
+    
+    /// <summary>
     /// Set parameters for how textures are displayed which take up less pixels on screen than the number of pixels in the texture image
     /// </summary>
     /// <param name="filter">the filter for how surrounding pixels should be sampled (if at all)</param>
@@ -123,5 +136,125 @@ public class Texture
     /// <param name="texture">the texture who's handle you are getting from the cast</param>
     /// <returns>texture handle</returns>
     public static explicit operator int(Texture texture) => texture.GetHandle();
+
+}
+
+/// <summary>
+/// Textures which the CPU can read from, but doesn't write to
+/// </summary>
+public class TextureBuffer
+{
+    public readonly int Handle;
+    public readonly PixelFormat Format;
+    public readonly PixelInternalFormat InternalFormat;
+    public readonly TextureTarget Target;
+    public readonly PixelType PixelType;
+    public readonly Vector2i Size;
+
+    public TextureBuffer(PixelInternalFormat internalFormat, PixelFormat format, (int,int) size,
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0, int border = 0)
+    {
+        (Size.X, Size.Y) = size;
+        
+        Handle = GL.GenTexture();
+        Format = format;
+        Target = target;
+        PixelType = pixelType;
+        InternalFormat = internalFormat;
+        Format = format;
+
+        this.Use();
+        
+        GL.TexImage2D(Target,mipmap,InternalFormat,Size.X,Size.Y,border,Format,PixelType,IntPtr.Zero);
+        MinFilter(TextureMinFilter.Linear);
+        
+        GL.BindTexture(Target,0);
+        
+    }
+
+    public TextureBuffer(PixelInternalFormat internalFormat, PixelFormat format, Vector2i size,
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0,
+        int border = 0) :
+        this(internalFormat, format, (size.X,size.Y),target,pixelType,mipmap,border) { }
+    public TextureBuffer(PixelFormat format, Vector2i size,
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0,
+        int border = 0) :
+        this((PixelInternalFormat)format, format, (size.X,size.Y),target,pixelType,mipmap,border) { }
+
+    public static explicit operator int(TextureBuffer textureBuffer) => textureBuffer.Handle;
+
+    public TextureBuffer Use() { GL.BindTexture(Target,Handle); return this; }
+    
+    
+    
+    // have to repeat these instead of using inheritance to allow for interfacing
+    
+    /// <summary>
+    /// Set parameters for how textures handle texture coordinates when they lie outside of the range of 0->1
+    /// </summary>
+    /// <param name="paramName">set wrapping for x,y,z components of the texture separately</param>
+    /// <param name="wrapMode">how to wrap the texture when texture coordinates lie outside of the range of 0->1</param>
+    public TextureBuffer Wrapping(TextureParameterName paramName, TextureWrapMode wrapMode) { this.Use(); GL.TexParameter(Target, paramName, (int)wrapMode); return this; }
+
+    /// <summary>
+    /// Set parameters for how textures handle texture coordinates when they lie outside of the range of 0->1 (for specifically x and y wrapping)
+    /// </summary>
+    /// <param name="wrapMode">how to wrap the texture when texture coordinates lie outside of the range of 0->1</param>
+    public TextureBuffer Wrapping(TextureWrapMode wrapMode)
+    {
+        Wrapping(TextureParameterName.TextureWrapS,wrapMode);
+        Wrapping(TextureParameterName.TextureWrapT,wrapMode);
+        return this;
+    }
+
+    /// <summary>
+    /// Set parameters for how textures are displayed which take up less pixels on screen than the number of pixels in the texture image
+    /// </summary>
+    /// <param name="filter">the filter for how surrounding pixels should be sampled (if at all)</param>
+    public TextureBuffer MinFilter(TextureMinFilter filter) { this.Use(); GL.TexParameter(Target,TextureParameterName.TextureMinFilter,(int)filter); return this; }
+
+    /// <summary>
+    /// Set parameters for how textures are displayed which take up more pixels on screen than the number of pixels in the texture image
+    /// </summary>
+    /// <param name="filter">the filter for how surrounding pixels should be sampled (if at all)</param>
+    public TextureBuffer MagFilter(TextureMagFilter filter) { this.Use(); GL.TexParameter(Target,TextureParameterName.TextureMagFilter,(int)filter); return this; }
+    
+
+}
+
+
+/// <summary>
+/// Textures which the CPU cannot read from
+/// </summary>
+public class RenderBuffer
+{
+    public readonly int Handle;
+    public readonly RenderbufferStorage Format;
+    public readonly RenderbufferTarget Target;
+    public readonly Vector2i Size;
+
+    public RenderBuffer(RenderbufferStorage format, (int,int) size, RenderbufferTarget target = RenderbufferTarget.Renderbuffer)
+    {
+        (Size.X, Size.Y) = size;
+        
+        Handle = GL.GenRenderbuffer();
+        Format = format;
+        Target = target;
+
+        GL.BindRenderbuffer(Target,Handle);
+        GL.RenderbufferStorage(Target,Format,Size.X,Size.Y);
+        GL.BindRenderbuffer(Target,0);
+    }
+
+    public RenderBuffer(RenderbufferStorage internalformat, Vector2i resolution, RenderbufferTarget bufferTarget = RenderbufferTarget.Renderbuffer) : 
+        this(internalformat, (resolution.X, resolution.Y), bufferTarget) { }
+
+    public static explicit operator int(RenderBuffer renderBuffer) => renderBuffer.Handle;
+
+    public RenderBuffer Use()
+    {
+        GL.BindRenderbuffer(Target,Handle);
+        return this;
+    }
 
 }
