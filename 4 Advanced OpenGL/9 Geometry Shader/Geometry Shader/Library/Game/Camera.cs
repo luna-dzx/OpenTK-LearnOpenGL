@@ -23,6 +23,9 @@ public class Camera
     private Matrix4 proj;
     private Matrix4 view;
 
+    public Matrix4 GetProjMatrix() => proj;
+    public Matrix4 GetViewMatrix() => view;
+
     /// <summary>
     /// Create a new camera object for handling 3D projection
     /// </summary>

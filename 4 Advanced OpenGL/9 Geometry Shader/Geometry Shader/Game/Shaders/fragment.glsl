@@ -1,6 +1,10 @@
 ﻿#version luma-dx
 
+uniform sampler2D texture0;
+
+in vec2 texCoords;
+
 void main()
 {
-    lx_FragColour = vec4(0.99,0.31,0.36,1.0);
+    lx_FragColour = texture(texture0,texCoords);
 }

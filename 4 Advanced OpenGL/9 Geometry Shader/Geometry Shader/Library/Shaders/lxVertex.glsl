@@ -1,6 +1,6 @@
-﻿uniform mat4 lx_Model;
-uniform mat4 lx_View;
-uniform mat4 lx_Proj;
+﻿uniform mat4 lx_Model = mat4(1.0);
+uniform mat4 lx_View = mat4(1.0);
+uniform mat4 lx_Proj = mat4(1.0);
 uniform int lx_AutoProjection;
 mat4 lx_Transform = mat4(1.0);
 

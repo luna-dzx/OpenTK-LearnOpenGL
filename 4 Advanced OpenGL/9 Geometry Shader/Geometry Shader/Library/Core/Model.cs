@@ -22,6 +22,8 @@ public class Model : VertexArray
     public float[]? GetNormals => mesh.Normals;
     public int[]? GetIndices => mesh.Indices;
 
+    public Matrix4 GetTransform() => transform;
+
 
     /// <summary>
     /// Create a new model, which contains an empty mesh object and a transformation matrix
