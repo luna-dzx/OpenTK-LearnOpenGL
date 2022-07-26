@@ -35,6 +35,7 @@ public class Model : VertexArray
         mesh = new Objects.Mesh();
         uTransform = modelMatrixBinding;
         renderMode = primitiveType;
+        UpdateTransformation(transform);
     }
 
     /// <summary>

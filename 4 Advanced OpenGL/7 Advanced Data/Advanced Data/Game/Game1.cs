@@ -27,8 +27,6 @@ public class Game1 : Library.Game
             .SetDirection(new Vector3(0, 0, -1));
 
         cube = new Model(PresetMesh.Cube, shader.DefaultModel);
-        
-        cube.ResetTransform();
 
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.CullFace);
