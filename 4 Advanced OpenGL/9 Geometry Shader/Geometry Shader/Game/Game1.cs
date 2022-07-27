@@ -32,36 +32,31 @@ public class Game1 : Library.Game
             .Compile()
             .EnableAutoProjection()
             ;
-        
-        shader.Use();
 
-        // todo: do this a better away to allow for multiple shaders
-        player = new FirstPersonPlayer(shader.DefaultProjection, shader.DefaultView, Window.Size)
+
+        player = new FirstPersonPlayer(Window.Size)
             .SetPosition(new Vector3(0, 0, 3))
-            .SetDirection(new Vector3(0, 0, -1));
-
+            .SetDirection(new Vector3(0, 0, -1))
+            .UpdateProjection(shader).UpdateProjection(normalShader)
+            ;
         
-        normalShader.Use();
-        Matrix4 proj = player.Camera.GetProjMatrix();
-        GL.UniformMatrix4(normalShader.DefaultProjection,false,ref proj);
-
-        shader.Use();
 
         backpack = Model.FromFile(
-            "../../../../../../0 Assets/backpack/", "backpack.obj",
-            out var textures,
-            shader.DefaultModel,
-            new [] { TextureType.Diffuse}
-        );
+                    "../../../../../../0 Assets/backpack/", "backpack.obj",
+                    out var textures,
+                    shader.DefaultModel,
+                    new [] { TextureType.Diffuse}
+                )
+                .Transform(Vector3.UnitX*5f, new Vector3(0.3f,0.2f,0.8f), Vector3.One)
+                .UpdateTransform(shader).UpdateTransform(normalShader)
+            ;
 
-        Console.WriteLine(textures[TextureType.Diffuse].Count);
-        
+
         Texture texture = textures[TextureType.Diffuse][0].Use();
         shader.UniformTexture("texture0", texture);
 
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.CullFace);
-        GL.Enable(EnableCap.ProgramPointSize);
 
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(newWin.Size);
@@ -69,13 +64,9 @@ public class Game1 : Library.Game
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
-        shader.Use();
-        player.Update(args,Window.KeyboardState,GetRelativeMouse());
-        
-        
-        normalShader.Use();
-        Matrix4 view = player.Camera.GetViewMatrix();
-        GL.UniformMatrix4(normalShader.DefaultView,false,ref view);
+        player.Update(args,Window.KeyboardState,GetRelativeMouse())
+            .UpdateView(shader)
+            .UpdateView(normalShader);
     }
 
     protected override void RenderFrame(FrameEventArgs args)
@@ -83,15 +74,10 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         shader.Use();
-
+        shader.SetActive(ShaderType.FragmentShader, "alt");
         backpack.Draw();
-        
-        
+
         normalShader.Use();
-        
-        Matrix4 model = backpack.GetTransform();
-        GL.UniformMatrix4(normalShader.DefaultModel,false,ref model);
-        
         backpack.Draw();
 
         Window.SwapBuffers();

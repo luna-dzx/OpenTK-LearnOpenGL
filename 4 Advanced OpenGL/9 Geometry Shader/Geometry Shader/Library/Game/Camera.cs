@@ -17,8 +17,8 @@ public class Camera
     private readonly Vector3 up = Vector3.UnitY;
 
     // OpenGL
-    private int uProj;
-    private int uView;
+    //private int uProj;
+    //private int uView;
 
     private Matrix4 proj;
     private Matrix4 view;
@@ -29,45 +29,42 @@ public class Camera
     /// <summary>
     /// Create a new camera object for handling 3D projection
     /// </summary>
-    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
-    /// <param name="viewBinding">the uniform location of the view matrix</param>
     /// <param name="aspectRatio">the screen's aspect ratio</param>
     /// <param name="fieldOfView">the camera's field of view</param>
     /// <param name="clipNear">the closest distance to render</param>
     /// <param name="clipFar">the furthest distance to render</param>
-    public Camera(int projectionBinding, int viewBinding, float aspectRatio, float fieldOfView = MathHelper.PiOver3,float clipNear = 0.1f, float clipFar = 100f)
+    public Camera(float aspectRatio, float fieldOfView = MathHelper.PiOver3,float clipNear = 0.1f, float clipFar = 100f)
     {
         aspect = aspectRatio;
         fov = fieldOfView;
         depthNear = clipNear;
         depthFar = clipFar;
     
-        uProj = projectionBinding;
-        uView = viewBinding;
+        //uProj = projectionBinding;
+        //uView = viewBinding;
 
-        UpdateProjection();
-        UpdateView();
+        //UpdateProjection();
+        //UpdateView();
     }
 
     /// <summary>
     /// Create a new camera object for handling 3D projection
     /// </summary>
-    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
-    /// <param name="viewBinding">the uniform location of the view matrix</param>
     /// <param name="windowSize">the screen's size</param>
     /// <param name="fieldOfView">the camera's field of view in radians</param>
     /// <param name="clipNear">the closest distance to render</param>
     /// <param name="clipFar">the furthest distance to render</param>
-    public Camera(int projectionBinding, int viewBinding, Vector2i windowSize, float fieldOfView = MathHelper.PiOver3, float clipNear = 0.1f, float clipFar = 100f):this(projectionBinding,viewBinding,(float)windowSize.X/windowSize.Y,fieldOfView,clipNear,clipFar) { }
+    public Camera(Vector2i windowSize, float fieldOfView = MathHelper.PiOver3, float clipNear = 0.1f, float clipFar = 100f):this((float)windowSize.X/windowSize.Y,fieldOfView,clipNear,clipFar) { }
     
 
     /// <summary>
     /// Create a new perspective projection matrix and load to the uniform projection matrix binding
     /// </summary>
-    public void UpdateProjection()
+    public void UpdateProjection(int programId, int binding)
     {
+        GL.UseProgram(programId);
         proj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, depthNear, depthFar);
-        GL.UniformMatrix4(uProj,false,ref proj);
+        GL.UniformMatrix4(binding,false,ref proj);
     }
 
     /// <summary>
@@ -77,7 +74,6 @@ public class Camera
     public void Resize(float newAspect)
     {
         aspect = newAspect;
-        UpdateProjection();
     }
         
     /// <summary>
@@ -96,7 +92,6 @@ public class Camera
     public void SetFov(float fieldOfView)
     {
         fov = fieldOfView;
-        UpdateProjection();
     }
 
     /// <summary>
@@ -108,17 +103,17 @@ public class Camera
     {
         depthNear = near;
         depthFar = far;
-        UpdateProjection();
     }
 
     /// <summary>
     /// Update the view matrix relative to the camera's current position
     /// </summary>
     /// <param name="flipCamera">if ture, the camera will be upside down</param>
-    public void UpdateView(bool flipCamera = false)
+    public void UpdateView(int programId, int binding, bool flipCamera = false)
     {
+        GL.UseProgram(programId);
         view = Matrix4.LookAt(Position, Position + Direction, ((flipCamera)?-1:1) * up);
-        GL.UniformMatrix4(uView,false,ref view);
+        GL.UniformMatrix4(binding,false,ref view);
     }
 
 }

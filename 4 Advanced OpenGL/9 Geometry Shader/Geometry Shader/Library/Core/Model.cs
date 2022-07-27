@@ -14,7 +14,7 @@ public class Model : VertexArray
 {
     private Objects.Mesh mesh;
 
-    private int uTransform;
+    //private int uTransform;
     private Matrix4 transform = Matrix4.Identity;
 
     public float[]? GetVertices => mesh.Vertices;
@@ -30,11 +30,10 @@ public class Model : VertexArray
     /// </summary>
     /// <param name="modelMatrixBinding">uniform mat4 model glsl binding</param>
     /// <param name="primitiveType">the primitive type to render this vao with (when draw is called)</param>
-    public Model(int modelMatrixBinding = -1)
+    public Model()
     {
         mesh = new Objects.Mesh();
-        uTransform = modelMatrixBinding;
-        UpdateTransformation(transform);
+        //uTransform = modelMatrixBinding;
     }
 
     /// <summary>
@@ -42,10 +41,9 @@ public class Model : VertexArray
     /// </summary>
     /// <param name="vertices">vertex data to load</param>
     /// <param name="vertexBinding">glsl vertex binding to load the vertex data to in the vertex shader</param>
-    /// <param name="modelMatrixBinding">uniform mat4 model glsl binding</param>
     /// <param name="primitiveType">the primitive type to render this vao with (when draw is called)</param>
-    public Model(float[] vertices, int vertexBinding = 0, int modelMatrixBinding = -1, PrimitiveType primitiveType = PrimitiveType.Triangles)
-        :this(modelMatrixBinding)
+    public Model(float[] vertices, int vertexBinding = 0, PrimitiveType primitiveType = PrimitiveType.Triangles)
+        :this()
     {
         LoadVertices(vertexBinding,vertices);
     }
@@ -59,7 +57,7 @@ public class Model : VertexArray
     /// <param name="modelMatrixBinding">uniform mat4 model glsl binding</param>
     /// <param name="primitiveType">the primitive type to render this vao with (when draw is called)</param>
     public Model(float[] vertices, int[] indices, int vertexBinding = 0, int modelMatrixBinding = -1, PrimitiveType primitiveType = PrimitiveType.Triangles)
-        :this(vertices,vertexBinding,modelMatrixBinding,primitiveType)
+        :this(vertices,vertexBinding,primitiveType)
     {
         LoadIndices(indices);
     }
@@ -71,7 +69,7 @@ public class Model : VertexArray
     /// <param name="modelMatrixBinding">uniform mat4 model glsl binding</param>
     /// <param name="primitiveType">the primitive type to render this vao with (when draw is called)</param>
     public Model(Objects.Mesh meshData, int modelMatrixBinding = -1, PrimitiveType primitiveType = PrimitiveType.Triangles)
-        :this(modelMatrixBinding)
+        :this()
     {
         LoadMesh(meshData);
     }
@@ -257,13 +255,27 @@ public class Model : VertexArray
     /// <summary>
     /// Load the transformation matrix onto the GPU
     /// </summary>
-    public void UpdateTransformation(Matrix4 transformation)
+    public Model UpdateTransform(int programId, int binding)
     {
-        GL.UniformMatrix4(uTransform,false,ref transformation);
+        GL.UseProgram(programId);
+        GL.UniformMatrix4(binding,false,ref transform);
+        return this;
+    }
+    public Model UpdateTransform(int programId, string name)
+    {
+        GL.UseProgram(programId);
+        GL.UniformMatrix4(GL.GetUniformLocation(programId,name),false,ref transform);
+        return this;
+    }
+    public Model UpdateTransform(ShaderProgram program)
+    {
+        GL.UseProgram(program.GetHandle());
+        GL.UniformMatrix4(program.DefaultModel,false,ref transform);
+        return this;
     }
 
     /// <summary>
-    /// Set a new transformation matrix and load it to the gpu
+    /// Set a new transformation matrix
     /// </summary>
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
@@ -271,12 +283,11 @@ public class Model : VertexArray
     public Model Transform(Vector3 translation, Vector3 rotation, Vector3 scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, scale);
-        UpdateTransformation(transform);
         return this;
     }
 
     /// <summary>
-    /// Set a new transformation matrix and load it to the gpu
+    /// Set a new transformation matrix
     /// </summary>
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
@@ -284,40 +295,36 @@ public class Model : VertexArray
     public Model Transform(Vector3 translation, Vector3 rotation, float scale)
     {
         transform = Maths.CreateTransformation(translation, rotation, new Vector3(scale,scale,scale));
-        UpdateTransformation(transform);
         return this;
     }
 
 
 
     /// <summary>
-    /// Multiply the current object's scale by this value and load the model matrix to the gpu
+    /// Multiply the current object's scale by this value
     /// </summary>
     /// <param name="scale">scale in x,y and z</param>
     public void Scale(Vector3 scale)
     {
         transform = Matrix4.CreateScale(scale) * transform;
-        UpdateTransformation(transform);
     }
 
     /// <summary>
-    /// Multiply the current object's scale by this value and load the model matrix to the gpu
+    /// Multiply the current object's scale by this value
     /// </summary>
     /// <param name="scale">scale of the overall object in all 3 dimensions</param>
     public void Scale(float scale)
     {
         transform = Matrix4.CreateScale(scale,scale,scale) * transform;
-        UpdateTransformation(transform);
     }
 
 
     /// <summary>
-    /// Sets the transform to default (at origin, no rotation, scale 1) and load the model matrix to the gpu
+    /// Sets the transform to default (at origin, no rotation, scale 1)
     /// </summary>
     public Model ResetTransform()
     {
         transform = Matrix4.Identity;
-        UpdateTransformation(transform);
         return this;
     }
 

@@ -1,7 +1,7 @@
-﻿using System;
-using OpenTK.Mathematics;
+﻿using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
+using OpenTK.Graphics.OpenGL4;
 
 namespace Library;
 
@@ -16,25 +16,21 @@ public abstract class Player
     /// <summary>
     /// Create new player and create camera based off window size
     /// </summary>
-    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
-    /// <param name="viewBinding">the uniform location of the view matrix</param>
     /// <param name="windowSize">the screen's size</param>
     /// <param name="fov">the camera's field of view in radians</param>
-    public Player(int projectionBinding, int viewBinding, Vector2i windowSize, float fov = MathHelper.PiOver3)
+    public Player(Vector2i windowSize, float fov = MathHelper.PiOver3)
     {
-        Camera = new Camera(projectionBinding, viewBinding, windowSize, fov);
+        Camera = new Camera(windowSize, fov);
     }    
     
     /// <summary>
     /// Create new player and create camera based off aspect ratio
     /// </summary>
-    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
-    /// <param name="viewBinding">the uniform location of the view matrix</param>
     /// <param name="aspectRatio">the screen's aspect ratio</param>
     /// <param name="fov">the camera's field of view in radians</param>
-    public Player(int projectionBinding, int viewBinding, float aspectRatio, float fov = MathHelper.PiOver3)
+    public Player(float aspectRatio, float fov = MathHelper.PiOver3)
     {
-        Camera = new Camera(projectionBinding, viewBinding, aspectRatio, fov);
+        Camera = new Camera(aspectRatio, fov);
     }    
     
     /// <summary>
@@ -45,19 +41,8 @@ public abstract class Player
     {
         Camera = camera;
     }
-    
-    /// <summary>
-    /// Update the camera's view
-    /// </summary>
-    /// <param name="flipCamera">if ture, the camera will be upside down</param>
-    /// <param name="renderingPaused">setting this to true exclusively updates the player and not the camera</param>
-    protected void Update(bool flipCamera = false, bool renderingPaused = false)
-    {
-        if (!renderingPaused) Camera.UpdateView(flipCamera);
-    }
 
 }
-
 
 
 
@@ -73,14 +58,12 @@ public class FirstPersonPlayer : Player
     /// <summary>
     /// Create first person player with [wasd + space/ctrl] controls
     /// </summary>
-    /// <param name="projectionBinding">the uniform location of the projection matrix</param>
-    /// <param name="viewBinding">the uniform location of the view matrix</param>
     /// <param name="windowSize">the screen's size</param>
     /// <param name="fov">the camera's field of view in radians</param>
     /// <param name="sensitivity">the mouse sensitivity</param>
     /// <param name="speed">player's speed</param>
-    public FirstPersonPlayer(int projectionBinding, int viewBinding, Vector2i windowSize, float fov = MathHelper.PiOver3, float sensitivity = 1/20f, float speed = 5f)
-        : base(projectionBinding,viewBinding,windowSize,fov)
+    public FirstPersonPlayer(Vector2i windowSize, float fov = MathHelper.PiOver3, float sensitivity = 1/20f, float speed = 5f)
+        : base(windowSize,fov)
     {
         Sensitivity = sensitivity;
         Speed = speed;
@@ -115,6 +98,7 @@ public class FirstPersonPlayer : Player
     private float pitch;
 
     private bool capPitch = true;
+    private bool isCameraFlipped = false;
     
     /// <summary>
     /// Move and rotate the player and camera, as well as updating the camera's view
@@ -122,7 +106,7 @@ public class FirstPersonPlayer : Player
     /// <param name="args">args from the window's update function</param>
     /// <param name="keyboardState">the keyboard state to check inputs from</param>
     /// <param name="relativeMousePos">the relative mouse pos from the last call of SetMouseOrigin()</param>
-    public void Update(FrameEventArgs args, KeyboardState keyboardState, Vector2 relativeMousePos)
+    public FirstPersonPlayer Update(FrameEventArgs args, KeyboardState keyboardState, Vector2 relativeMousePos)
     {
         var input = Input.DirectionWASD(keyboardState) * Speed * (float)args.Time;
         yaw += (relativeMousePos.X - lastMousePos.X) * Sensitivity;
@@ -147,8 +131,28 @@ public class FirstPersonPlayer : Player
         Position += Velocity;
         Camera.Position = Position;
 
-        base.Update((Math.Abs(pitch)+90)%360 >= 180);
+        isCameraFlipped = (Math.Abs(pitch) + 90) % 360 >= 180;
+        
         lastMousePos = relativeMousePos;
+
+        return this;
+    }
+
+    
+    /// <summary>
+    /// ... - only for use with single shader programs
+    /// </summary>
+    /// <param name="shaderProgram"></param>
+    /// <param name="args"></param>
+    /// <param name="keyboardState"></param>
+    /// <param name="relativeMousePos"></param>
+    /// <returns></returns>
+    public FirstPersonPlayer Update(ShaderProgram shaderProgram, FrameEventArgs args, KeyboardState keyboardState,
+        Vector2 relativeMousePos)
+    {
+        Update(args, keyboardState, relativeMousePos);
+        UpdateView(shaderProgram);
+        return this;
     }
 
     /// <summary>
@@ -158,6 +162,38 @@ public class FirstPersonPlayer : Player
     {
         get => Camera.Direction;
         set => Camera.Direction=value;
+    }
+    
+    public FirstPersonPlayer UpdateProjection(int programId, int binding)
+    {
+        Camera.UpdateProjection(programId,binding);
+        return this;
+    }
+    public FirstPersonPlayer UpdateProjection(int programId, string name)
+    {
+        Camera.UpdateProjection(programId, GL.GetUniformLocation(programId, name));
+        return this;
+    }
+    public FirstPersonPlayer UpdateProjection(ShaderProgram program)
+    {
+        Camera.UpdateProjection(program.GetHandle(), program.DefaultProjection);
+        return this;
+    }
+    
+    public FirstPersonPlayer UpdateView(int programId, int binding)
+    {
+        Camera.UpdateView(programId,binding,isCameraFlipped);
+        return this;
+    }
+    public FirstPersonPlayer UpdateView(int programId, string name)
+    {
+        Camera.UpdateView(programId, GL.GetUniformLocation(programId, name));
+        return this;
+    }
+    public FirstPersonPlayer UpdateView(ShaderProgram program)
+    {
+        Camera.UpdateView(program.GetHandle(), program.DefaultView);
+        return this;
     }
     
 }
