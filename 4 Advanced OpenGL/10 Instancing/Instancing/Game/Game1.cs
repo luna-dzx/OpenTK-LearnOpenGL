@@ -1,5 +1,4 @@
-﻿using Assimp;
-using Library;
+﻿using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -22,9 +21,31 @@ public class Game1 : Library.Game
 
     Objects.Light light;
     Objects.Material material;
+    
+    Matrix4[] asteroidMatrices = new Matrix4[50000];
 
     protected override void Load()
     {
+        // generate asteroid position, rotation, scales
+        Random r = new Random(1);
+        float dist = 130f;
+        float posVar = 50f;
+        float vertPosVar = 0.2f;
+        float scaleVar = 0.2f;
+        float baseScale = 0.3f;
+        
+        for (int i = 0; i < 50000; i++)
+        {
+            var pos = (new Vector3(r.NextSingle()*2 -1, 0f, r.NextSingle()*2 -1).Normalized()+ Vector3.UnitY * (r.NextSingle() * vertPosVar - vertPosVar/2f)).Normalized() 
+                      * (dist + (r.NextSingle() * posVar - posVar/2f))
+                ;
+            var rot = new Vector3(r.NextSingle() * MathF.PI*2, r.NextSingle() * MathF.PI*2, r.NextSingle() * MathF.PI*2);
+            var scale = baseScale + (r.NextSingle() * scaleVar - scaleVar/2f);
+            asteroidMatrices[i] = Maths.CreateTransformation(pos, rot, new Vector3(scale,scale,scale));
+        }
+        
+        
+        
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
         shader = new ShaderProgram(
@@ -52,68 +73,12 @@ public class Game1 : Library.Game
 
         shader.UniformLight("light",light);
 
-        var asteroidMesh = Model.FromFile(
-            "../../../../../../0 Assets/rock/", "rock.obj",
-            out _,
-            Array.Empty<TextureType>()
-        );
-
-        asteroid = new Model();
-
-        Matrix4[] modelMatrices = new Matrix4[50000];
-        Random r = new Random(1);
-        float dist = 130f;
-        float posVar = 50f;
-        float vertPosVar = 0.2f;
-        float scaleVar = 0.2f;
-        float baseScale = 0.3f;
+        asteroid = Model.FromFile("../../../../../../0 Assets/rock/", "rock.obj", out _);
         
-        for (int i = 0; i < 50000; i++)
-        {
-            var pos = (new Vector3(r.NextSingle()*2 -1, 0f, r.NextSingle()*2 -1).Normalized()+ Vector3.UnitY * (r.NextSingle() * vertPosVar - vertPosVar/2f)).Normalized() 
-                      * (dist + (r.NextSingle() * posVar - posVar/2f))
-                      ;
-            var rot = new Vector3(r.NextSingle() * MathF.PI*2, r.NextSingle() * MathF.PI*2, r.NextSingle() * MathF.PI*2);
-            var scale = baseScale + (r.NextSingle() * scaleVar - scaleVar/2f);
-            modelMatrices[i] = Maths.CreateTransformation(pos, rot, new Vector3(scale,scale,scale));
-        }
-
-        asteroid.StoreData(modelMatrices, BufferTarget.ArrayBuffer);
-        GL.BindVertexArray(asteroid.GetHandle());
-
-        int vec4size = 4*sizeof(float);
+        asteroid.LoadMatrix(3,asteroidMatrices,4,4);
         
-        GL.EnableVertexAttribArray(3);
-        GL.VertexAttribPointer(3,4,VertexAttribPointerType.Float,false,4*vec4size,IntPtr.Zero);        
-        GL.EnableVertexAttribArray(4);
-        GL.VertexAttribPointer(4,4,VertexAttribPointerType.Float,false,4*vec4size,(IntPtr) vec4size);        
-        GL.EnableVertexAttribArray(5);
-        GL.VertexAttribPointer(5,4,VertexAttribPointerType.Float,false,4*vec4size,(IntPtr) (2 * vec4size));        
-        GL.EnableVertexAttribArray(6);
-        GL.VertexAttribPointer(6,4,VertexAttribPointerType.Float,false,4*vec4size,(IntPtr) (3 * vec4size));
-        
-        GL.VertexAttribDivisor(3,1);
-        GL.VertexAttribDivisor(4,1);
-        GL.VertexAttribDivisor(5,1);
-        GL.VertexAttribDivisor(6,1);
-        
-        asteroid.Add(0, asteroidMesh.Vertices);
-        asteroid.Add(1, asteroidMesh.TexCoords, BufferTarget.ArrayBuffer, 2, 2);
-        asteroid.Add(2, asteroidMesh.Normals);
-        
-
-        asteroid.StoreData(asteroidMesh.Indices, BufferTarget.ElementArrayBuffer);
-
-        asteroid.SetMesh(asteroidMesh);
-
-        
-        planet = new Model(Model.FromFile(
-                "../../../../../../0 Assets/planet/", "planet.obj",
-                out _,
-                Array.Empty<TextureType>()
-            ))
-        .Scale(5f)
-            ;
+        planet = Model.FromFile("../../../../../../0 Assets/planet/", "planet.obj", out _)
+            .Scale(5f);
 
         cube = new Model(PresetMesh.Cube);
 

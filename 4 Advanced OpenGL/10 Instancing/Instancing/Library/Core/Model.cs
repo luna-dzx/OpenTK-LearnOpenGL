@@ -75,7 +75,7 @@ public class Model : VertexArray
 
 
 
-    public static Objects.Mesh FromFile(
+    public static Model FromFile(
         string directory,
         string fileName,
         out Dictionary<TextureType,List<Texture>> textures,
@@ -96,39 +96,41 @@ public class Model : VertexArray
 
         textures = new();
 
-        // load all textures of each type from all materials (yeah idk why the structure has to be this convoluted it's annoying)
-        int offset = 0;
-        foreach (TextureType type in Enum.GetValues(typeof(TextureType)))
+        if (filters != null)
         {
-            // filter out certain texture types because images take a while to load
-            if (filters != null && !filters.Contains(type)) continue;
-
-            foreach (var material in scene.Materials)
+            // load all textures of each type from all materials (yeah idk why the structure has to be this convoluted it's annoying)
+            int offset = 0;
+            foreach (TextureType type in Enum.GetValues(typeof(TextureType)))
             {
-                List<Texture> currentTextures = new List<Texture>();
-        
-                for (int j = 0; j < material.GetMaterialTextureCount(type); j++)
+                // filter out certain texture types because images take a while to load
+                if (!filters.Contains(type)) continue;
+
+                foreach (var material in scene.Materials)
                 {
-                    material.GetMaterialTexture(type, j, out var slot);
-                    string path = directory + slot.FilePath;
-                    var texture = new Texture(path, (offset + slot.TextureIndex));
-                    currentTextures.Add(texture);
+                    List<Texture> currentTextures = new List<Texture>();
+        
+                    for (int j = 0; j < material.GetMaterialTextureCount(type); j++)
+                    {
+                        material.GetMaterialTexture(type, j, out var slot);
+                        string path = directory + slot.FilePath;
+                        var texture = new Texture(path, (offset + slot.TextureIndex));
+                        currentTextures.Add(texture);
+                    }
+
+                    offset += currentTextures.Count;
+                    if (!textures.ContainsKey(type))
+                    {
+                        textures.Add(type,currentTextures);
+                    }
+                    else
+                    {
+                        textures[type] = currentTextures;
+                    }
                 }
 
-                offset += currentTextures.Count;
-                if (!textures.ContainsKey(type))
-                {
-                    textures.Add(type,currentTextures);
-                }
-                else
-                {
-                    textures[type] = currentTextures;
-                }
             }
-
         }
-        
-        
+
         var vertices = new float[vertexCount * 3];
         var normals = new float[vertexCount * 3];
         var texCoords = new float[vertexCount * 2];
@@ -176,7 +178,7 @@ public class Model : VertexArray
             normals: normals
         );
 
-        return finalMesh; //return new Model(finalMesh);
+        return new Model(finalMesh);
 
     }
     
@@ -189,10 +191,10 @@ public class Model : VertexArray
     /// <returns>current object for ease of use</returns>
     public Model LoadMesh(Objects.Mesh meshData)
     {
-        if (meshData.Vertices != null) Add(meshData.VertexBinding, meshData.Vertices);
-        if (meshData.TexCoords != null) Add(meshData.TexCoordBinding, meshData.TexCoords, BufferTarget.ArrayBuffer, 2, 2);
-        if (meshData.Normals != null) Add(meshData.NormalBinding, meshData.Normals);
-        if (meshData.Indices != null) StoreData(meshData.Indices, BufferTarget.ElementArrayBuffer);
+        if (meshData.Vertices != null) LoadData(meshData.VertexBinding, meshData.Vertices);
+        if (meshData.TexCoords != null) LoadData(meshData.TexCoordBinding, meshData.TexCoords, BufferTarget.ArrayBuffer, -1, 2, 2);
+        if (meshData.Normals != null) LoadData(meshData.NormalBinding, meshData.Normals);
+        if (meshData.Indices != null) CreateBuffer(meshData.Indices, BufferTarget.ElementArrayBuffer);
 
         mesh = meshData;
         return this;
@@ -207,7 +209,7 @@ public class Model : VertexArray
     public Model LoadVertices(int layoutLocation,float[] vertices)
     {
         mesh.Vertices = vertices;
-        Add(layoutLocation, mesh.Vertices);
+        LoadData(layoutLocation, mesh.Vertices);
         return this;
     }
 
@@ -219,7 +221,7 @@ public class Model : VertexArray
     public Model LoadIndices(int[] indices)
     {
         mesh.Indices = indices; 
-        StoreData(mesh.Indices, BufferTarget.ElementArrayBuffer);
+        CreateBuffer(mesh.Indices, BufferTarget.ElementArrayBuffer);
         return this;
     }
 
@@ -232,7 +234,7 @@ public class Model : VertexArray
     public Model LoadTexCoords(int layoutLocation, float[] texCoords)
     {
         mesh.TexCoords = texCoords;
-        Add(layoutLocation, mesh.TexCoords, BufferTarget.ArrayBuffer, 2, 2);
+        LoadData(layoutLocation, mesh.TexCoords, BufferTarget.ArrayBuffer, 2, 2);
         return this;
     }
 
@@ -245,7 +247,7 @@ public class Model : VertexArray
     public Model LoadNormals(int layoutLocation, float[] normals)
     {
         mesh.Normals = normals;
-        Add(layoutLocation, normals);
+        LoadData(layoutLocation, normals);
         return this;
     }
     
