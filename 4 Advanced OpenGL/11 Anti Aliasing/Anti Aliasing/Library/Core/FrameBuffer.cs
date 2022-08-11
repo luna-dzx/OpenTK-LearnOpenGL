@@ -9,7 +9,9 @@ public class FrameBuffer
     
     // optional extras for simplification
     private bool usingPreset = false;
-    private TextureBuffer colourAttachment;
+    public TextureBuffer ColourAttachment;
+    public TextureBuffer DepthStencilAttachment;
+    private bool usingRenderBuffer = true;
 
 
     public FrameBuffer()
@@ -22,18 +24,37 @@ public class FrameBuffer
     /// </summary>
     /// <param name="pixelFormat"></param>
     /// <param name="size"></param>
-    public FrameBuffer(PixelFormat pixelFormat, Vector2i size, TextureTarget target = TextureTarget.Texture2D) : this()
+    public FrameBuffer(Vector2i size, TextureTarget target = TextureTarget.Texture2D, PixelFormat pixelFormat= PixelFormat.Rgb,
+        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4) : this()
     {
         usingPreset = true;
 
-        colourAttachment = new TextureBuffer(pixelFormat, size, target)
-            .Wrapping(TextureWrapMode.ClampToEdge);
+        ColourAttachment = new TextureBuffer(internalFormat, pixelFormat, (size.X,size.Y), target,samples:numSamples);
+
+        if (37120 <= (int)target && (int)target <= 37123) // MSAA
+        {
+            Console.WriteLine("MSAA");
+            
+            AttachTexture(ColourAttachment, FramebufferAttachment.ColorAttachment0);
+
+            DepthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil,
+                (size.X, size.Y), target, samples: numSamples);
+            
+            AttachTexture(DepthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+
+            usingRenderBuffer = false;
+        }
+        else // NO MSAA
+        {
+            
+            ColourAttachment.Wrapping(TextureWrapMode.ClampToEdge);
+            AttachTexture(ColourAttachment, FramebufferAttachment.ColorAttachment0);
         
-        AttachTexture(colourAttachment, FramebufferAttachment.ColorAttachment0);
+            RenderBuffer depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
+            AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
+        }
         
-        RenderBuffer depthStencilAttachment = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
-        
-        AttachRenderBuffer(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+
 
         CheckCompletion();
 
@@ -46,7 +67,7 @@ public class FrameBuffer
     {
         if (usingPreset)
         {
-            colourAttachment.Use();
+            ColourAttachment.Use();
             return this;
         }
 

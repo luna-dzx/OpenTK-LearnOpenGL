@@ -22,7 +22,7 @@ public class Game1 : Library.Game
     Objects.Light light;
     Objects.Material material;
     
-    Matrix4[] asteroidMatrices = new Matrix4[50000];
+    readonly Matrix4[] asteroidMatrices = new Matrix4[50000];
 
     protected override void Load()
     {

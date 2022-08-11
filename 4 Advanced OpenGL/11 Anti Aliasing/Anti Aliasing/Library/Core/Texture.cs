@@ -174,14 +174,16 @@ public class Texture
 public class TextureBuffer
 {
     public readonly int Handle;
+    public readonly int NumSamples;
     public readonly PixelFormat Format;
     public readonly PixelInternalFormat InternalFormat;
+    public readonly SizedInternalFormat InternalFormatSized;
     public readonly TextureTarget Target;
     public readonly PixelType PixelType;
     public readonly Vector2i Size;
 
     public TextureBuffer(PixelInternalFormat internalFormat, PixelFormat format, (int,int) size,
-        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0, int border = 0)
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int samples = 4, int mipmap = 0, int border = 0)
     {
         (Size.X, Size.Y) = size;
         
@@ -191,24 +193,44 @@ public class TextureBuffer
         PixelType = pixelType;
         InternalFormat = internalFormat;
         Format = format;
+        NumSamples = samples;
 
-        this.Use();
+        this.Use(); 
         
-        GL.TexImage2D(Target,mipmap,InternalFormat,Size.X,Size.Y,border,Format,PixelType,IntPtr.Zero);
-        MinFilter(TextureMinFilter.Linear);
+        if (37120 <= (int)target && (int)target <= 37123) // MSAA
+        {
+            if (internalFormat == PixelInternalFormat.Depth24Stencil8)
+            {
+                Console.WriteLine("depthstencil");
+                GL.TexImage2DMultisample((TextureTargetMultisample)target,samples,
+                    PixelInternalFormat.Depth24Stencil8,Size.X,Size.Y,true);
+            }
+            else
+            {
+                Console.WriteLine("texture");
+                GL.TextureStorage2DMultisample(Handle,NumSamples,(SizedInternalFormat)internalFormat,Size.X,Size.Y,true);
+            }
+            
+        }
+        else // NO MSAA
+        {
+            GL.TexImage2D(Target, mipmap, InternalFormat, Size.X, Size.Y, border, Format, PixelType, IntPtr.Zero);
+            MinFilter(TextureMinFilter.Linear);
+        }
+        
         
         GL.BindTexture(Target,0);
-        
     }
+    
 
     public TextureBuffer(PixelInternalFormat internalFormat, PixelFormat format, Vector2i size,
-        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0,
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int samples = 4, int mipmap = 0,
         int border = 0) :
-        this(internalFormat, format, (size.X,size.Y),target,pixelType,mipmap,border) { }
+        this(internalFormat, format, (size.X,size.Y),target,pixelType,samples,mipmap,border) { }
     public TextureBuffer(PixelFormat format, Vector2i size,
-        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int mipmap = 0,
+        TextureTarget target = TextureTarget.Texture2D, PixelType pixelType = PixelType.UnsignedByte, int samples = 4, int mipmap = 0,
         int border = 0) :
-        this((PixelInternalFormat)format, format, (size.X,size.Y),target,pixelType,mipmap,border) { }
+        this((PixelInternalFormat)format, format, (size.X,size.Y),target,pixelType,samples,mipmap,border) { }
 
     public static explicit operator int(TextureBuffer textureBuffer) => textureBuffer.Handle;
 

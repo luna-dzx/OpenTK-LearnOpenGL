@@ -82,3 +82,14 @@ vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoo
 {
     return lx_BasePhong(normal,fragPos,cameraPos,texCoords,specTexCoords,2,material,light);
 }
+
+vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
+{
+    vec4 pixelColour = texelFetch(sampler, texCoords, 0);
+    for(int i = 1; i < numSamples; i++)
+    {
+        pixelColour += texelFetch(sampler, texCoords, i);
+    }
+    
+    return pixelColour / float(numSamples);
+}
