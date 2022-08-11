@@ -14,10 +14,6 @@ public class Game1 : Library.Game
     Model cube;
     Model quad;
 
-    int fboHandle;
-    int fboTexture;
-    int fboDepthStencil;
-
     FrameBuffer fbo;
 
     protected override void Load()
@@ -37,47 +33,6 @@ public class Game1 : Library.Game
         cube = new Model(PresetMesh.Cube);
         quad = new Model(PresetMesh.Square);
 
-
-        /*
-        var (FboWidth,FboHeight) = Window.Size;
-        
-        GL.ActiveTexture(TextureUnit.Texture0);
-
-        
-        var textureTarget = TextureTarget.Texture2DMultisample;
-
-
-        fboHandle = GL.GenFramebuffer();
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, fboHandle);
-
-
-        fboDepthStencil = GL.GenTexture();
-        GL.BindTexture(textureTarget,fboDepthStencil);
-        
-        GL.TexImage2DMultisample(TextureTargetMultisample.Texture2DMultisample,4,PixelInternalFormat.Depth24Stencil8,FboWidth,FboHeight,true);
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthStencilAttachment,textureTarget,fboDepthStencil,0);
-        
-        
-        
-        fboTexture = GL.GenTexture();
-        
-        GL.BindTexture(textureTarget, fboTexture);
-        
-        GL.TextureStorage2DMultisample(fboTexture,4,SizedInternalFormat.Rgba8,FboWidth,FboHeight,true);
-        
-
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.ColorAttachment0, textureTarget, fboTexture, 0);
-
-
-        Console.WriteLine(GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer));
-
-
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
-        //Framebuffer.Unbind(FramebufferTarget.Framebuffer);
-
-        Console.WriteLine(GL.CheckFramebufferStatus(FramebufferTarget.Framebuffer));*/
-
-
         fbo = new FrameBuffer(Window.Size, TextureTarget.Texture2DMultisample);
         fbo.UseTexture();
 
@@ -93,7 +48,6 @@ public class Game1 : Library.Game
     {
         shader.Use();
         
-        //GL.BindFramebuffer(FramebufferTarget.Framebuffer,fboHandle);
         fbo.WriteMode();
         
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
@@ -110,14 +64,11 @@ public class Game1 : Library.Game
         shader.Uniform3("cubeColour", 0f, 0f, 1f);
         cube.Draw();
         
-
-        //GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+        
         fbo.ReadMode();
 
         GL.Clear(ClearBufferMask.ColorBufferBit);
         GL.Disable(EnableCap.DepthTest);
-
-        //GL.BindTexture(TextureTarget.Texture2D,fboTexture);
 
         shader.SetActive(ShaderType.VertexShader, "fbo");
         shader.SetActive(ShaderType.FragmentShader, "fbo");
@@ -134,6 +85,7 @@ public class Game1 : Library.Game
         
         cube.Delete();
         quad.Delete();
+        fbo.Delete();
         
         shader.Delete();
     }

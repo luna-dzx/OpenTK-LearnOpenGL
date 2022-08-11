@@ -201,13 +201,11 @@ public class TextureBuffer
         {
             if (internalFormat == PixelInternalFormat.Depth24Stencil8)
             {
-                Console.WriteLine("depthstencil");
                 GL.TexImage2DMultisample((TextureTargetMultisample)target,samples,
                     PixelInternalFormat.Depth24Stencil8,Size.X,Size.Y,true);
             }
             else
             {
-                Console.WriteLine("texture");
                 GL.TextureStorage2DMultisample(Handle,NumSamples,(SizedInternalFormat)internalFormat,Size.X,Size.Y,true);
             }
             

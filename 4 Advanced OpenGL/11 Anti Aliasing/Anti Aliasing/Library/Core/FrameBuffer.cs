@@ -9,8 +9,9 @@ public class FrameBuffer
     
     // optional extras for simplification
     private bool usingPreset = false;
-    public TextureBuffer ColourAttachment;
-    public TextureBuffer DepthStencilAttachment;
+    private TextureBuffer colourAttachment;
+    private TextureBuffer depthStencilAttachment;
+    private RenderBuffer depthStencilRenderBuffer;
     private bool usingRenderBuffer = true;
 
 
@@ -29,28 +30,26 @@ public class FrameBuffer
     {
         usingPreset = true;
 
-        ColourAttachment = new TextureBuffer(internalFormat, pixelFormat, (size.X,size.Y), target,samples:numSamples);
+        colourAttachment = new TextureBuffer(internalFormat, pixelFormat, (size.X,size.Y), target,samples:numSamples);
 
         if (37120 <= (int)target && (int)target <= 37123) // MSAA
         {
-            Console.WriteLine("MSAA");
-            
-            AttachTexture(ColourAttachment, FramebufferAttachment.ColorAttachment0);
+            AttachTexture(colourAttachment, FramebufferAttachment.ColorAttachment0);
 
-            DepthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil,
+            depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil,
                 (size.X, size.Y), target, samples: numSamples);
             
-            AttachTexture(DepthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+            AttachTexture(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
 
             usingRenderBuffer = false;
         }
         else // NO MSAA
         {
             
-            ColourAttachment.Wrapping(TextureWrapMode.ClampToEdge);
-            AttachTexture(ColourAttachment, FramebufferAttachment.ColorAttachment0);
+            colourAttachment.Wrapping(TextureWrapMode.ClampToEdge);
+            AttachTexture(colourAttachment, FramebufferAttachment.ColorAttachment0);
         
-            RenderBuffer depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
+            depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
             AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
         }
         
@@ -67,7 +66,7 @@ public class FrameBuffer
     {
         if (usingPreset)
         {
-            ColourAttachment.Use();
+            colourAttachment.Use();
             return this;
         }
 
@@ -140,6 +139,20 @@ public class FrameBuffer
     public void Delete()
     {
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+
+        if (usingPreset)
+        {
+            GL.DeleteTexture(colourAttachment.Handle);
+            if (usingRenderBuffer)
+            {
+                GL.DeleteRenderbuffer(depthStencilRenderBuffer.Handle);
+            }
+            else
+            {
+                GL.DeleteTexture(depthStencilAttachment.Handle);
+            }
+        }
+
         GL.DeleteFramebuffer(handle);
     }
 
