@@ -44,7 +44,7 @@ public class Game1 : Library.Game
             .Wrapping(TextureWrapMode.ClampToEdge);
         
         light = new Objects.Light().PointMode();
-        material = PresetMaterial.Silver.SetShininess(1f);
+        material = PresetMaterial.Silver.SetShininess(32f);
         
         shader.UniformMaterial("material",material,texture)
             .UniformLight("light",light);

@@ -56,8 +56,13 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     vec3 diffuse = light.diffuse * diff * material.diffuse * baseTexSample;
     
     vec3 viewDir = normalize(cameraPos - fragPos);
-    vec3 reflectDir = reflect(-lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    //vec3 reflectDir = reflect(-lightDir, normal);
+    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
+    
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
+    
     vec3 specular = light.specular * spec * material.specular * specTexSample;
     
     // fix buggy lighting
