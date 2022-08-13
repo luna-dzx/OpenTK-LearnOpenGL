@@ -53,6 +53,8 @@ public class Game1 : Library.Game
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.CullFace);
 
+        shader.EnableGammaCorrection();
+
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(shader,newWin.Size);
     }

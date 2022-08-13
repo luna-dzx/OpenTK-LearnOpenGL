@@ -1,5 +1,16 @@
 ﻿out vec4 lx_FragColour;
 
+uniform bool lx_IsGammaCorrectionEnabled;
+
+vec4 lx_GammaCorrect(vec4 colour, float gamma)
+{
+    return vec4(pow(colour.rgb, vec3(gamma)),colour.w);
+}
+vec3 lx_GammaCorrect(vec3 colour, float gamma)
+{
+    return pow(colour, vec3(gamma));
+}
+
 vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in int textureMode, in lx_Material material, in lx_Light light)
 {
     normal = normalize(normal);
@@ -15,6 +26,12 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     if (textureMode > 1)
     {
         specTexSample = vec3(texture(material.specTex, specTexCoords));
+    }
+    
+    if (lx_IsGammaCorrectionEnabled)
+    {
+        baseTexSample = lx_GammaCorrect(baseTexSample,2.2);
+        specTexSample = lx_GammaCorrect(specTexSample,2.2);
     }
 
     vec3 ambient = light.ambient * material.ambient * baseTexSample;
@@ -97,4 +114,13 @@ vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
     }
     
     return pixelColour / float(numSamples);
+}
+
+[main]
+lx_FragColour = vec4(0.0);
+
+[post-main]
+if (lx_IsGammaCorrectionEnabled)
+{
+    lx_FragColour = lx_GammaCorrect( lx_FragColour , 1.0/2.2);
 }

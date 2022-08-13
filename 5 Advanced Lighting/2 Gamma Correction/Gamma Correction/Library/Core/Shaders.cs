@@ -93,7 +93,7 @@ public class ShaderProgram
 
     private const string ShaderFileLocation = "../../../Library/Shaders/";
     
-    private static (string,string) ReadEngineShader(ShaderType type)
+    private static (string,string,string) ReadEngineShader(ShaderType type)
     {
         string mainFileDirectory = 
             ShaderFileLocation +
@@ -108,16 +108,28 @@ public class ShaderProgram
                    _ => throw new Exception("Invalid ShaderType")
                };
 
+
+        string mainFileText = File.ReadAllText(mainFileDirectory);
+        
+        string postMain = "";
+        string[] postSplit = mainFileText.Split("[post-main]");
+        if (postSplit.Length > 1) postMain = postSplit[1];
+
+        mainFileText = postSplit[0];
+        
+        
         string[] splitMainFile = { "", "" };
-        if (File.Exists(mainFileDirectory)) 
-            splitMainFile = File.ReadAllText(mainFileDirectory).Split("[main]");
+        if (File.Exists(mainFileDirectory))
+            splitMainFile = mainFileText.Split("[main]");
+        
         
         string[] splitBaseFile = { "", "" };
         if (File.Exists(ShaderFileLocation + "lxGlobal.glsl")) 
             splitBaseFile = File.ReadAllText(ShaderFileLocation + "lxGlobal.glsl").Split("[main]");
 
         return (splitBaseFile[0]+"\n"+splitMainFile[0],
-            (splitBaseFile.Length > 1 ? splitBaseFile[1] : "")+"\n"+(splitMainFile.Length > 1 ? splitMainFile[1] : ""));
+            (splitBaseFile.Length > 1 ? splitBaseFile[1] : "")+"\n"+(splitMainFile.Length > 1 ? splitMainFile[1] : ""),
+            postMain);
     }
 
     /// <summary>
@@ -134,7 +146,7 @@ public class ShaderProgram
 
         usesCustomSynax[(int)shaderType] = true;
         
-        var (engineShader,engineShaderMain) = ReadEngineShader(shaderType);
+        var (engineShader,engineShaderMain,postMain) = ReadEngineShader(shaderType);
 
         lines[0] = engineShader;
         lines[0] += "\nuniform int active"+shaderType+"Id;\n";
@@ -201,9 +213,13 @@ public class ShaderProgram
         {
             for (int i = 0; i < sections[shaderType].Count; i++)
             {
-                outputText += "\nif (active" + shaderType + "Id == "+i+") {lx_program" + i + "_main(); return;}";
+                outputText += "\nif (active" + shaderType + "Id == "+i+") {lx_program" + i + "_main();}";
             }
         }
+        
+        
+        
+        outputText += "\n"+postMain;
         
         outputText += "\n}";
 
@@ -433,6 +449,19 @@ public class ShaderProgram
 
             return -1;
         }
+    }
+
+    public ShaderProgram EnableGammaCorrection()
+    {
+        GL.Enable(EnableCap.FramebufferSrgb);
+        Uniform1("lx_IsGammaCorrectionEnabled", 1);
+        return this;
+    }
+    public ShaderProgram DisableGammaCorrection()
+    {
+        GL.Disable(EnableCap.FramebufferSrgb);
+        Uniform1("lx_IsGammaCorrectionEnabled", 0);
+        return this;
     }
 
 
