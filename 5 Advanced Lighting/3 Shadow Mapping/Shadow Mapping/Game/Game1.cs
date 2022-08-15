@@ -27,8 +27,7 @@ public class Game1 : Library.Game
     Vector3 shadowMapOrigin = new Vector3(-1.5f,8.5f,20f);
     Vector3 shadowMapDirection = new Vector3(1f,-4f,-5f);
 
-    Matrix4 lightSpaceProjection;
-    Matrix4 lightSpaceView;
+    Matrix4 lightSpaceMatrix;
 
     protected override void Load()
     {
@@ -79,12 +78,12 @@ public class Game1 : Library.Game
         GL.Enable(EnableCap.CullFace);
 
         shader.EnableGammaCorrection();
-        
 
+        var lightSpaceView = Matrix4.LookAt(shadowMapOrigin, shadowMapOrigin + shadowMapDirection, Vector3.UnitY);
+        var lightSpaceProjection = Matrix4.CreateOrthographic(20f,20f, 0.05f, 50f);// * lightView;
         
-
-        lightSpaceView = Matrix4.LookAt(shadowMapOrigin, shadowMapOrigin + shadowMapDirection, Vector3.UnitY);
-        lightSpaceProjection = Matrix4.CreateOrthographic(40f,40f, 0.05f, 50f);// * lightView;
+        lightSpaceMatrix = lightSpaceView * lightSpaceProjection;
+        
         
         texture.Use();
         
@@ -117,7 +116,6 @@ public class Game1 : Library.Game
         cube.UpdateTransform(shader);
         cube.Draw();
         
-        shader.SetActive(ShaderType.FragmentShader, "test");
         cube.Transform(new Vector3(-3f,-3f,3f), new Vector3(0.4f,0f,0f), 1f);
         cube.UpdateTransform(shader);
         cube.Draw();
@@ -129,25 +127,29 @@ public class Game1 : Library.Game
 
 
         shader.SetActive(ShaderType.FragmentShader, "depthMap");
+        GL.CullFace(CullFaceMode.Front);
         GL.Viewport(0,0,depthMapSize.X,depthMapSize.Y);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMapFbo);
         GL.Clear(ClearBufferMask.DepthBufferBit);
         
-        GL.UniformMatrix4(shader.DefaultView,false,ref lightSpaceView);
-        GL.UniformMatrix4(shader.DefaultProjection,false,ref lightSpaceProjection);
+        var mat2 = Matrix4.Identity;
+        
+        GL.UniformMatrix4(shader.DefaultView,false,ref lightSpaceMatrix);
+        GL.UniformMatrix4(shader.DefaultProjection,false,ref mat2);
         
         RenderScene();
         
 
+        GL.CullFace(CullFaceMode.Back);
         GL.Viewport(0,0,Window.Size.X,Window.Size.Y);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
         player.Camera.UpdateView((int)shader,shader.DefaultView);
         player.Camera.UpdateProjection((int)shader,shader.DefaultProjection);
-
-        Console.WriteLine(player.Camera.Position+" | "+player.Camera.Direction);
         
+        GL.UniformMatrix4(GL.GetUniformLocation((int)shader,"lightSpaceMatrix"),false, ref lightSpaceMatrix);
+
         shader.SetActive(ShaderType.FragmentShader, "scene");
         RenderScene();
         

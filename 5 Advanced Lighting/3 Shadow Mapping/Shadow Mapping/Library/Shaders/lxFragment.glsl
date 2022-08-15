@@ -11,7 +11,7 @@ vec3 lx_GammaCorrect(vec3 colour, float gamma)
     return pow(colour, vec3(gamma));
 }
 
-vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in int textureMode, in lx_Material material, in lx_Light light)
+vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in int textureMode, in lx_Material material, in lx_Light light, float lightMult)
 {
     normal = normalize(normal);
 
@@ -89,20 +89,20 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     diffuse  *= attenuation * intensity;
     specular *= attenuation * intensity;
 
-    return ambient + diffuse + specular; 
+    return ambient + lightMult * (diffuse + specular); 
 }
 
-vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in lx_Material material, in lx_Light light)
+vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in lx_Material material, in lx_Light light, float lightMult)
 {
-    return lx_BasePhong(normal,fragPos,cameraPos,vec2(0.0),vec2(0.0),0,material,light);
+    return lx_BasePhong(normal,fragPos,cameraPos,vec2(0.0),vec2(0.0),0,material,light,lightMult);
 }
-vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in lx_Material material, in lx_Light light)
+vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in lx_Material material, in lx_Light light, float lightMult)
 {
-    return lx_BasePhong(normal,fragPos,cameraPos,texCoords,vec2(0.0),1,material,light);
+    return lx_BasePhong(normal,fragPos,cameraPos,texCoords,vec2(0.0),1,material,light,lightMult);
 }
-vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in lx_Material material, in lx_Light light)
+vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in lx_Material material, in lx_Light light, float lightMult)
 {
-    return lx_BasePhong(normal,fragPos,cameraPos,texCoords,specTexCoords,2,material,light);
+    return lx_BasePhong(normal,fragPos,cameraPos,texCoords,specTexCoords,2,material,light,lightMult);
 }
 
 vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
