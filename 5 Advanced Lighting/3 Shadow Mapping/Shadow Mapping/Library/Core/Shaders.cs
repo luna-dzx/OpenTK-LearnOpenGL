@@ -222,6 +222,8 @@ public class ShaderProgram
         outputText += "\n"+postMain;
         
         outputText += "\n}";
+        
+        Console.WriteLine(outputText);
 
         return outputText;
     }

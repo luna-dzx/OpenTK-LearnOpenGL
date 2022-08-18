@@ -11,7 +11,9 @@ out VS_OUT {
 } vs_out;
 
 uniform mat4 lightSpaceMatrix;
+uniform int visualiseDepthMap;
 
+[scene]
 void main()
 {
     vs_out.normal = lx_NormalFix(lx_Model,aNormal);
@@ -20,5 +22,19 @@ void main()
     
     vs_out.fragPosLightSpace = lightSpaceMatrix * vec4(vs_out.fragPos,1.0);
     
-    gl_Position = lx_Transform*vec4(aPos, 1.0);
+    if (visualiseDepthMap == 0)
+    {
+        gl_Position = lx_Transform*vec4(aPos, 1.0);
+    }
+    else
+    {
+        gl_Position = lightSpaceMatrix*lx_Model*vec4(aPos, 1.0);
+    }
+    
+}
+
+[depthMap]
+void main()
+{
+    gl_Position = lightSpaceMatrix*lx_Model*vec4(aPos, 1.0);
 }

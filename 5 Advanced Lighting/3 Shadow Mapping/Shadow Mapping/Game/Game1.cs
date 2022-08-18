@@ -2,6 +2,7 @@
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Gamma_Correction.Game;
 
@@ -19,16 +20,21 @@ public class Game1 : Library.Game
 
     int depthMapFbo;
     int depthMap;
-    Vector2i depthMapSize = new Vector2i(1024,1024);
+    Vector2i depthMapSize = new Vector2i(4096,4096);
 
     Texture texture;
 
 
-    Vector3 shadowMapOrigin = new Vector3(-1.5f,8.5f,20f);
+    Vector3 shadowMapOrigin = new Vector3(-3.5f,8.5f,20f);
     Vector3 shadowMapDirection = new Vector3(1f,-4f,-5f);
 
     Matrix4 lightSpaceMatrix;
 
+    bool visualiseDepthMap = false;
+
+    // TODO: Clever Z-Fighting Prevention? (Z-Fighting causes some weird shadow issues)
+    private Vector3 cubePosition = new Vector3(1f, -3.99f, -5f);
+    
     protected override void Load()
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -47,11 +53,7 @@ public class Game1 : Library.Game
             
         quad = new Model(PresetMesh.Square).Transform(new Vector3(0f,-5f,0f), new Vector3(MathHelper.DegreesToRadians(-90f),0f,0f),10f);
 
-        texture = new Texture("../../../../../../0 Assets/wood.png",0)
-            .Mipmapping(TextureMinFilter.Linear)
-            .MinFilter(TextureMinFilter.Linear)
-            .MagFilter(TextureMagFilter.Linear)
-            .Wrapping(TextureWrapMode.ClampToEdge);
+        texture = new Texture("../../../../../../0 Assets/wood.png",0);
         
         light = new Objects.Light().SunMode().SetDirection(shadowMapDirection).SetAmbient(0.1f);
         material = PresetMaterial.Silver.SetAmbient(0.1f);
@@ -80,9 +82,10 @@ public class Game1 : Library.Game
         shader.EnableGammaCorrection();
 
         var lightSpaceView = Matrix4.LookAt(shadowMapOrigin, shadowMapOrigin + shadowMapDirection, Vector3.UnitY);
-        var lightSpaceProjection = Matrix4.CreateOrthographic(20f,20f, 0.05f, 50f);// * lightView;
+        var lightSpaceProjection = Matrix4.CreateOrthographic(24f,24f, 0.05f, 50f);// * lightView;
         
         lightSpaceMatrix = lightSpaceView * lightSpaceProjection;
+        GL.UniformMatrix4(GL.GetUniformLocation((int)shader,"lightSpaceMatrix"),false, ref lightSpaceMatrix);
         
         
         texture.Use();
@@ -106,13 +109,31 @@ public class Game1 : Library.Game
         shader.Uniform3("cameraPos", player.Position);
     }
 
+    protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
+    {
+        Vector3 direction = Vector3.Zero;
+        if (keyboardState.IsKeyDown(Keys.Up)) direction -= Vector3.UnitZ;
+        if (keyboardState.IsKeyDown(Keys.Down)) direction += Vector3.UnitZ;
+        if (keyboardState.IsKeyDown(Keys.Left)) direction -= Vector3.UnitX;
+        if (keyboardState.IsKeyDown(Keys.Right)) direction += Vector3.UnitX;
+
+        cubePosition += direction * (float)args.Time * 5f;
+
+
+        if (keyboardState.IsKeyPressed(Keys.Enter))
+        {
+            visualiseDepthMap = !visualiseDepthMap;
+            shader.Uniform1("visualiseDepthMap", visualiseDepthMap ? 1 : 0);
+        }
+    }
+
     void RenderScene()
     {
         //texture.Use();
         quad.UpdateTransform(shader);
         quad.Draw();
         
-        cube.Transform(new Vector3(1f,-4f,-5f), new Vector3(0f,0.2f,0f), 1f);
+        cube.Transform(cubePosition, new Vector3(0f,0.2f,0f), 1f);
         cube.UpdateTransform(shader);
         cube.Draw();
         
@@ -127,6 +148,7 @@ public class Game1 : Library.Game
 
 
         shader.SetActive(ShaderType.FragmentShader, "depthMap");
+        shader.SetActive(ShaderType.VertexShader, "depthMap");
         GL.CullFace(CullFaceMode.Front);
         GL.Viewport(0,0,depthMapSize.X,depthMapSize.Y);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMapFbo);
@@ -134,9 +156,9 @@ public class Game1 : Library.Game
         
         var mat2 = Matrix4.Identity;
         
-        GL.UniformMatrix4(shader.DefaultView,false,ref lightSpaceMatrix);
-        GL.UniformMatrix4(shader.DefaultProjection,false,ref mat2);
-        
+        //GL.UniformMatrix4(shader.DefaultView,false,ref lightSpaceMatrix);
+        //GL.UniformMatrix4(shader.DefaultProjection,false,ref mat2);
+
         RenderScene();
         
 
@@ -147,10 +169,9 @@ public class Game1 : Library.Game
         
         player.Camera.UpdateView((int)shader,shader.DefaultView);
         player.Camera.UpdateProjection((int)shader,shader.DefaultProjection);
-        
-        GL.UniformMatrix4(GL.GetUniformLocation((int)shader,"lightSpaceMatrix"),false, ref lightSpaceMatrix);
 
         shader.SetActive(ShaderType.FragmentShader, "scene");
+        shader.SetActive(ShaderType.VertexShader, "scene");
         RenderScene();
         
         /*shader.SetActive(ShaderType.FragmentShader, "light");
