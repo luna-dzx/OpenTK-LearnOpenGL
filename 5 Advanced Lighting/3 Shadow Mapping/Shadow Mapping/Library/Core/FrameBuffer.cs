@@ -158,3 +158,89 @@ public class FrameBuffer
 
 
 }
+
+
+public class DepthMap
+{
+    public readonly int Handle;
+    public readonly int TextureHandle;
+
+    public readonly Vector2i Size;
+    
+    public Matrix4 ViewSpaceMatrix;
+    
+    //Vector3 Position = new Vector3(-3.5f,8.5f,20f);
+    //Vector3 Direction = new Vector3(1f,-4f,-5f);
+    public Vector3 Position { get; private set; }
+    public Vector3 Direction { get; private set; }
+
+
+    public DepthMap(Vector2i size, Vector3 position, Vector3 direction)
+    {
+        Handle = GL.GenFramebuffer();
+        TextureHandle = GL.GenTexture();
+        Size = size;
+        Position = position;
+        Direction = direction;
+        
+        GL.BindTexture(TextureTarget.Texture2D,TextureHandle);
+        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.DepthComponent,Size.X,Size.Y,0,PixelFormat.DepthComponent,PixelType.Float,IntPtr.Zero);
+        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Nearest);
+        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapS,(int)TextureWrapMode.Repeat);
+        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapT,(int)TextureWrapMode.Repeat);
+        
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,Handle);
+        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthAttachment,TextureTarget.Texture2D,TextureHandle,0);
+        GL.DrawBuffer(DrawBufferMode.None);
+        GL.ReadBuffer(ReadBufferMode.None);
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+    }
+
+    public DepthMap DrawMode(int x = 0, int y = 0, int width = 0, int height = 0, CullFaceMode cullFaceMode = CullFaceMode.Front)
+    {
+        if (width == 0) width = Size.X;
+        if (height == 0) height = Size.Y;
+        
+        GL.CullFace(cullFaceMode);
+        GL.Viewport(x,y,width,height);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,Handle);
+        GL.Clear(ClearBufferMask.DepthBufferBit);
+
+        return this;
+    }
+
+    public DepthMap ReadMode()
+    {
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+        return this;
+    }
+
+    public DepthMap ProjectOrthographic(float orthoWidth = 24f, float orthoHeight = 24f, float clipNear = 0.05f, float clipFar = 50f, Vector3 up = default)
+    {
+        if (up == default) up = Vector3.UnitY;
+        Matrix4 viewMatrix = Matrix4.LookAt(Position, Position + Direction, up);
+        Matrix4 projMatrix = Matrix4.CreateOrthographic(orthoWidth,orthoHeight, clipNear, clipFar);
+        ViewSpaceMatrix = viewMatrix * projMatrix;
+        
+        return this;
+    }
+
+    public DepthMap ProjectPerspective(float fieldOfView = MathHelper.PiOver3, float clipNear = 0.1f, float clipFar = 100f, Vector3 up = default)
+    {
+        if (up == default) up = Vector3.UnitY;
+        Matrix4 viewMatrix = Matrix4.LookAt(Position, Position + Direction, up);
+        Matrix4 projMatrix = Matrix4.CreatePerspectiveFieldOfView(fieldOfView, (float) Size.X / Size.Y, clipNear, clipFar);
+        ViewSpaceMatrix = viewMatrix * projMatrix;
+        
+        return this;
+    }
+
+    public DepthMap UniformMatrix(int shaderProgram, string name)
+    {
+        GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram,name),false, ref ViewSpaceMatrix);
+        return this;
+    }
+
+}

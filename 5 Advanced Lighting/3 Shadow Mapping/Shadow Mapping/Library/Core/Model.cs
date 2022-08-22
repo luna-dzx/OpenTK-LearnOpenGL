@@ -280,9 +280,23 @@ public class Model : VertexArray
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
     /// <param name="scale">scale in x,y and z</param>
-    public Model Transform(Vector3 translation, Vector3 rotation, Vector3 scale)
+    public Model Transform(Vector3 translation = default, Vector3 rotation = default, Vector3 scale = default)
     {
         transform = Maths.CreateTransformation(translation, rotation, scale);
+        return this;
+    }
+
+    public Model UpdateTransform(ShaderProgram shader, Vector3 translation, Vector3 rotation = default, Vector3 scale = default)
+    {
+        if (scale == default) scale = Vector3.One;
+        Transform(translation, rotation, scale);
+        UpdateTransform(shader);
+        return this;
+    }
+    public Model UpdateTransform(ShaderProgram shader, Vector3 translation, Vector3 rotation, float scale)
+    {
+        Transform(translation, rotation, scale);
+        UpdateTransform(shader);
         return this;
     }
 
@@ -292,7 +306,7 @@ public class Model : VertexArray
     /// <param name="translation">position relative to the origin</param>
     /// <param name="rotation">rotation in the x,y and z axis</param>
     /// <param name="scale">scale of the overall object in all 3 dimensions</param>
-    public Model Transform(Vector3 translation, Vector3 rotation, float scale)
+    public Model Transform(Vector3 translation = default, Vector3 rotation = default, float scale = 1f)
     {
         transform = Maths.CreateTransformation(translation, rotation, new Vector3(scale,scale,scale));
         return this;
@@ -335,7 +349,7 @@ public class Model : VertexArray
     /// Draw the object based on the current configuration
     /// </summary>
     /// <exception cref="Exception"></exception>
-    public void Draw(int instanceCount = 1,PrimitiveType renderMode = PrimitiveType.Triangles)
+    public void Draw(int instanceCount = 1, PrimitiveType renderMode = PrimitiveType.Triangles)
     {
         Use();
 
@@ -364,6 +378,20 @@ public class Model : VertexArray
         throw new Exception("Invalid Mesh");
 
 
+    }
+
+    public void Draw(ShaderProgram program, Vector3 position = default, Vector3 rotation = default, Vector3 scale = default, int instanceCount = 1, PrimitiveType renderMode = PrimitiveType.Triangles)
+    {
+        if (position == default && rotation == default && scale == default)
+        {
+            UpdateTransform(program);
+        }
+        else
+        {
+            UpdateTransform(program, position, rotation, scale);
+        }
+        
+        Draw(instanceCount, renderMode);
     }
 
 }
