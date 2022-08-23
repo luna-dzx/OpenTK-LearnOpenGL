@@ -269,7 +269,7 @@ public class Model : VertexArray
     }
     public Model UpdateTransform(ShaderProgram program)
     {
-        GL.UseProgram(program.GetHandle());
+        program.Use();
         GL.UniformMatrix4(program.DefaultModel,false,ref transform);
         return this;
     }

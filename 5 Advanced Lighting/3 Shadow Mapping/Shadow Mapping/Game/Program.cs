@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Gamma_Correction.Game;
+namespace Shadow_Mapping.Game;
 
 internal static class Program
 {

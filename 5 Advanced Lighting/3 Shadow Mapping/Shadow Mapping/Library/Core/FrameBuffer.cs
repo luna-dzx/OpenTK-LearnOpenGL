@@ -162,6 +162,9 @@ public class FrameBuffer
 
 public class DepthMap
 {
+
+    public readonly ShaderProgram Shader;
+    
     public readonly int Handle;
     public readonly int TextureHandle;
 
@@ -175,7 +178,7 @@ public class DepthMap
     public Vector3 Direction { get; private set; }
 
 
-    public DepthMap(Vector2i size, Vector3 position, Vector3 direction)
+    public DepthMap(string shaderPath, Vector2i size, Vector3 position, Vector3 direction)
     {
         Handle = GL.GenFramebuffer();
         TextureHandle = GL.GenTexture();
@@ -196,6 +199,11 @@ public class DepthMap
         GL.ReadBuffer(ReadBufferMode.None);
 
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+
+        Shader = new ShaderProgram(
+            shaderPath + "vertex.glsl",
+            shaderPath + "fragment.glsl"
+        ).SetModelLocation("model");
     }
 
     public DepthMap DrawMode(int x = 0, int y = 0, int width = 0, int height = 0, CullFaceMode cullFaceMode = CullFaceMode.Front)
@@ -207,6 +215,8 @@ public class DepthMap
         GL.Viewport(x,y,width,height);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,Handle);
         GL.Clear(ClearBufferMask.DepthBufferBit);
+        
+        Shader.Use();
 
         return this;
     }
@@ -223,6 +233,8 @@ public class DepthMap
         Matrix4 viewMatrix = Matrix4.LookAt(Position, Position + Direction, up);
         Matrix4 projMatrix = Matrix4.CreateOrthographic(orthoWidth,orthoHeight, clipNear, clipFar);
         ViewSpaceMatrix = viewMatrix * projMatrix;
+
+        UniformMatrix(Shader, "lightSpaceMatrix");
         
         return this;
     }

@@ -222,8 +222,6 @@ public class ShaderProgram
         outputText += "\n"+postMain;
         
         outputText += "\n}";
-        
-        Console.WriteLine(outputText);
 
         return outputText;
     }
@@ -417,6 +415,8 @@ public class ShaderProgram
 
     }
 
+    private int customModelMatrixBinding = -1;
+
     /// <summary>
     /// The uniform location of the standard model matrix
     /// </summary>
@@ -431,8 +431,20 @@ public class ShaderProgram
                 return GL.GetUniformLocation(handle, "lx_Model");
             }
 
-            return -1;
+            return customModelMatrixBinding; // -1 if not set
         }
+    }
+
+
+    public ShaderProgram SetModelLocation(int binding)
+    {
+        customModelMatrixBinding = binding;
+        return this;
+    }
+    public ShaderProgram SetModelLocation(string name)
+    {
+        customModelMatrixBinding = GetUniform(name);
+        return this;
     }
 
     /// <summary>

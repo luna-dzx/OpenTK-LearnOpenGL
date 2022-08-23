@@ -27,6 +27,7 @@ public abstract class Game : IDisposable
 
         if (type == DebugType.DebugTypeError)
         {
+            Console.WriteLine("Error");
             throw new Exception(messageString);
         }
     }
