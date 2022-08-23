@@ -57,7 +57,7 @@ public class Game1 : Library.Game
         shader.EnableGammaCorrection();
 
         depthMap.ProjectOrthographic();
-        depthMap.UniformMatrix((int)shader, "lightSpaceMatrix");
+        depthMap.UniformMatrix(shader, "lightSpaceMatrix");
 
         texture.Use();
         

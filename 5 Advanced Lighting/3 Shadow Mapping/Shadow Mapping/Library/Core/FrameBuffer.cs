@@ -237,9 +237,10 @@ public class DepthMap
         return this;
     }
 
-    public DepthMap UniformMatrix(int shaderProgram, string name)
+    public DepthMap UniformMatrix(ShaderProgram shaderProgram, string name)
     {
-        GL.UniformMatrix4(GL.GetUniformLocation(shaderProgram,name),false, ref ViewSpaceMatrix);
+        shaderProgram.Use();
+        GL.UniformMatrix4(GL.GetUniformLocation((int)shaderProgram,name),false, ref ViewSpaceMatrix);
         return this;
     }
 
