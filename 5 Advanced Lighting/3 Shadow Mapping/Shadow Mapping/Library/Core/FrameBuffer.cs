@@ -256,4 +256,22 @@ public class DepthMap
         return this;
     }
 
+
+    public DepthMap UniformTexture(string name, ShaderProgram shaderProgram, int textureUnit = 0)
+    {
+        shaderProgram.Use();
+        GL.ActiveTexture(TextureUnit.Texture0 + textureUnit);
+        GL.BindTexture(TextureTarget.Texture2D,TextureHandle);
+        shaderProgram.Uniform1(name, textureUnit);
+        return this;
+    }
+
+    public DepthMap Delete()
+    {
+        GL.DeleteTexture(TextureHandle);
+        GL.DeleteFramebuffer(Handle);
+        Shader.Delete();
+        return this;
+    }
+
 }

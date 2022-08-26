@@ -105,6 +105,52 @@ vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoo
     return lx_BasePhong(normal,fragPos,cameraPos,texCoords,specTexCoords,2,material,light,lightMult);
 }
 
+float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace)
+{
+    vec3 projCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5 + 0.5;
+    float closestDepth = texture(shadowTexture, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float textureDepth = texture(shadowTexture, projCoords.xy).r;
+    
+    float shadow = (currentDepth > textureDepth ? 1.0 : 0.0);
+
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+        
+    return 1.0-shadow;
+}
+
+float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace, float texelOffset, int range, float divisor)
+{
+    vec3 projCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5 + 0.5;
+    float closestDepth = texture(shadowTexture, projCoords.xy).r;
+    float currentDepth = projCoords.z;
+    float textureDepth = texture(shadowTexture, projCoords.xy).r;
+    
+    float shadow = (currentDepth > textureDepth ? 1.0 : 0.0);
+    
+
+    if (shadow == 0.0)
+    {
+        vec2 texelSize = texelOffset / textureSize(shadowTexture, 0);
+        for(int x = -range; x <= range; x++)
+        {
+            for(int y = -range; y <= range; y++)
+            {
+                float pcfDepth = texture(shadowTexture, projCoords.xy + vec2(x, y) * texelSize).r; 
+                shadow += currentDepth > pcfDepth ? 1.0 : 0.0;
+            }    
+        }
+        shadow = min(shadow/divisor,0.98);
+    }
+    
+    if(projCoords.z > 1.0)
+        shadow = 0.0;
+        
+        
+    return 1.0-shadow;
+}
+
 vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
 {
     vec4 pixelColour = texelFetch(sampler, texCoords, 0);

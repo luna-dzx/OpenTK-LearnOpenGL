@@ -65,11 +65,8 @@ public class Game1 : Library.Game
         
         shader.UniformMaterial("material",material,texture)
             .UniformLight("light",light);
-        
-        
-        GL.ActiveTexture(TextureUnit.Texture1);
-        GL.BindTexture(TextureTarget.Texture2D,depthMap.TextureHandle);
-        GL.Uniform1(GL.GetUniformLocation((int)shader,"depthMap"),1);
+
+        depthMap.UniformTexture("depthMap",shader,1);
 
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(shader,newWin.Size);
@@ -130,5 +127,7 @@ public class Game1 : Library.Game
         cube.Delete();
 
         shader.Delete();
+
+        depthMap.Delete();
     }
 }
