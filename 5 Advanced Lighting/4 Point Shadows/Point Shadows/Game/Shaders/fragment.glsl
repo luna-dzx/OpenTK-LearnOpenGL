@@ -14,6 +14,7 @@ in VS_OUT {
     vec4 fragPosLightSpace;
 } fs_in;
 
+[cube]
 void main()
 {
     if (visualiseDepthMap == 0){
@@ -24,4 +25,10 @@ void main()
         lx_FragColour = vec4(texture(depthMap,projCoords).r);
     }
     
+}
+
+[light]
+void main()
+{
+    lx_FragColour = vec4(1.0);
 }

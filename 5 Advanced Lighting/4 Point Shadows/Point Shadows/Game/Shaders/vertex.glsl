@@ -12,10 +12,14 @@ out VS_OUT {
 
 uniform mat4 lightSpaceMatrix;
 uniform int visualiseDepthMap;
+uniform int flipNormals;
 
 void main()
 {
-    vs_out.normal = lx_NormalFix(lx_Model,aNormal);
+    vec3 inNormal = aNormal;
+    if (flipNormals==1) { inNormal*=-1; }
+    
+    vs_out.normal = lx_NormalFix(lx_Model,inNormal);
     vs_out.texCoords = aTexCoords;
     vs_out.fragPos = (lx_Model*vec4(aPos,1.0)).xyz;
     
