@@ -7,31 +7,14 @@ out VS_OUT {
     vec3 fragPos;
     vec3 normal;
     vec2 texCoords;
-    vec4 fragPosLightSpace;
 } vs_out;
-
-uniform mat4 lightSpaceMatrix;
-uniform int visualiseDepthMap;
-uniform int flipNormals;
 
 void main()
 {
-    vec3 inNormal = aNormal;
-    if (flipNormals==1) { inNormal*=-1; }
-    
-    vs_out.normal = lx_NormalFix(lx_Model,inNormal);
+    vs_out.normal = lx_NormalFix(lx_Model,aNormal);
     vs_out.texCoords = aTexCoords;
     vs_out.fragPos = (lx_Model*vec4(aPos,1.0)).xyz;
-    
-    vs_out.fragPosLightSpace = lightSpaceMatrix * vec4(vs_out.fragPos,1.0);
-    
-    if (visualiseDepthMap == 0)
-    {
-        gl_Position = lx_Transform*vec4(aPos, 1.0);
-    }
-    else
-    {
-        gl_Position = lightSpaceMatrix*lx_Model*vec4(aPos, 1.0);
-    }
-    
+
+    gl_Position = lx_Transform*vec4(aPos, 1.0);
+
 }

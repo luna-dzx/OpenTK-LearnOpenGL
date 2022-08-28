@@ -1,2 +1,2 @@
-#version luma-dx
+#version 330 core
 void main(){}

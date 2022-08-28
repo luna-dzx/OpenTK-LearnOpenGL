@@ -15,6 +15,7 @@ public class Game1 : Library.Game
 
     FirstPersonPlayer player;
     Model cube;
+    Model inverseCube;
 
     Objects.Light light;
     Objects.Material material;
@@ -24,23 +25,20 @@ public class Game1 : Library.Game
     ShaderProgram depthMapShader;
     
     int depthMap;
-    int depthMapTexture;
-
-    Matrix4 ViewSpaceMatrix;
 
     Vector3 depthMapPosition;
-    Vector3 depthMapDirection;
-    
-    
+
+
     int depthCubeMap;
-    
-    bool visualiseDepthMap = false;
-    
-    private Vector3 cubePosition = new Vector3(1f, 0f, -5f);
+
+    private Vector3 cubePosition = new Vector3(0f, 0f, -5f);
     
     const int CubeMapWidth = 1024;
     const int CubeMapHeight = 1024;
-    
+
+    const float DepthNear = 0.05f;
+    const float DepthFar = 100f;
+
     protected override void Load()
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
@@ -54,65 +52,21 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0,0,6))
             .SetDirection(new Vector3(0, 0, 1));
         player.UpdateProjection(shader);
+        
 
         cube = new Model(PresetMesh.Cube);
+
+        var inverseCubeMesh = PresetMesh.Cube;
+        for (int i = 0; i < inverseCubeMesh.Normals.Length; i++) { inverseCubeMesh.Normals[i] *= -1; }
         
+        inverseCube = new Model(inverseCubeMesh);
+
         texture = new Texture("../../../../../../0 Assets/wood.png",0);
 
         depthMap = GL.GenFramebuffer();
-        depthMapTexture = GL.GenTexture();
-        depthMapPosition = (-3.5f, 8.5f, 20f);
-        depthMapDirection = (1f,-4f,-5f);
+        depthMapPosition = (0f,0f,0f);
 
-        GL.BindTexture(TextureTarget.Texture2D,depthMapTexture);
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.DepthComponent,4096,4096,0,PixelFormat.DepthComponent,PixelType.Float,IntPtr.Zero);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapS,(int)TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapT,(int)TextureWrapMode.Repeat);
-        
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMap);
-        GL.FramebufferTexture2D(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthAttachment,TextureTarget.Texture2D,depthMapTexture,0);
-        GL.DrawBuffer(DrawBufferMode.None);
-        GL.ReadBuffer(ReadBufferMode.None);
-
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
-
-        depthMapShader = new ShaderProgram(
-            DepthMapShaderLocation + "vertex.glsl",
-            DepthMapShaderLocation + "fragment.glsl"
-        ).SetModelLocation("model");
-        
-        
-        
-        light = new Objects.Light().SunMode().SetDirection(depthMapDirection).SetAmbient(0.1f);
-        material = PresetMaterial.Silver.SetAmbient(0.1f);
-
-        GL.Enable(EnableCap.DepthTest);
-        GL.Enable(EnableCap.CullFace);
-
-        shader.EnableGammaCorrection();
-
-        Matrix4 viewMatrix = Matrix4.LookAt(depthMapPosition, depthMapPosition + depthMapDirection, Vector3.UnitY);
-        Matrix4 projMatrix = Matrix4.CreateOrthographic(24f,24f, 0.05f, 50f);
-        ViewSpaceMatrix = viewMatrix * projMatrix;
-        
-        depthMapShader.Use();
-        GL.UniformMatrix4(GL.GetUniformLocation((int)depthMapShader,"lightSpaceMatrix"),false, ref ViewSpaceMatrix);        
-        shader.Use();
-        GL.UniformMatrix4(GL.GetUniformLocation((int)shader,"lightSpaceMatrix"),false, ref ViewSpaceMatrix);
-
-        texture.Use();
-        
-        shader.UniformMaterial("material",material,texture)
-            .UniformLight("light",light);
-
-        shader.Use();
-        GL.ActiveTexture(TextureUnit.Texture0 + 1);
-        GL.BindTexture(TextureTarget.Texture2D,depthMapTexture);
-        shader.Uniform1("depthMap", 1);
-
-        /*depthCubeMap = GL.GenTexture();
+        depthCubeMap = GL.GenTexture();
         GL.BindTexture(TextureTarget.TextureCubeMap,depthCubeMap);
         for (int i = 0; i < 6; i++)
         {
@@ -128,16 +82,68 @@ public class Game1 : Library.Game
         GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureWrapT,(int)TextureWrapMode.ClampToEdge);
         GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureWrapR,(int)TextureWrapMode.ClampToEdge);
         
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMap.Handle);
-        GL.FramebufferTexture(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthAttachment,depthCubeMap,0);*/
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMap);
+        GL.FramebufferTexture(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthAttachment,depthCubeMap,0);
         
+        GL.DrawBuffer(DrawBufferMode.None);
+        GL.ReadBuffer(ReadBufferMode.None);
 
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+
+        depthMapShader = new ShaderProgram()
+            .LoadShader(DepthMapShaderLocation + "vertexCubeMap.glsl", ShaderType.VertexShader)
+            .LoadShader(DepthMapShaderLocation + "geometryCubeMap.glsl", ShaderType.GeometryShader)
+            .LoadShader(DepthMapShaderLocation + "fragmentCubeMap.glsl", ShaderType.FragmentShader)
+            .Compile()
+            .SetModelLocation("model");
+
+        light = new Objects.Light().PointMode().SetPosition(depthMapPosition).SetAmbient(0.1f);
+        material = PresetMaterial.Silver.SetAmbient(0.1f);
+
+        GL.Enable(EnableCap.DepthTest);
+        GL.Enable(EnableCap.CullFace);
+        GL.DepthMask(true);
+
+        shader.EnableGammaCorrection();
+        
+        depthMapShader.Use();
+        var proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 0.05f, 100f);
+
+        Matrix4[] viewSpaceMatrices =
+        {
+            Matrix4.LookAt(Vector3.Zero,  Vector3.UnitX, -Vector3.UnitY) * proj,
+            Matrix4.LookAt(Vector3.Zero, -Vector3.UnitX, -Vector3.UnitY) * proj,
+            Matrix4.LookAt(Vector3.Zero,  Vector3.UnitY,  Vector3.UnitZ) * proj, // can't look straight up so swap the "up" direction
+            Matrix4.LookAt(Vector3.Zero, -Vector3.UnitY, -Vector3.UnitZ) * proj,
+            Matrix4.LookAt(Vector3.Zero,  Vector3.UnitZ, -Vector3.UnitY) * proj,
+            Matrix4.LookAt(Vector3.Zero, -Vector3.UnitZ, -Vector3.UnitY) * proj,
+        };
+
+        depthMapShader.Use();
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[0]"),false, ref viewSpaceMatrices[0]);
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[1]"),false, ref viewSpaceMatrices[1]);
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[2]"),false, ref viewSpaceMatrices[2]);
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[3]"),false, ref viewSpaceMatrices[3]);
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[4]"),false, ref viewSpaceMatrices[4]);
+        GL.UniformMatrix4(GL.GetUniformLocation(depthMapShader.GetHandle(),"shadowMatrices[5]"),false, ref viewSpaceMatrices[5]);
+
+        texture.Use();
+        
+        shader.UniformMaterial("material",material,texture)
+            .UniformLight("light",light);
+
+        shader.Use();
+        GL.ActiveTexture(TextureUnit.Texture0 + 1);
+        GL.BindTexture(TextureTarget.TextureCubeMap,depthCubeMap);
+        shader.Uniform1("depthMap", 1);
+        
         // attach player functions to window
         Window.Resize += newWin => player.Camera.Resize(shader,newWin.Size);
     }
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
+
         player.Update(shader, args, Window.KeyboardState, GetRelativeMouse());
         shader.Uniform3("cameraPos", player.Position);
     }
@@ -151,19 +157,12 @@ public class Game1 : Library.Game
         if (keyboardState.IsKeyDown(Keys.Right)) direction += Vector3.UnitX;
 
         cubePosition += direction * (float)args.Time * 5f;
-
-
-        if (keyboardState.IsKeyPressed(Keys.Enter))
-        {
-            visualiseDepthMap = !visualiseDepthMap;
-            shader.Uniform1("visualiseDepthMap", visualiseDepthMap ? 1 : 0);
-        }
     }
     
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.CullFace(CullFaceMode.Front);
-        GL.Viewport(0,0,4096,4096);
+        GL.Viewport(0,0,CubeMapWidth,CubeMapHeight);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMap);
         GL.Clear(ClearBufferMask.DepthBufferBit);
         depthMapShader.Use();
@@ -179,11 +178,12 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         shader.SetActive(ShaderType.FragmentShader, "cube");
-        shader.Uniform1("flipNormals", 1);
-        GL.CullFace(CullFaceMode.Front);
-        cube.Draw(shader,scale: new Vector3(8f,8f,8f));
+        //GL.CullFace(CullFaceMode.Back);
+        shader.Uniform1("farPlane", DepthFar);
+        depthMapShader.Uniform1("farPlane", DepthFar);
         
-        shader.Uniform1("flipNormals", 0);
+        GL.CullFace(CullFaceMode.Front);
+        inverseCube.Draw(shader,scale: new Vector3(8f,8f,8f));
         GL.CullFace(CullFaceMode.Back);
         cube.Draw(shader,cubePosition, new Vector3(0f,0.2f,0f));
         cube.Draw(shader,new Vector3(-3f,0f,3f), new Vector3(0.4f,0f,0f));
@@ -203,7 +203,7 @@ public class Game1 : Library.Game
 
         shader.Delete();
 
-        GL.DeleteTexture(depthMapTexture);
+        GL.DeleteTexture(depthCubeMap);
         GL.DeleteFramebuffer(depthMap);
         depthMapShader.Delete();
     }
