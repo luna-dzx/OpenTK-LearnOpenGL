@@ -33,8 +33,8 @@ public class Game1 : Library.Game
 
     private Vector3 cubePosition = new Vector3(0f, 0f, -5f);
     
-    const int CubeMapWidth = 1024;
-    const int CubeMapHeight = 1024;
+    const int CubeMapWidth = 2048;
+    const int CubeMapHeight = 2048;
 
     const float DepthNear = 0.05f;
     const float DepthFar = 100f;
@@ -161,16 +161,17 @@ public class Game1 : Library.Game
     
     protected override void RenderFrame(FrameEventArgs args)
     {
-        GL.CullFace(CullFaceMode.Front);
+        GL.Disable(EnableCap.CullFace);
         GL.Viewport(0,0,CubeMapWidth,CubeMapHeight);
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,depthMap);
         GL.Clear(ClearBufferMask.DepthBufferBit);
         depthMapShader.Use();
-
+        
         cube.Draw(depthMapShader, cubePosition, new Vector3(0f,0.2f,0f));
         cube.Draw(depthMapShader,new Vector3(-3f,0f,3f), new Vector3(0.4f,0f,0f));
+
         
-        
+        GL.Enable(EnableCap.CullFace);
         shader.Use();
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
 
@@ -178,7 +179,6 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         shader.SetActive(ShaderType.FragmentShader, "cube");
-        //GL.CullFace(CullFaceMode.Back);
         shader.Uniform1("farPlane", DepthFar);
         depthMapShader.Uniform1("farPlane", DepthFar);
         
