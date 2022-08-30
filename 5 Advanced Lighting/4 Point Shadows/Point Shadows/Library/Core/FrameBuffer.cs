@@ -172,10 +172,8 @@ public class DepthMap
     
     public Matrix4 ViewSpaceMatrix;
     
-    //Vector3 Position = new Vector3(-3.5f,8.5f,20f);
-    //Vector3 Direction = new Vector3(1f,-4f,-5f);
-    public Vector3 Position { get; private set; }
-    public Vector3 Direction { get; private set; }
+    public Vector3 Position;
+    public Vector3 Direction;
 
 
     public DepthMap(string shaderPath, Vector2i size, Vector3 position, Vector3 direction)
@@ -267,6 +265,154 @@ public class DepthMap
     }
 
     public DepthMap Delete()
+    {
+        GL.DeleteTexture(TextureHandle);
+        GL.DeleteFramebuffer(Handle);
+        Shader.Delete();
+        return this;
+    }
+
+}
+
+
+public class CubeDepthMap
+{
+    public readonly ShaderProgram Shader;
+    
+    public readonly int Handle;
+    public readonly int TextureHandle;
+
+    public readonly Vector2i Size;
+    
+    public Matrix4[] ViewSpaceMatrices;
+    public Vector3 Position;
+
+    public float ClipNear;
+    public float ClipFar;
+
+
+    public CubeDepthMap(string shaderPath, Vector2i size, Vector3 position, float clipNear = 0.05f, float clipFar = 100f)
+    {
+        Handle = GL.GenFramebuffer();
+        TextureHandle = GL.GenTexture();
+        Size = size;
+        Position = position;
+        ViewSpaceMatrices = new Matrix4[6];
+        ClipNear = clipNear;
+        ClipFar = clipFar;
+        
+        GL.BindTexture(TextureTarget.TextureCubeMap,TextureHandle);
+        for (int i = 0; i < 6; i++)
+        {
+            GL.TexImage2D(TextureTarget.TextureCubeMapPositiveX + i,
+                0, PixelInternalFormat.DepthComponent,
+                Size.X,Size.Y,0,
+                PixelFormat.DepthComponent,PixelType.Float,IntPtr.Zero);
+        }
+
+        GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Nearest);
+        GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Nearest);
+        GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureWrapS,(int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureWrapT,(int)TextureWrapMode.ClampToEdge);
+        GL.TexParameter(TextureTarget.TextureCubeMap,TextureParameterName.TextureWrapR,(int)TextureWrapMode.ClampToEdge);
+        
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,Handle);
+        GL.FramebufferTexture(FramebufferTarget.Framebuffer,FramebufferAttachment.DepthAttachment,TextureHandle,0);
+        GL.DrawBuffer(DrawBufferMode.None);
+        GL.ReadBuffer(ReadBufferMode.None);
+
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+
+        Shader = new ShaderProgram()
+            .LoadShader(shaderPath + "vertexCubeMap.glsl", ShaderType.VertexShader)
+            .LoadShader(shaderPath + "geometryCubeMap.glsl", ShaderType.GeometryShader)
+            .LoadShader(shaderPath + "fragmentCubeMap.glsl", ShaderType.FragmentShader)
+            .Compile()
+            .SetModelLocation("model");
+    }
+
+    public CubeDepthMap DrawMode(int x = 0, int y = 0, int width = 0, int height = 0)
+    {
+        if (width == 0) width = Size.X;
+        if (height == 0) height = Size.Y;
+        
+        GL.Disable(EnableCap.CullFace);
+        GL.Viewport(x,y,width,height);
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,Handle);
+        GL.Clear(ClearBufferMask.DepthBufferBit);
+        
+        Shader.Use();
+
+        return this;
+    }
+
+    public CubeDepthMap ReadMode()
+    {
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+        return this;
+    }
+    
+
+    public CubeDepthMap UpdateMatrices(Vector3[] directions = default, Vector3[] upDirections = default)
+    {
+        if (directions == default)
+        {
+            directions = new[]
+            {
+                Vector3.UnitX,
+                -Vector3.UnitX,
+                Vector3.UnitY,
+                -Vector3.UnitY,
+                Vector3.UnitZ,
+                -Vector3.UnitZ
+            };
+        }
+        if (upDirections == default)
+        {
+            upDirections = new[]
+            {
+                -Vector3.UnitY,
+                -Vector3.UnitY,
+                Vector3.UnitZ,
+                -Vector3.UnitZ,
+                -Vector3.UnitY,
+                -Vector3.UnitY
+            };
+        }
+        
+        var proj = Matrix4.CreatePerspectiveFieldOfView(MathHelper.PiOver2, (float)Size.X/Size.Y, ClipNear, ClipFar);
+        for (int i = 0; i < 6; i++) ViewSpaceMatrices[i] = Matrix4.LookAt(Vector3.Zero, directions[i], upDirections[i]) * proj;
+
+        UniformMatrices(Shader, "shadowMatrices");
+        UniformClipFar(Shader, "farPlane");
+
+        return this;
+    }
+
+    public CubeDepthMap UniformMatrices(ShaderProgram shaderProgram, string name)
+    {
+        shaderProgram.UniformMat4Array(name, ref ViewSpaceMatrices);
+        return this;
+    }
+
+
+    public CubeDepthMap UniformTexture(ShaderProgram shaderProgram, string name, int textureUnit = 0)
+    {
+        shaderProgram.Use();
+        GL.ActiveTexture(TextureUnit.Texture0 + textureUnit);
+        GL.BindTexture(TextureTarget.TextureCubeMap,TextureHandle);
+        shaderProgram.Uniform1(name, textureUnit);
+        return this;
+    }
+
+    public CubeDepthMap UniformClipFar(ShaderProgram shaderProgram, string name)
+    {
+        shaderProgram.Use();
+        shaderProgram.Uniform1(name, ClipFar);
+        return this;
+    }
+
+    public CubeDepthMap Delete()
     {
         GL.DeleteTexture(TextureHandle);
         GL.DeleteFramebuffer(Handle);

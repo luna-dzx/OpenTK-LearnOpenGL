@@ -655,7 +655,25 @@ public class ShaderProgram
     /// <param name="v3">w component value</param>
     /// <returns>current object for ease of use</returns>
     public ShaderProgram Uniform4(string name, uint v0, uint v1, uint v2, uint v3) { GL.Uniform4(GetUniform(name), v0,v1,v2,v3); return this; }
-        
+    
+    public ShaderProgram UniformMat4(string name, ref Matrix4 matrix) { GL.UniformMatrix4(GetUniform(name),false,ref matrix); return this; }
+
+    #endregion
+
+
+    #region Uniform Arrays
+
+    public ShaderProgram UniformMat4Array(string name, ref Matrix4[] matrices)
+    {
+        for (int i = 0; i < matrices.Length; i++)
+        {
+            GL.UniformMatrix4(GetUniform(name+"["+i+"]"),false,ref matrices[i]);
+        }
+
+        return this;
+    }
+    
+
     #endregion
         
     #region Engine Specific
