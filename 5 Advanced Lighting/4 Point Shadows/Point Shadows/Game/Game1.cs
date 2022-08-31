@@ -78,7 +78,6 @@ public class Game1 : Library.Game
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
-
         player.Update(shader, args, Window.KeyboardState, GetRelativeMouse());
         shader.Uniform3("cameraPos", player.Position);
     }
@@ -104,7 +103,7 @@ public class Game1 : Library.Game
         
         GL.Enable(EnableCap.CullFace);
         shader.Use();
-        GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
+        depthMap.ReadMode();
 
         GL.Viewport(0,0,Window.Size.X,Window.Size.Y);
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
