@@ -14,6 +14,7 @@ public class Game1 : Library.Game
 
     FirstPersonPlayer player;
     Model quad;
+    Model cube;
 
     Objects.Light light;
     Objects.Material material;
@@ -29,10 +30,17 @@ public class Game1 : Library.Game
     {
         GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
-        shader = new ShaderProgram(
+        shader = new ShaderProgram()
+            .LoadShader(ShaderLocation + "vertex.glsl", ShaderType.VertexShader)
+            //.LoadShader(ShaderLocation + "geometry.glsl", ShaderType.GeometryShader)
+            .LoadShader(ShaderLocation + "fragment.glsl", ShaderType.FragmentShader)
+            .Compile()
+            .EnableAutoProjection();
+        
+        /*shader = new ShaderProgram(
             ShaderLocation + "vertex.glsl", 
             ShaderLocation + "fragment.glsl",
-            true);
+            true);*/
 
         player = new FirstPersonPlayer(Window.Size)
             .SetPosition(new Vector3(0,0,6))
@@ -42,11 +50,16 @@ public class Game1 : Library.Game
 
         quad = new Model(PresetMesh.Square);
 
+
         texture = new Texture("../../../../../../0 Assets/brickwall.jpg",0);
         normalMap = new Texture("../../../../../../0 Assets/brickwall_normal.jpg",1);
 
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
         material = PresetMaterial.Silver.SetAmbient(0.1f);
+        
+        
+        cube = new Model(PresetMesh.Cube)
+            .UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
 
         GL.Enable(EnableCap.DepthTest);
         GL.Enable(EnableCap.CullFace);
@@ -81,13 +94,23 @@ public class Game1 : Library.Game
             shader.Uniform1("normalMapping",normalMapping?1:0);
         }
         
+        if (keyboardState.IsKeyDown(Keys.Right)) rotation+=Vector3.UnitY*(float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.Left))  rotation-=Vector3.UnitY*(float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.Up))    rotation+=Vector3.UnitX*(float)args.Time;
+        if (keyboardState.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
+        
+        
     }
 
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
+        shader.SetActive(ShaderType.FragmentShader, "scene");
         quad.Draw(shader,rotation:rotation,scale:5f);
+
+        shader.SetActive(ShaderType.FragmentShader, "light");
+        cube.Draw(shader);
 
         Window.SwapBuffers();
     }
@@ -98,6 +121,7 @@ public class Game1 : Library.Game
         GL.UseProgram(0);
         
         quad.Delete();
+        cube.Delete();
 
         shader.Delete();
     }

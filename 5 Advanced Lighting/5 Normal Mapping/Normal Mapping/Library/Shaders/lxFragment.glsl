@@ -11,6 +11,11 @@ vec3 lx_GammaCorrect(vec3 colour, float gamma)
     return pow(colour, vec3(gamma));
 }
 
+float lx_Diffuse(in vec3 normal, in vec3 fragPos, in vec3 lightPos)
+{
+    return max(dot(normal, lightPos - fragPos), 0.0);
+}
+
 vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoords, in vec2 specTexCoords, in int textureMode, in lx_Material material, in lx_Light light, float lightMult)
 {
     normal = normalize(normal);
@@ -80,7 +85,7 @@ vec3 lx_BasePhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 te
     vec3 halfwayDir = normalize(lightDir + viewDir);
     float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
     
-    vec3 specular = light.specular * spec * material.specular * specTexSample;
+    vec3 specular = diff * light.specular * spec * material.specular * specTexSample;
     
     // fix buggy lighting
     if (abs(diffuse.x)+abs(diffuse.y)+abs(diffuse.z) == 0){specular*=0;}

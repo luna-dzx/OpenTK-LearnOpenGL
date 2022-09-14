@@ -12,18 +12,22 @@ public static class Objects
         public float[] Vertices;
         public float[] TexCoords;
         public float[] Normals;
+        public float[] Tangents;
+
         public int[] Indices;
 
         public int VertexBinding = 0;
         public int TexCoordBinding = 1;
         public int NormalBinding = 2;
-        
-        public Mesh(float[] vertices = null, int[] indices = null, float[] texCoords = null, float[] normals = null)
+        public int TangentBinding = 3;
+
+        public Mesh(float[] vertices = null, int[] indices = null, float[] texCoords = null, float[] normals = null, float[] tangents = null)
         {
             Vertices = vertices;
             Indices = indices;
             TexCoords = texCoords;
             Normals = normals;
+            Tangents = tangents;
         }
 
     }

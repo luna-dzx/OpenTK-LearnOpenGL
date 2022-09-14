@@ -194,6 +194,7 @@ public class Model : VertexArray
         if (meshData.Vertices != null) LoadData(meshData.VertexBinding, meshData.Vertices);
         if (meshData.TexCoords != null) LoadData(meshData.TexCoordBinding, meshData.TexCoords, BufferTarget.ArrayBuffer, -1, 2, 2);
         if (meshData.Normals != null) LoadData(meshData.NormalBinding, meshData.Normals);
+        if (meshData.Tangents != null) LoadData(meshData.TangentBinding, meshData.Tangents);
         if (meshData.Indices != null) CreateBuffer(meshData.Indices, BufferTarget.ElementArrayBuffer);
 
         mesh = meshData;

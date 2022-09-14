@@ -202,6 +202,16 @@ public static class PresetMesh
             0,0,1,
             0,0,1,
             0,0,1,
+        },
+        
+        tangents: new float[]
+        {
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
         }
 
     );

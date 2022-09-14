@@ -45,4 +45,31 @@ public class Maths
         result.Row3 = new Vector4(x,y,z, 1f);
         return result;
     }
+
+
+    public static (Vector3, Vector3) CalculateTangents((Vector3,Vector3,Vector3) positions, (Vector2,Vector2,Vector2) texCoords)
+    {
+        var (pos1, pos2, pos3) = positions;
+        var (uv1, uv2, uv3) = texCoords;
+        
+        var edge1 = pos2 - pos1;
+        var edge2 = pos3 - pos1;
+        
+        var deltaUv1 = uv2 - uv1;
+        var deltaUv2 = uv3 - uv1;
+
+        float f = 1f / (deltaUv1.X * deltaUv2.Y - deltaUv2.X * deltaUv1.Y);
+
+        Vector3 tangent, biTangent;
+        
+        tangent.X = f * (deltaUv2.Y * edge1.X - deltaUv1.Y * edge2.X);
+        tangent.Y = f * (deltaUv2.Y * edge1.Y - deltaUv1.Y * edge2.Y);
+        tangent.Z = f * (deltaUv2.Y * edge1.Z - deltaUv1.Y * edge2.Z);
+
+        biTangent.X = f * (-deltaUv2.X * edge1.X + deltaUv1.X * edge2.X);
+        biTangent.Y = f * (-deltaUv2.X * edge1.Y + deltaUv1.X * edge2.Y);
+        biTangent.Z = f * (-deltaUv2.X * edge1.Z + deltaUv1.X * edge2.Z);
+
+        return (tangent, biTangent);
+    }
 }
