@@ -1,4 +1,5 @@
-﻿using Library;
+﻿using Assimp;
+using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
@@ -13,7 +14,7 @@ public class Game1 : Library.Game
     ShaderProgram shader;
 
     FirstPersonPlayer player;
-    Model quad;
+    Model backpack;
     Model cube;
 
     Objects.Light light;
@@ -21,6 +22,7 @@ public class Game1 : Library.Game
 
     Texture texture;
     Texture normalMap;
+    Texture specular;
     
     bool normalMapping;
 
@@ -28,7 +30,7 @@ public class Game1 : Library.Game
 
     protected override void Load()
     {
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
 
         shader = new ShaderProgram()
             .LoadShader(ShaderLocation + "vertex.glsl", ShaderType.VertexShader)
@@ -46,30 +48,35 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0,0,6))
             .SetDirection(new Vector3(0, 0, 1));
         player.UpdateProjection(shader);
+
+
+        const string BackpackDir = "../../../../../../0 Assets/backpack/";
+        backpack = Model.FromFile(BackpackDir,"backpack.obj",out var textures,
+            Array.Empty<TextureType>(),
+            PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
+
+
+        texture = new Texture(BackpackDir+"diffuse.jpg",0);
+        specular = new Texture(BackpackDir+"specular.jpg",1);
+        normalMap = new Texture(BackpackDir+"normal.png",2);
         
 
-        quad = new Model(PresetMesh.Square);
-
-
-        texture = new Texture("../../../../../../0 Assets/brickwall.jpg",0);
-        normalMap = new Texture("../../../../../../0 Assets/brickwall_normal.jpg",1);
-
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
-        material = PresetMaterial.Silver.SetAmbient(0.1f);
+        material = PresetMaterial.Silver.SetAmbient(0.01f);
         
         
         cube = new Model(PresetMesh.Cube)
             .UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
 
         GL.Enable(EnableCap.DepthTest);
-        //GL.Enable(EnableCap.CullFace);
+        GL.Enable(EnableCap.CullFace);
         GL.DepthMask(true);
 
         shader.EnableGammaCorrection();
 
         texture.Use();
         
-        shader.UniformMaterial("material",material,texture)
+        shader.UniformMaterial("material",material,texture,specular)
             .UniformLight("light",light)
             .UniformTexture("normalMap",normalMap);
 
@@ -81,7 +88,7 @@ public class Game1 : Library.Game
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
-        player.Update(shader, args, Window.KeyboardState, GetRelativeMouse());
+        player.Update(shader, args, Window.KeyboardState, GetRelativeMouse()*3f);
         shader.Uniform3("cameraPos", player.Position);
         //rotation += Vector3.UnitX * (float)(args.Time * 2f);
     }
@@ -107,7 +114,7 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
         shader.SetActive(ShaderType.FragmentShader, "scene");
-        quad.Draw(shader,rotation:rotation,scale:5f);
+        backpack.Draw(shader,rotation:rotation,scale:5f);
 
         shader.SetActive(ShaderType.FragmentShader, "light");
         cube.Draw(shader);
@@ -120,7 +127,7 @@ public class Game1 : Library.Game
         GL.BindVertexArray(0);
         GL.UseProgram(0);
         
-        quad.Delete();
+        backpack.Delete();
         cube.Delete();
 
         shader.Delete();

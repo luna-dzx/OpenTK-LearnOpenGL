@@ -115,6 +115,7 @@ public class Model : VertexArray
                         string path = directory + slot.FilePath;
                         var texture = new Texture(path, (offset + slot.TextureIndex));
                         currentTextures.Add(texture);
+                        Console.WriteLine(type);
                     }
 
                     offset += currentTextures.Count;
@@ -133,6 +134,7 @@ public class Model : VertexArray
 
         var vertices = new float[vertexCount * 3];
         var normals = new float[vertexCount * 3];
+        var tangents = new float[vertexCount * 3];
         var texCoords = new float[vertexCount * 2];
         var indices = new int[indexCount];
         
@@ -150,6 +152,10 @@ public class Model : VertexArray
                 normals[vertexIndex*3] = mesh.Normals[i].X;
                 normals[vertexIndex*3 +1] = mesh.Normals[i].Y;
                 normals[vertexIndex*3 +2] = mesh.Normals[i].Z;
+                
+                tangents[vertexIndex*3] = mesh.Tangents[i].X;
+                tangents[vertexIndex*3 +1] = mesh.Tangents[i].Y;
+                tangents[vertexIndex*3 +2] = mesh.Tangents[i].Z;
                 
                 texCoords[vertexIndex*2] = mesh.TextureCoordinateChannels[0][i].X;
                 texCoords[vertexIndex*2 +1] = mesh.TextureCoordinateChannels[0][i].Y;
@@ -175,7 +181,8 @@ public class Model : VertexArray
             vertices: vertices,
             indices: indices,
             texCoords: texCoords,
-            normals: normals
+            normals: normals,
+            tangents: tangents
         );
 
         return new Model(finalMesh);
