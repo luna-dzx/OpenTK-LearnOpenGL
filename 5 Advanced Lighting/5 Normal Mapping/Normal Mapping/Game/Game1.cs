@@ -62,7 +62,7 @@ public class Game1 : Library.Game
             .UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
 
         GL.Enable(EnableCap.DepthTest);
-        GL.Enable(EnableCap.CullFace);
+        //GL.Enable(EnableCap.CullFace);
         GL.DepthMask(true);
 
         shader.EnableGammaCorrection();

@@ -21,7 +21,28 @@ struct lx_Light {
     vec3 attenuation;
 };
 
-vec3 lx_NormalFix(mat4 appliedMatrix, vec3 normal)
+
+lx_Light lx_MoveLight(lx_Light light, vec3 position)
 {
-    return mat3(transpose(inverse(appliedMatrix))) * normal;
+    lx_Light lightTemp = light;
+    lightTemp.position = position;
+    return lightTemp;
+}
+
+float lx_NormalFlip(vec3 position, vec3 normal)
+{
+    if (dot (normal, position) < 0.0) // approximation, almost always true
+    {
+        return - 1.0;
+    }
+    return 1.0;
+}
+
+vec3 lx_NormalFlipVec(vec3 position, vec3 normal)
+{
+    if (dot (normal, position) < 0.0) // approximation, almost always true
+    {
+        return normal * -1;
+    }
+    return normal;
 }

@@ -120,35 +120,45 @@ float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace)
     return 1.0-shadow;
 }
 
-float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace, float texelOffset, int range, float divisor)
-{
-    vec3 projCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5 + 0.5;
-    float closestDepth = texture(shadowTexture, projCoords.xy).r;
-    float currentDepth = projCoords.z;
-    float textureDepth = texture(shadowTexture, projCoords.xy).r;
-    
-    float shadow = (currentDepth > textureDepth ? 1.0 : 0.0);
-    
 
+vec3 lx_SampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);   
+
+float lx_ShadowCalculation(samplerCube depthMap, vec3 fragPos, vec3 lightPos, vec3 cameraPos, float farPlane)
+{
+    vec3 fragToLight = fragPos - lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    closestDepth *= farPlane;
+    float currentDepth = length(fragToLight);
+    
+    float bias = 0.15;
+    float shadow = currentDepth - bias > closestDepth ? 0.0 : 1.0;
+    
+    
     if (shadow == 0.0)
     {
-        vec2 texelSize = texelOffset / textureSize(shadowTexture, 0);
-        for(int x = -range; x <= range; x++)
+        int samples = 20;
+        float viewDistance = length(cameraPos - fragPos);
+        float diskRadius = (1.0 + (viewDistance / farPlane)) / 30.0; 
+        for(int i = 0; i < samples; ++i)
         {
-            for(int y = -range; y <= range; y++)
-            {
-                float pcfDepth = texture(shadowTexture, projCoords.xy + vec2(x, y) * texelSize).r; 
-                shadow += currentDepth > pcfDepth ? 1.0 : 0.0;
-            }    
+            closestDepth = texture(depthMap, fragToLight + lx_SampleOffsetDirections[i] * diskRadius).r;
+            closestDepth *= farPlane;
+            if(currentDepth - bias < closestDepth)
+                shadow += 1.0;
         }
-        shadow = min(shadow/divisor,0.98);
-    }
+        shadow /= float(samples);
     
-    if(projCoords.z > 1.0)
-        shadow = 0.0;
-        
-        
-    return 1.0-shadow;
+    }
+
+    
+    return shadow;
 }
 
 vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)

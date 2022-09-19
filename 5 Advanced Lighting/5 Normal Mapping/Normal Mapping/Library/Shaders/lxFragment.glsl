@@ -167,6 +167,19 @@ vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
     return pixelColour / float(numSamples);
 }
 
+
+vec3 lx_NormalMap(sampler2D normalMap, vec2 texCoords)
+{
+    return normalize(texture(normalMap, texCoords).rgb * 2.0 - 1.0);
+}
+
+// just for readability on longer lines
+vec4 lx_Colour(vec3 colour)
+{
+    return vec4(colour,1.0);
+}
+
+
 [main]
 lx_FragColour = vec4(0.0);
 
