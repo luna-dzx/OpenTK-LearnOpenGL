@@ -46,9 +46,9 @@ public class Game1 : Library.Game
         
         quad = new Model(PresetMesh.Square);
 
-        texture = new Texture("../../../../../../0 Assets/bricks2.jpg",0);
-        normalMap = new Texture("../../../../../../0 Assets/bricks2_normal.jpg",1);
-        displaceMap = new Texture("../../../../../../0 Assets/bricks2_disp.jpg",2);
+        texture = new Texture("../../../../../../0 Assets/toy_box_diffuse.png",0);
+        normalMap = new Texture("../../../../../../0 Assets/toy_box_normal.png",1);
+        displaceMap = new Texture("../../../../../../0 Assets/toy_box_disp.png",2);
         
 
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
