@@ -22,6 +22,7 @@ public class Game1 : Library.Game
 
     Texture texture;
     Texture normalMap;
+    Texture displaceMap;
 
     bool normalMapping;
 
@@ -45,8 +46,9 @@ public class Game1 : Library.Game
         
         quad = new Model(PresetMesh.Square);
 
-        texture = new Texture("../../../../../../0 Assets/brickwall.jpg",0);
-        normalMap = new Texture("../../../../../../0 Assets/brickwall_normal.jpg",1);
+        texture = new Texture("../../../../../../0 Assets/bricks2.jpg",0);
+        normalMap = new Texture("../../../../../../0 Assets/bricks2_normal.jpg",1);
+        displaceMap = new Texture("../../../../../../0 Assets/bricks2_disp.jpg",2);
         
 
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
@@ -66,7 +68,9 @@ public class Game1 : Library.Game
         
         shader.UniformMaterial("material",material,texture)
             .UniformLight("light",light)
-            .UniformTexture("normalMap",normalMap);
+            .UniformTexture("normalMap",normalMap)
+            .UniformTexture("displaceMap",displaceMap)
+            .Uniform1("height_scale",heightScale);
 
         shader.Use();
 
@@ -94,6 +98,15 @@ public class Game1 : Library.Game
         if (keyboardState.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
         
         
+    }
+
+
+    float heightScale = 0.1f;
+    
+    protected override void MouseHandling(FrameEventArgs args, MouseState mouseState)
+    {
+        heightScale += mouseState.ScrollDelta.Y*((float)args.Time);
+        shader.Uniform1("height_scale",heightScale);
     }
 
     protected override void RenderFrame(FrameEventArgs args)

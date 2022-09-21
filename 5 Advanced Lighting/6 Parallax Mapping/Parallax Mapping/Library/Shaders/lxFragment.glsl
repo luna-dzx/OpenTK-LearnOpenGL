@@ -179,6 +179,44 @@ vec4 lx_Colour(vec3 colour)
     return vec4(colour,1.0);
 }
 
+vec2 lx_ParallaxMapping(sampler2D depthMap, vec2 texCoords, vec3 viewDir, float heightScale, float minLayers, float maxLayers)
+{ 
+    // size of each layer
+    float layerDepth = 1.0 / mix(maxLayers, minLayers, max(dot(vec3(0.0, 0.0, 1.0), viewDir), 0.0));
+    
+    // amount to shift the texture coordinates per layer
+    vec2 P = viewDir.xy * heightScale; 
+    vec2 deltaTexCoords = P * layerDepth;
+
+
+    vec2  currentTexCoords = texCoords;
+    float currentDepthMapValue = texture(depthMap, currentTexCoords).r;
+    float currentLayerDepth = 0.0;
+      
+    while(currentLayerDepth < currentDepthMapValue)
+    {
+        // move texCoords with parallaxing
+        currentTexCoords -= deltaTexCoords; 
+        currentDepthMapValue = texture(depthMap, currentTexCoords).r; // sadly this sample step makes optimising layers a lot harder
+
+        // keep incrementing (stops once it hits the imaginary parallaxed object's depth)
+        currentLayerDepth += layerDepth;  
+    }
+    
+    // undo last step
+    vec2 prevTexCoords = currentTexCoords + deltaTexCoords;
+
+    // get depth after and before collision for linear interpolation
+    float afterDepth  = currentDepthMapValue - currentLayerDepth;
+    float beforeDepth = texture(depthMap, prevTexCoords).r - currentLayerDepth + layerDepth;
+     
+    // interpolation of texture coordinates
+    float weight = afterDepth / (afterDepth - beforeDepth);
+    vec2 finalTexCoords = prevTexCoords * weight + currentTexCoords * (1.0 - weight);
+    
+    return finalTexCoords;  
+}
+
 
 [main]
 lx_FragColour = vec4(0.0);
