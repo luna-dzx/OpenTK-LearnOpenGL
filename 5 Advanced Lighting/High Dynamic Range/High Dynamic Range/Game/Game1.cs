@@ -28,7 +28,9 @@ public class Game1 : Library.Game
     
     FrameBuffer frameBuffer;
     
-    bool normalMapping;
+    bool highDynamicRange;
+
+    float exposure;
 
     private Vector3 rotation = Vector3.Zero; //  new Vector3(0f,MathHelper.DegreesToRadians(59f),0f);
 
@@ -63,7 +65,7 @@ public class Game1 : Library.Game
         normalMap = new Texture(BackpackDir+"normal.png",2);
         
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f))
-            .SetAmbient(0.01f).SetSpecular(Vector3.One*5f).SetDiffuse(Vector3.One*5f);
+            .SetAmbient(0.01f).SetSpecular(Vector3.One*12f).SetDiffuse(Vector3.One*12f);
         material = PresetMaterial.Silver.SetAmbient(0.01f);
         
         
@@ -94,8 +96,6 @@ public class Game1 : Library.Game
             .UniformTexture("normalMap",normalMap);
         
 
-        shader.Use();
-
         
         shader.Use();
 
@@ -105,19 +105,23 @@ public class Game1 : Library.Game
 
     protected override void UpdateFrame(FrameEventArgs args)
     {
-        shader.Use();
         player.Update(shader, args, Window.KeyboardState, GetRelativeMouse()*3f);
         shader.Uniform3("cameraPos", player.Position);
         //rotation += Vector3.UnitX * (float)(args.Time * 2f);
     }
 
+    protected override void MouseHandling(FrameEventArgs args, MouseState mouseState)
+    {
+        exposure += mouseState.ScrollDelta.Y * (float)args.Time;
+        frameBufferShader.Uniform1("exposure", exposure);
+    }
+
     protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
     {
-        shader.Use();
         if (keyboardState.IsKeyPressed(Keys.Enter))
         {
-            normalMapping = !normalMapping;
-            shader.Uniform1("normalMapping",normalMapping?1:0);
+            highDynamicRange = !highDynamicRange;
+            frameBufferShader.Uniform1("highDynamicRange",highDynamicRange?1:0);
         }
         
         if (keyboardState.IsKeyDown(Keys.Right)) rotation+=Vector3.UnitY*(float)args.Time;
@@ -169,7 +173,9 @@ public class Game1 : Library.Game
         
         backpack.Delete();
         cube.Delete();
+        quad.Delete();
 
+        frameBufferShader.Delete();
         shader.Delete();
     }
 }

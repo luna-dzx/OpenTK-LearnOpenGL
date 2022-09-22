@@ -217,6 +217,18 @@ vec2 lx_ParallaxMapping(sampler2D depthMap, vec2 texCoords, vec3 viewDir, float 
     return finalTexCoords;  
 }
 
+vec3 lx_ApplyHDR(vec3 colour, float exposure, float gamma)
+{
+    // exposure tone mapping
+    vec3 mapped = vec3(1.0) - exp(-colour * exposure);
+    if (gamma != 1.0)
+    {
+        // gamma correction 
+        mapped = pow(mapped, vec3(1.0 / gamma));
+    }
+    
+    return mapped;
+}
 
 [main]
 lx_FragColour = vec4(0.0);

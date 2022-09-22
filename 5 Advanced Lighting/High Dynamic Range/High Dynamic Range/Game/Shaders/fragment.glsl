@@ -5,7 +5,6 @@ uniform lx_Light light;
 uniform sampler2D normalMap;
 uniform vec3 cameraPos;
 
-uniform int normalMapping;
 
 in VS_OUT {
     vec3 fragPos;
