@@ -9,7 +9,8 @@ public class FrameBuffer
     
     // optional extras for simplification
     private bool usingPreset = false;
-    private TextureBuffer colourAttachment;
+    public int NumColourAttachments;
+    private TextureBuffer[] colourAttachments;
     private TextureBuffer depthStencilAttachment;
     private RenderBuffer depthStencilRenderBuffer;
     private bool usingRenderBuffer = true;
@@ -21,20 +22,24 @@ public class FrameBuffer
     }
 
     /// <summary>
-    /// Create a common FBO with a texture bound to colour attachment 0 and a render buffer bound to the depth/stencil buffer
+    /// Create a common FBO with n textures bound to colour attachment 0,1,2... and a render buffer bound to the depth/stencil buffer
     /// </summary>
     /// <param name="pixelFormat"></param>
     /// <param name="size"></param>
     public FrameBuffer(Vector2i size, TextureTarget target = TextureTarget.Texture2D, PixelFormat pixelFormat= PixelFormat.Rgb,
-        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4) : this()
+        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4, int numColourAttachments = 1) : this()
     {
         usingPreset = true;
 
-        colourAttachment = new TextureBuffer(internalFormat, pixelFormat, (size.X,size.Y), target,samples:numSamples);
+        NumColourAttachments = numColourAttachments;
+        colourAttachments = new TextureBuffer[NumColourAttachments];
+        for (int i = 0; i < NumColourAttachments; i++)
+            colourAttachments[i] = new TextureBuffer(internalFormat, pixelFormat, (size.X,size.Y), target,samples:numSamples);
 
         if (37120 <= (int)target && (int)target <= 37123) // MSAA
         {
-            AttachTexture(colourAttachment, FramebufferAttachment.ColorAttachment0);
+            for (int i = 0; i < NumColourAttachments; i++) 
+                AttachTexture(colourAttachments[i], FramebufferAttachment.ColorAttachment0 + i);
 
             depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil,
                 (size.X, size.Y), target, samples: numSamples);
@@ -45,10 +50,12 @@ public class FrameBuffer
         }
         else // NO MSAA
         {
+            for (int i = 0; i < NumColourAttachments; i++)
+            {
+                colourAttachments[i].Wrapping(TextureWrapMode.ClampToEdge);
+                AttachTexture(colourAttachments[i], FramebufferAttachment.ColorAttachment0 + i);
+            }
             
-            colourAttachment.Wrapping(TextureWrapMode.ClampToEdge);
-            AttachTexture(colourAttachment, FramebufferAttachment.ColorAttachment0);
-        
             depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
             AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
         }
@@ -62,11 +69,25 @@ public class FrameBuffer
     }
 
 
-    public FrameBuffer UseTexture()
+    public FrameBuffer UseTexture(int num = -1)
     {
         if (usingPreset)
         {
-            colourAttachment.Use();
+
+            if (num == -1)
+            {
+                for (int i = 0; i < NumColourAttachments; i++)
+                {
+                    GL.ActiveTexture(TextureUnit.Texture0+i);
+                    colourAttachments[i].Use();
+                }
+            }
+            else
+            {
+                colourAttachments[num].Use();
+            }
+
+                
             return this;
         }
 
@@ -142,7 +163,8 @@ public class FrameBuffer
 
         if (usingPreset)
         {
-            GL.DeleteTexture(colourAttachment.Handle);
+            for (int i = 0; i < NumColourAttachments; i++)
+                GL.DeleteTexture(colourAttachments[i].Handle);
             if (usingRenderBuffer)
             {
                 GL.DeleteRenderbuffer(depthStencilRenderBuffer.Handle);

@@ -18,7 +18,6 @@ out VS_OUT {
 uniform lx_Light light;
 uniform vec3 cameraPos;
 
-[main]
 void main()
 {
     mat3 TBN = lx_TBN(lx_Model,aTangent,aNormal);
@@ -33,13 +32,5 @@ void main()
     vs_out.tangent = TBN * vec3(1,0,0);
 
     gl_Position = lx_Transform * vec4(aPos, 1.0);
-
-}
-
-[temp]
-void main()
-{
-    vs_out.texCoords = aTexCoords;
-    gl_Position = vec4(aPos, 1.0);
 
 }
