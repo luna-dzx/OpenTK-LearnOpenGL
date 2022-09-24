@@ -13,6 +13,7 @@ public class Game1 : Library.Game
 
     ShaderProgram shader;
     ShaderProgram frameBufferShader;
+    ShaderProgram gaussianShader;
 
     FirstPersonPlayer player;
     Model backpack;
@@ -90,19 +91,22 @@ public class Game1 : Library.Game
             ShaderLocation + "PostProcess/vertex.glsl",
             ShaderLocation + "PostProcess/fragment.glsl"
         );
+        
+        gaussianShader = new ShaderProgram(
+            ShaderLocation + "PostProcess/vertex.glsl",
+            ShaderLocation + "PostProcess/gaussianFragment.glsl"
+        );
 
         blurFrameBuffer = new FrameBuffer[2];
         blurFrameBuffer[0] = new FrameBuffer(Window.Size,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
         blurFrameBuffer[1] = new FrameBuffer(Window.Size,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
-
-
-        blurFrameBuffer[0].UniformTexture((int)frameBufferShader, "sampler", 0);
-        blurFrameBuffer[1].UniformTexture((int)frameBufferShader, "sampler", 0);
+        
         
         frameBuffer.UniformTexture((int)frameBufferShader, "sampler", 0);
+        frameBuffer.UniformTexture((int)gaussianShader, "sampler", 1);
         frameBuffer.UniformTexture((int)frameBufferShader, "brightSample", 1);
-        
-        
+
+
         shader.UniformMaterial("material",material,texture,specular)
             .UniformLight("light",light)
             .UniformTexture("normalMap",normalMap);
@@ -174,27 +178,27 @@ public class Game1 : Library.Game
         
         #region Complex Gaussian Blur FrameBuffers
         
-        frameBufferShader.Use();
-        frameBufferShader.SetActive(ShaderType.FragmentShader, "gaussian");
+        gaussianShader.Use();
+        //frameBufferShader.SetActive(ShaderType.FragmentShader, "gaussian");
 
-        frameBufferShader.Uniform1("blurDirection", 0);
+        gaussianShader.Uniform1("blurDirection", 0);
         blurFrameBuffer[0].WriteMode();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         frameBuffer.UseTexture();
-        quad.Draw(frameBufferShader);
+        quad.Draw(gaussianShader);
         
         blurFrameBuffer[0].ReadMode();
         
         
-        frameBufferShader.Uniform1("blurDirection", 1);
+        gaussianShader.Uniform1("blurDirection", 1);
         blurFrameBuffer[1].WriteMode();
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         GL.ActiveTexture(TextureUnit.Texture1);
         blurFrameBuffer[0].UseTexture(0);
 
-        quad.Draw(frameBufferShader);
+        quad.Draw(gaussianShader);
         
         blurFrameBuffer[1].ReadMode();
         
@@ -211,30 +215,6 @@ public class Game1 : Library.Game
 
         quad.Draw(frameBufferShader);
         
-        
-        /*
-        blurFrameBuffer.WriteMode();
-        
-        frameBufferShader.Use();
-        frameBufferShader.SetActive(ShaderType.FragmentShader, "gaussian");
-        frameBuffer.UseTexture();
-        quad.Draw(frameBufferShader);
-
-        blurFrameBuffer.ReadMode();
-        
-        
-        
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        
-        frameBufferShader.Use();
-        frameBufferShader.SetActive(ShaderType.FragmentShader, "hdr");
-        
-        GL.ActiveTexture(TextureUnit.Texture1);
-        blurFrameBuffer.UseTexture(0);
-
-        quad.Draw(frameBufferShader);
-        
-        */
 
         Window.SwapBuffers();
     }
@@ -249,6 +229,7 @@ public class Game1 : Library.Game
         quad.Delete();
 
         frameBufferShader.Delete();
+        gaussianShader.Delete();
         shader.Delete();
     }
 }
