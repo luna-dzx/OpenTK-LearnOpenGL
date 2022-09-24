@@ -60,12 +60,12 @@ public class PostProcessing
     
     private static readonly DrawBuffersEnum[] DefaultAttachments = { DrawBuffersEnum.ColorAttachment0 };
     
-    public PostProcessing(string libraryShaderLocation, PostProcessShader postProcessEffects, Vector2i frameBufferSize, DrawBuffersEnum[]? colourAttachments = null)
+    public PostProcessing(string libraryShaderLocation, PostProcessShader postProcessEffects, Vector2i frameBufferSize, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, DrawBuffersEnum[]? colourAttachments = null)
     {
         colourAttachments ??= DefaultAttachments;
         
-        WriteFbo = new FrameBuffer(frameBufferSize,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
-        ReadFbo = new FrameBuffer(frameBufferSize,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
+        WriteFbo = new FrameBuffer(frameBufferSize,internalFormat: internalFormat,numColourAttachments:colourAttachments.Length);
+        ReadFbo = new FrameBuffer(frameBufferSize,internalFormat: internalFormat,numColourAttachments:colourAttachments.Length);
         
         
         BlitShader = new ShaderProgram()

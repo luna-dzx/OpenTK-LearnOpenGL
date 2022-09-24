@@ -87,15 +87,16 @@ public class Game1 : Library.Game
 
         texture.Use();
         
-        postProcessor = new PostProcessing(LibraryShaderLocation, PostProcessing.PostProcessShader.GaussianBlur, Window.Size, colourAttachments);
-        postProcessor.UniformTextures(HdrShader, new []{"sampler", "brightSample"});
-
+        
         HdrShader = new ShaderProgram(
             LibraryShaderLocation + "PostProcessing/vertex.glsl",
             ShaderLocation + "PostProcess/fragment.glsl"
         );
         
+        postProcessor = new PostProcessing(LibraryShaderLocation, PostProcessing.PostProcessShader.GaussianBlur, Window.Size, PixelInternalFormat.Rgba16f, colourAttachments);
+        postProcessor.UniformTextures(HdrShader, new []{"sampler", "brightSample"});
 
+        
         sceneShader.UniformMaterial("material",material,texture,specular)
             .UniformLight("light",light)
             .UniformTexture("normalMap",normalMap);
