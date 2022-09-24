@@ -14,6 +14,7 @@ public class FrameBuffer
     private TextureBuffer depthStencilAttachment;
     private RenderBuffer depthStencilRenderBuffer;
     private bool usingRenderBuffer = true;
+    public Vector2i Size;
 
 
     public FrameBuffer()
@@ -30,6 +31,8 @@ public class FrameBuffer
         PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4, int numColourAttachments = 1) : this()
     {
         usingPreset = true;
+
+        Size = size;
 
         NumColourAttachments = numColourAttachments;
         colourAttachments = new TextureBuffer[NumColourAttachments];
@@ -177,7 +180,8 @@ public class FrameBuffer
 
         GL.DeleteFramebuffer(handle);
     }
-
+    
+    public static explicit operator int(FrameBuffer fbo) => fbo.handle;
 
 }
 
