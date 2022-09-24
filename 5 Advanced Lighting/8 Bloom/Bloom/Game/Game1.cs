@@ -42,6 +42,7 @@ public class Game1 : Library.Game
     private Vector3 rotation = Vector3.Zero; //  new Vector3(0f,MathHelper.DegreesToRadians(59f),0f);
 
     private DrawBuffersEnum[] colourAttachments;
+    private DrawBuffersEnum[] brightColourAttachment;
     
     protected override void Load()
     {
@@ -113,9 +114,8 @@ public class Game1 : Library.Game
         //blurFrameBuffer[0] = new FrameBuffer(Window.Size,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
         //blurFrameBuffer[1] = new FrameBuffer(Window.Size,internalFormat: PixelInternalFormat.Rgba16f,numColourAttachments:2);
         
-        postProcessFbo.UniformTexture((int)gaussianShader, "sampler", 0);
-        postProcessFbo.UniformTexture((int)gaussianShader, "brightSample", 1);
-        
+        postProcessFbo.UniformTexture((int)gaussianShader, "texture0", 1);
+
         postProcessFbo.UniformTexture((int)frameBufferShader, "sampler", 0);
         postProcessFbo.UniformTexture((int)frameBufferShader, "brightSample", 1);
         
@@ -132,6 +132,7 @@ public class Game1 : Library.Game
         shader.Use();
 
         colourAttachments = new DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment0, DrawBuffersEnum.ColorAttachment1 };
+        brightColourAttachment = new DrawBuffersEnum[] { DrawBuffersEnum.ColorAttachment1 };
 
 
         // attach player functions to window
@@ -177,7 +178,7 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
         postProcessFbo.UseTexture();
-        quad.Draw(blitShader);
+        PostProcessing.Draw();
         
         storageFbo.ReadMode();
     }
@@ -195,7 +196,7 @@ public class Game1 : Library.Game
         texture.Use();
         specular.Use();
 
-        storageFbo.WriteMode();
+        postProcessFbo.WriteMode();
         GL.DrawBuffers(2,colourAttachments );
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
@@ -207,39 +208,41 @@ public class Game1 : Library.Game
         cube.Draw(shader);
 
         
-        storageFbo.ReadMode();
-        
-        
-        
+        postProcessFbo.ReadMode();
         
         GL.DepthMask(false);
-
+        
+        
+        storageFbo.WriteMode();
+        GL.DrawBuffers(2,colourAttachments );
+        storageFbo.ReadMode();
+        
+        BlitFbo();
 
         gaussianShader.Use();
 
         gaussianShader.Uniform1("blurDirection", 0);
         postProcessFbo.WriteMode();
-        GL.DrawBuffers(2,colourAttachments );
+        GL.DrawBuffers(1,brightColourAttachment );
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
         storageFbo.UseTexture();
-        quad.Draw(gaussianShader);
+        PostProcessing.Draw();
         
         postProcessFbo.ReadMode();
-
-
-
+        
+        
         BlitFbo();
         
 
         
         gaussianShader.Uniform1("blurDirection", 1);
         postProcessFbo.WriteMode();
-        GL.DrawBuffers(2,colourAttachments );
+        GL.DrawBuffers(1,brightColourAttachment );
         GL.Clear(ClearBufferMask.ColorBufferBit);
         
         storageFbo.UseTexture();
-        quad.Draw(gaussianShader);
+        PostProcessing.Draw();
         
         postProcessFbo.ReadMode();
         
@@ -256,7 +259,7 @@ public class Game1 : Library.Game
         
         storageFbo.UseTexture();
 
-        quad.Draw(frameBufferShader);
+        PostProcessing.Draw();
 
 
         Window.SwapBuffers();
