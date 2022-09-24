@@ -5,7 +5,7 @@ using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
 
-namespace Bloom.Game;
+namespace Deferred_Shading.Game;
 
 public class Game1 : Library.Game
 {
