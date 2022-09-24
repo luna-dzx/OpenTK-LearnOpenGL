@@ -160,6 +160,15 @@ public class FrameBuffer
         return this;
     }
 
+
+    public FrameBuffer SetDrawBuffers(DrawBuffersEnum[] colourAttachments)
+    {
+        this.WriteMode();
+        GL.DrawBuffers(colourAttachments.Length,colourAttachments);
+        return this;
+    }
+    
+
     public void Delete()
     {
         GL.BindFramebuffer(FramebufferTarget.Framebuffer,0);
