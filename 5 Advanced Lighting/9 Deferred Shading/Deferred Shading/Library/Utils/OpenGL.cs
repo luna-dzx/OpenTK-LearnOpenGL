@@ -46,5 +46,16 @@ public class OpenGL
 
         return 4;
     }
+
+    public static DrawBuffersEnum[] GetDrawBuffers(int numBuffers, int offset=0)
+    {
+        DrawBuffersEnum[] buffers = new DrawBuffersEnum[numBuffers];
+        for (int i = 0; i < numBuffers; i++)
+        {
+            buffers[i] = DrawBuffersEnum.ColorAttachment0 + i + offset;
+        }
+
+        return buffers;
+    }
     
 }

@@ -172,7 +172,7 @@ public class ShaderProgram
             for (int i = line.Length-1; i > -1; i--)
             {
                 if (line[i] == ' ') continue;
-                lastCharIndex = i-1; break;
+                lastCharIndex = i; break;
             }
 
             if (line.Length>0 && line[firstCharIndex] == '[' && line[lastCharIndex] == ']')

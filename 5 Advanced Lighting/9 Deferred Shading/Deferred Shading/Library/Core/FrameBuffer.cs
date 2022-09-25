@@ -1,5 +1,6 @@
 ﻿using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
+using OpenTK.Windowing.GraphicsLibraryFramework;
 
 namespace Library;
 
@@ -72,6 +73,67 @@ public class FrameBuffer
     }
 
 
+    public FrameBuffer(Vector2i size, PixelInternalFormat[]? internalFormats = null,
+        TextureTarget target = TextureTarget.Texture2D, PixelFormat pixelFormat = PixelFormat.Rgb, int numSamples = 4, bool readableDepth = false) : this()
+    {
+        internalFormats ??= new [] { PixelInternalFormat.Rgb8 };
+        int numColourAttachments = internalFormats.Length;
+        
+        usingPreset = true;
+
+        Size = size;
+
+        NumColourAttachments = numColourAttachments;
+        colourAttachments = new TextureBuffer[NumColourAttachments];
+        for (int i = 0; i < NumColourAttachments; i++)
+            colourAttachments[i] = new TextureBuffer(internalFormats[i], pixelFormat, (size.X,size.Y), target,samples:numSamples);
+
+        if (37120 <= (int)target && (int)target <= 37123) // MSAA
+        {
+            for (int i = 0; i < NumColourAttachments; i++) 
+                AttachTexture(colourAttachments[i], FramebufferAttachment.ColorAttachment0 + i);
+
+            depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8, PixelFormat.DepthStencil,
+                (size.X, size.Y), target, samples: numSamples);
+            
+            AttachTexture(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+
+            usingRenderBuffer = false;
+        }
+        else // NO MSAA
+        {
+            for (int i = 0; i < NumColourAttachments; i++)
+            {
+                colourAttachments[i].Wrapping(TextureWrapMode.ClampToEdge);
+                AttachTexture(colourAttachments[i], FramebufferAttachment.ColorAttachment0 + i);
+            }
+
+            if (readableDepth)
+            {
+                usingRenderBuffer = false;
+                depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8,
+                    PixelFormat.DepthStencil, size, target,
+                    PixelType.UnsignedInt248);
+                
+                AttachTexture(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+                
+            }
+            else
+            {
+                depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
+                AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
+            }
+            
+        }
+        
+
+
+        CheckCompletion();
+
+        ReadMode();
+    }
+
+
     public FrameBuffer UseTexture(int num = -1)
     {
         if (usingPreset)
@@ -104,7 +166,17 @@ public class FrameBuffer
         GL.Uniform1(GL.GetUniformLocation(shader,name),unit);
         return this;
     }
+    
+    public FrameBuffer UniformTextures(int shader, string[] names, int offset=0)
+    {
+        GL.UseProgram(shader);
+        UseTexture();
+        for (int i = 0; i < names.Length; i++) { GL.Uniform1(GL.GetUniformLocation(shader,names[i]),offset+i); }
+        return this;
+    }
 
+    
+    
 
     /// <summary>
     /// Does nothing if complete, throws error if incomplete
@@ -191,6 +263,27 @@ public class FrameBuffer
     }
     
     public static explicit operator int(FrameBuffer fbo) => fbo.handle;
+
+
+
+    public FrameBuffer BlitDepth(Vector2i size, bool gammaCorrection = false)
+    {
+        if (gammaCorrection) GL.Disable(EnableCap.FramebufferSrgb);
+        
+        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, handle);
+        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
+        GL.BlitFramebuffer(0,0,Size.X,Size.Y,0,0,size.X,size.Y,ClearBufferMask.DepthBufferBit,BlitFramebufferFilter.Nearest);
+        
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        
+        if (gammaCorrection) GL.Enable(EnableCap.FramebufferSrgb);
+        
+        
+        
+        return this;
+    }
+    
+    
 
 }
 
