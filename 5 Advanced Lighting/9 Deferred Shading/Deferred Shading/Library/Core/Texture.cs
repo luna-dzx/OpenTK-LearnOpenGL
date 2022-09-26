@@ -33,7 +33,15 @@ public class Texture
     /// <param name="textureTarget">the type of texture to store</param>
     public Texture(string path, int textureUnit, TextureTarget textureTarget = TextureTarget.Texture2D, bool flipOnLoad = true) : this(textureUnit,textureTarget)
     {
-        LoadFile(path,flipOnLoad);
+        if (path.Substring(path.Length - 3) == "bmp") // significantly faster loads
+        {
+            LoadBmp(path);
+        }
+        else
+        {
+            LoadFile(path,flipOnLoad);
+        }
+        
     }
 
 
@@ -63,6 +71,16 @@ public class Texture
         using var stream = File.OpenRead(path);
         var image = ImageResult.FromStream(stream,ColorComponents.RedGreenBlueAlpha);
         GL.TexImage2D(target,0,PixelInternalFormat.Rgba,image.Width,image.Height,0,PixelFormat.Rgba,PixelType.UnsignedByte,image.Data); 
+        GL.GenerateMipmap((GenerateMipmapTarget)target);
+        return this;
+    }
+
+    public Texture LoadBmp(string path)
+    {
+        this.Use();
+        var image = BmpSharp.BitmapFileHelper.ReadFileAsBitmap(path,true);
+        
+        GL.TexImage2D(target,0,PixelInternalFormat.Rgb,image.Width,image.Height,0,PixelFormat.Bgr,PixelType.UnsignedByte,image.PixelData); 
         GL.GenerateMipmap((GenerateMipmapTarget)target);
         return this;
     }

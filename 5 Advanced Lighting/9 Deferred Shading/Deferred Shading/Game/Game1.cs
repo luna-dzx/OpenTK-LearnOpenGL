@@ -1,4 +1,5 @@
-﻿using Assimp;
+﻿using System.Diagnostics;
+using Assimp;
 using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -40,7 +41,7 @@ public class Game1 : Library.Game
     
     protected override void Load()
     {
-        GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
+        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 
 
         shader = new ShaderProgram
@@ -75,11 +76,10 @@ public class Game1 : Library.Game
             PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
 
         
-        
-        texture = new Texture(BackpackDir+"diffuse.jpg",0);
-        specular = new Texture(BackpackDir+"specular.jpg",1);
-        normalMap = new Texture(BackpackDir+"normal.png",2);
-        
+        texture = new Texture(BackpackDir+"diffuse.bmp",0);
+        specular = new Texture(BackpackDir+"specular.bmp",1);
+        normalMap = new Texture(BackpackDir+"normal.bmp",2);
+
         light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
         material = PresetMaterial.Silver.SetAmbient(0.1f);
         
