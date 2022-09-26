@@ -21,7 +21,7 @@ public class Game1 : Library.Game
     Model backpack;
     Model cube;
 
-    Objects.Light light;
+    Objects.Light[] lights;
     Objects.Material material;
 
     Texture texture;
@@ -37,6 +37,37 @@ public class Game1 : Library.Game
     float exposure = 1f;
 
     private Vector3 rotation = Vector3.Zero;
+
+    private Vector3[] backpackPositions;
+
+    Random r = new Random();
+    void Randomize()
+    {
+        for (int i = 0; i < lights.Length; i++)
+        {
+            var tempColour = Color4.FromHsv(new Vector4((float)r.NextDouble(),1f,1f,1f));
+            Vector3 colour = new Vector3(tempColour.R, tempColour.G, tempColour.B);
+            
+            lights[i] = new Objects.Light().PointMode()
+                .SetPosition(new Vector3(15f*(float)r.NextDouble() - 7.5f,15f*(float)r.NextDouble() - 7.5f,15f*(float)r.NextDouble() - 7.5f))
+                .SetAmbient(1f)
+                .SetDiffuse(colour)
+                .SetAttenuation(0.5f,0.22f,0.2f);
+        }
+        
+        for (int i = 0; i < lights.Length; i++)
+        {
+            gBufferShader.UniformLight("lights[" + i + "]", lights[i]);
+        }
+
+
+        for (int i = 0; i < backpackPositions.Length; i++)
+        {
+            backpackPositions[i] = new Vector3(15f * (float)r.NextDouble() - 7.5f, 15f * (float)r.NextDouble() - 7.5f,
+                15f * (float)r.NextDouble() - 7.5f);
+        }
+        // (updated to gpu every frame anyway)
+    }
     
     
     protected override void Load()
@@ -80,12 +111,15 @@ public class Game1 : Library.Game
         specular = new Texture(BackpackDir+"specular.bmp",1);
         normalMap = new Texture(BackpackDir+"normal.bmp",2);
 
-        light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
+        lights = new Objects.Light[64];
+        backpackPositions = new Vector3[50];
+
+
         material = PresetMaterial.Silver.SetAmbient(0.1f);
-        
-        
+
+
         cube = new Model(PresetMesh.Cube)
-            .UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
+            .UpdateTransform(shader,new Vector3(10f,10f,10f),Vector3.Zero,0.2f);
 
 
         GL.Enable(EnableCap.DepthTest);
@@ -98,7 +132,7 @@ public class Game1 : Library.Game
         
         gBuffer = new FrameBuffer(Window.Size, new []
             {
-                PixelInternalFormat.Rgb16f, // position
+                PixelInternalFormat.Rgba16f, // position
                 PixelInternalFormat.Rgb16f, // normal
                 PixelInternalFormat.Rgba8,   // albedo & specular
                 PixelInternalFormat.Rgb16f, // TBN column 1
@@ -106,6 +140,7 @@ public class Game1 : Library.Game
                 PixelInternalFormat.Rgb16f  // TBN column 3
             }
         );
+
         
         gBufferShader = new ShaderProgram
         (
@@ -113,17 +148,23 @@ public class Game1 : Library.Game
             ShaderLocation+"lightingFragment.glsl"
         );
 
-        
         sceneShader.Use();
         sceneShader.UniformMaterial("material",material,texture,specular)
-            .UniformLight("light", light)
-            .UniformTexture("normalMap",normalMap);        
+            .UniformTexture("normalMap",normalMap);
+
+
+        for (int i = 0; i < backpackPositions.Length; i++)
+        {
+            Matrix4 modelMatrix = Maths.CreateTransformation(backpackPositions[i], Vector3.Zero, new Vector3(0.8f));
+            sceneShader.UniformMat4("modelMatrices[" + i + "]", ref modelMatrix);
+        }
+        
         
         gBufferShader.Use();
-        gBufferShader.UniformMaterial("material", material, texture, specular)
-            .UniformLight("light", light);
-
-
+        gBufferShader.UniformMaterial("material", material, texture, specular);
+        
+        Randomize();
+        
         gBuffer.UniformTextures((int)gBufferShader, new[] { "gPosition", "gNormal", "gAlbedoSpec", "tbnColumn0", "tbnColumn1", "tbnColumn2" });
         colourAttachments = OpenGL.GetDrawBuffers(6);
 
@@ -155,12 +196,23 @@ public class Game1 : Library.Game
 
     protected override void KeyboardHandling(FrameEventArgs args, KeyboardState keyboardState)
     {
-        if (keyboardState.IsKeyPressed(Keys.Enter)) { bloomEnabled = !bloomEnabled; }
+        if (keyboardState.IsKeyPressed(Keys.Enter))
+        {
+            Randomize();
+            
+        }
         
         if (keyboardState.IsKeyDown(Keys.Right)) rotation+=Vector3.UnitY*(float)args.Time;
         if (keyboardState.IsKeyDown(Keys.Left))  rotation-=Vector3.UnitY*(float)args.Time;
         if (keyboardState.IsKeyDown(Keys.Up))    rotation+=Vector3.UnitX*(float)args.Time;
         if (keyboardState.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
+        
+        for (int i = 0; i < backpackPositions.Length; i++)
+        {
+            Matrix4 modelMatrix = Maths.CreateTransformation(backpackPositions[i], rotation, new Vector3(0.8f));
+            sceneShader.UniformMat4("modelMatrices[" + i + "]", ref modelMatrix);
+        }
+        
     }
 
 
@@ -181,11 +233,20 @@ public class Game1 : Library.Game
             specular.Use();
             normalMap.Use();
             
+            GL.ClearColor(0f,0f,0f,0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-            backpack.Draw(sceneShader,rotation:rotation,scale:5f);
+
+            backpack.Draw(sceneShader,instanceCount: backpackPositions.Length);
+            
+            GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
+            
         
         gBuffer.ReadMode();
 
+
+        
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        
         // draw gBuffer to screen
         gBufferShader.Use();
         gBuffer.UseTexture();
@@ -193,8 +254,23 @@ public class Game1 : Library.Game
 
         // use depth of gBuffer and draw other objects
         gBuffer.BlitDepth(Window.Size,true);
+
+        
         shader.Use();
-        cube.Draw();
+
+
+        //cube.Draw(shader,new Vector3(10f,10f,10f));
+        
+        for (int i = 0; i < lights.Length; i++)
+        {
+            shader.Uniform3("colour", lights[i].Diffuse);
+            cube.UpdateTransform(shader,lights[i].Position,Vector3.Zero,0.2f);
+            cube.Draw();
+        }
+
+
+
+        
 
         Window.SwapBuffers();
     }

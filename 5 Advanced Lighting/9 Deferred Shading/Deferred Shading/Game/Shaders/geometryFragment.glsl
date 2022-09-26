@@ -3,7 +3,7 @@
 uniform lx_Material material;
 uniform sampler2D normalMap;
 
-layout (location = 0) out vec3 gPosition;
+layout (location = 0) out vec4 gPosition;
 layout (location = 1) out vec3 gNormalMap;
 layout (location = 2) out vec4 gAlbedoSpec;
 layout (location = 3) out vec3 tbnColumn0;
@@ -12,7 +12,7 @@ layout (location = 5) out vec3 tbnColumn2;
 
 in VS_OUT {
     vec2 texCoords;
-    vec3 TBNfragPos;
+    vec4 TBNfragPos;
     mat3 tbnMatrix;
 } fs_in;
 

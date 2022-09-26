@@ -20,7 +20,7 @@ internal static class Program
 
         var uiSettings = NativeWindowSettings.Default;
         uiSettings.APIVersion = Version.Parse("4.1.0");
-        uiSettings.Size = new Vector2i(800,600);
+        uiSettings.Size = new Vector2i(1600,900);
         uiSettings.Title = "LearnOpenGL";
         uiSettings.NumberOfSamples = 4;
 
@@ -34,7 +34,7 @@ internal static class Program
 
         using var game = new Game1();
         game.InitWindow(gameSettings, uiSettings)
-            ;//.CursorState = CursorState.Grabbed;
+            .CursorState = CursorState.Grabbed;
         game.Run();
     }
 }

@@ -29,7 +29,7 @@ public class FrameBuffer
     /// <param name="pixelFormat"></param>
     /// <param name="size"></param>
     public FrameBuffer(Vector2i size, TextureTarget target = TextureTarget.Texture2D, PixelFormat pixelFormat= PixelFormat.Rgb,
-        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4, int numColourAttachments = 1) : this()
+        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, int numSamples = 4, int numColourAttachments = 1, bool readableDepth = false) : this()
     {
         usingPreset = true;
 
@@ -60,8 +60,21 @@ public class FrameBuffer
                 AttachTexture(colourAttachments[i], FramebufferAttachment.ColorAttachment0 + i);
             }
             
-            depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
-            AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
+            if (readableDepth)
+            {
+                usingRenderBuffer = false;
+                depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8,
+                    PixelFormat.DepthStencil, size, target,
+                    PixelType.UnsignedInt248);
+                
+                AttachTexture(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+                
+            }
+            else
+            {
+                depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
+                AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
+            }
         }
         
 
@@ -273,6 +286,23 @@ public class FrameBuffer
         GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, handle);
         GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, 0);
         GL.BlitFramebuffer(0,0,Size.X,Size.Y,0,0,size.X,size.Y,ClearBufferMask.DepthBufferBit,BlitFramebufferFilter.Nearest);
+        
+        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+        
+        if (gammaCorrection) GL.Enable(EnableCap.FramebufferSrgb);
+        
+        
+        
+        return this;
+    }
+    
+    public FrameBuffer BlitDepth(FrameBuffer frameBuffer, bool gammaCorrection = false)
+    {
+        if (gammaCorrection) GL.Disable(EnableCap.FramebufferSrgb);
+        
+        GL.BindFramebuffer(FramebufferTarget.ReadFramebuffer, handle);
+        GL.BindFramebuffer(FramebufferTarget.DrawFramebuffer, frameBuffer.handle);
+        GL.BlitFramebuffer(0,0,Size.X,Size.Y,0,0,frameBuffer.Size.X,frameBuffer.Size.Y,ClearBufferMask.DepthBufferBit,BlitFramebufferFilter.Nearest);
         
         GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         
