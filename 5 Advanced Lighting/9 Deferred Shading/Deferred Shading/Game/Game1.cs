@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using Assimp;
+﻿using Assimp;
 using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
@@ -37,8 +36,8 @@ public class Game1 : Library.Game
     float exposure = 1f;
 
     private Vector3 rotation = Vector3.Zero;
-
-    private Vector3[] backpackPositions;
+    
+    private Matrix4[] backpackTransforms;
 
     Random r = new Random();
     void Randomize()
@@ -58,13 +57,6 @@ public class Game1 : Library.Game
         for (int i = 0; i < lights.Length; i++)
         {
             gBufferShader.UniformLight("lights[" + i + "]", lights[i]);
-        }
-
-
-        for (int i = 0; i < backpackPositions.Length; i++)
-        {
-            backpackPositions[i] = new Vector3(15f * (float)r.NextDouble() - 7.5f, 15f * (float)r.NextDouble() - 7.5f,
-                15f * (float)r.NextDouble() - 7.5f);
         }
         // (updated to gpu every frame anyway)
     }
@@ -101,18 +93,24 @@ public class Game1 : Library.Game
         Console.WriteLine(matrix);
 
 
+        backpackTransforms = new Matrix4[50];
+        for (int i = 0; i < backpackTransforms.Length; i++)
+        {
+            backpackTransforms[i] = Maths.CreateTransformation(new Vector3(15f * (float)r.NextDouble() - 7.5f, 15f * (float)r.NextDouble() - 7.5f,
+                15f * (float)r.NextDouble() - 7.5f), Vector3.Zero, new Vector3(0.8f));
+        }
+        
         const string BackpackDir = "../../../../../../0 Assets/backpack/";
-        backpack = Model.FromFile(BackpackDir,"backpack.obj",out var textures,
-            Array.Empty<TextureType>(),
-            PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
-
+        backpack = Model.FromFile(BackpackDir,"backpack.obj",out _ , postProcessFlags: PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
+        backpack.LoadMatrix(4, backpackTransforms, 4, 4,countPerInstance:1);
         
         texture = new Texture(BackpackDir+"diffuse.bmp",0);
         specular = new Texture(BackpackDir+"specular.bmp",1);
         normalMap = new Texture(BackpackDir+"normal.bmp",2);
 
+        
         lights = new Objects.Light[64];
-        backpackPositions = new Vector3[50];
+        
 
 
         material = PresetMaterial.Silver.SetAmbient(0.1f);
@@ -152,18 +150,20 @@ public class Game1 : Library.Game
         sceneShader.UniformMaterial("material",material,texture,specular)
             .UniformTexture("normalMap",normalMap);
 
-
-        for (int i = 0; i < backpackPositions.Length; i++)
+        
+        /*for (int i = 0; i < backpackPositions.Length; i++)
         {
             Matrix4 modelMatrix = Maths.CreateTransformation(backpackPositions[i], Vector3.Zero, new Vector3(0.8f));
             sceneShader.UniformMat4("modelMatrices[" + i + "]", ref modelMatrix);
-        }
+        }*/
+        
         
         
         gBufferShader.Use();
         gBufferShader.UniformMaterial("material", material, texture, specular);
         
         Randomize();
+        
         
         gBuffer.UniformTextures((int)gBufferShader, new[] { "gPosition", "gNormal", "gAlbedoSpec", "tbnColumn0", "tbnColumn1", "tbnColumn2" });
         colourAttachments = OpenGL.GetDrawBuffers(6);
@@ -207,12 +207,14 @@ public class Game1 : Library.Game
         if (keyboardState.IsKeyDown(Keys.Up))    rotation+=Vector3.UnitX*(float)args.Time;
         if (keyboardState.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
         
-        for (int i = 0; i < backpackPositions.Length; i++)
+        /*for (int i = 0; i < backpackPositions.Length; i++)
         {
             Matrix4 modelMatrix = Maths.CreateTransformation(backpackPositions[i], rotation, new Vector3(0.8f));
             sceneShader.UniformMat4("modelMatrices[" + i + "]", ref modelMatrix);
-        }
-        
+        }*/
+
+        backpack.UpdateTransform(sceneShader, Vector3.Zero, rotation, new Vector3(0.8f));
+
     }
 
 
@@ -236,7 +238,7 @@ public class Game1 : Library.Game
             GL.ClearColor(0f,0f,0f,0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            backpack.Draw(sceneShader,instanceCount: backpackPositions.Length);
+            backpack.Draw(sceneShader,instanceCount: backpackTransforms.Length);
             
             GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
             

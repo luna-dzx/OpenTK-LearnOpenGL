@@ -74,7 +74,7 @@ public class Model : VertexArray
     }
 
 
-
+    
     public static Model FromFile(
         string directory,
         string fileName,
@@ -152,10 +152,14 @@ public class Model : VertexArray
                 normals[vertexIndex*3] = mesh.Normals[i].X;
                 normals[vertexIndex*3 +1] = mesh.Normals[i].Y;
                 normals[vertexIndex*3 +2] = mesh.Normals[i].Z;
-                
-                tangents[vertexIndex*3] = mesh.Tangents[i].X;
-                tangents[vertexIndex*3 +1] = mesh.Tangents[i].Y;
-                tangents[vertexIndex*3 +2] = mesh.Tangents[i].Z;
+
+                if (mesh.Tangents.Count > 0)
+                {
+                    tangents[vertexIndex*3] = mesh.Tangents[i].X;
+                    tangents[vertexIndex*3 +1] = mesh.Tangents[i].Y;
+                    tangents[vertexIndex*3 +2] = mesh.Tangents[i].Z;
+                }
+
                 
                 texCoords[vertexIndex*2] = mesh.TextureCoordinateChannels[0][i].X;
                 texCoords[vertexIndex*2 +1] = mesh.TextureCoordinateChannels[0][i].Y;
