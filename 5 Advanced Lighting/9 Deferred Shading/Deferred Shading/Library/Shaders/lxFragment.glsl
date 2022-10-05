@@ -230,6 +230,14 @@ vec3 lx_ApplyHDR(vec3 colour, float exposure, float gamma)
     return mapped;
 }
 
+void lx_DiscardBackground(vec4 fragColour)
+{
+    if (fragColour.a == 0.0) // only way this is possible is if fragColour was not written to and therefore this shouldn't be rendered
+    {
+        discard;
+    }
+}
+
 [main]
 lx_FragColour = vec4(0.0);
 

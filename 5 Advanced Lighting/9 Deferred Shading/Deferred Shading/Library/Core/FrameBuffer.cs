@@ -9,12 +9,12 @@ public class FrameBuffer
     private int handle = -1;
     
     // optional extras for simplification
-    private bool usingPreset = false;
+    protected bool usingPreset = false;
     public int NumColourAttachments;
-    private TextureBuffer[] colourAttachments;
-    private TextureBuffer depthStencilAttachment;
-    private RenderBuffer depthStencilRenderBuffer;
-    private bool usingRenderBuffer = true;
+    protected TextureBuffer[] colourAttachments;
+    protected TextureBuffer depthStencilAttachment;
+    protected RenderBuffer depthStencilRenderBuffer;
+    protected bool usingRenderBuffer = true;
     public Vector2i Size;
 
 
@@ -316,6 +316,72 @@ public class FrameBuffer
     
 
 }
+
+
+/// <summary>
+/// different way of constructing FBOs for complex combinations of 2D textures and one depth/stencil attachment
+/// </summary>
+public class GeometryBuffer : FrameBuffer
+{
+    
+    private List<TextureBuffer> colourAttachmentsList;
+
+    public GeometryBuffer(Vector2i size, bool readableDepth = false) : base()
+    {
+        Size = size;
+        colourAttachmentsList = new List<TextureBuffer>();
+
+        usingPreset = true;
+
+
+        if (readableDepth)
+        {
+            usingRenderBuffer = false;
+            depthStencilAttachment = new TextureBuffer(PixelInternalFormat.Depth24Stencil8,
+                PixelFormat.DepthStencil, size, TextureTarget.Texture2D,
+                PixelType.UnsignedInt248);
+            
+            AttachTexture(depthStencilAttachment, FramebufferAttachment.DepthStencilAttachment);
+        }
+        else
+        {
+            depthStencilRenderBuffer = new RenderBuffer(RenderbufferStorage.Depth24Stencil8, size);
+            AttachRenderBuffer(depthStencilRenderBuffer, FramebufferAttachment.DepthStencilAttachment);
+        }
+
+
+    }
+
+
+    public GeometryBuffer AddTexture(
+        PixelInternalFormat internalFormat = PixelInternalFormat.Rgb8,
+        PixelFormat pixelFormat = PixelFormat.Rgb,
+        int numSamples = 4
+    )
+    {
+        TextureBuffer textureBuffer = new TextureBuffer(internalFormat, pixelFormat, Size, TextureTarget.Texture2D, samples:numSamples);
+        textureBuffer.Wrapping(TextureWrapMode.ClampToEdge);
+        AttachTexture(textureBuffer, FramebufferAttachment.ColorAttachment0 + colourAttachmentsList.Count);
+        
+        colourAttachmentsList.Add(textureBuffer);
+
+        return this;
+    }
+
+    public GeometryBuffer Construct()
+    {
+        NumColourAttachments = colourAttachmentsList.Count;
+        colourAttachments = colourAttachmentsList.ToArray();
+        
+        
+        CheckCompletion();
+        ReadMode();
+
+        return this;
+    }
+
+}
+
 
 
 public class DepthMap
