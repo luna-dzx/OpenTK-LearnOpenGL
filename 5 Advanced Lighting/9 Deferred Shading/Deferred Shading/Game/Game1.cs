@@ -9,6 +9,7 @@ namespace Deferred_Shading.Game;
 
 public class Game1 : Library.Game
 {
+    private const int NUM_LIGHTS = 32;
     const string ShaderLocation = "../../../Game/Shaders/";
     const string LibraryShaderLocation = "../../../Library/Shaders/";
 
@@ -20,8 +21,8 @@ public class Game1 : Library.Game
     Model backpack;
     Model cube;
 
-    //Objects.Light[] lights;
-    Objects.Light light;
+    Objects.Light[] lights;
+    //Objects.Light light;
     Objects.Material material;
 
     Texture texture;
@@ -43,12 +44,11 @@ public class Game1 : Library.Game
     Random r = new Random();
     void Randomize()
     {
-        light = new Objects.Light().PointMode().SetAmbient(0.1f);
+        //light = new Objects.Light().PointMode().SetAmbient(0.1f);
+
+        //gBufferShader.UniformLight("light", light);
         
-        
-        gBufferShader.UniformLight("light", light);
-        
-        /*for (int i = 0; i < lights.Length; i++)
+        for (int i = 0; i < NUM_LIGHTS; i++)
         {
             var tempColour = Color4.FromHsv(new Vector4((float)r.NextDouble(),1f,1f,1f));
             Vector3 colour = new Vector3(tempColour.R, tempColour.G, tempColour.B);
@@ -60,7 +60,7 @@ public class Game1 : Library.Game
                 .SetAttenuation(0.5f,0.22f,0.2f);
         }
         
-        for (int i = 0; i < lights.Length; i++)
+        for (int i = 0; i < NUM_LIGHTS; i++)
         {
             gBufferShader.UniformLight("lights[" + i + "]", lights[i]);
         }
@@ -123,11 +123,11 @@ public class Game1 : Library.Game
         normalMap = new Texture(BackpackDir+"normal.bmp",2);
 
         
-        //lights = new Objects.Light[64];
+        lights = new Objects.Light[NUM_LIGHTS];
         
 
 
-        material = PresetMaterial.Silver.SetAmbient(0.1f);
+        material = PresetMaterial.Silver.SetAmbient(0.01f);
 
 
         cube = new Model(PresetMesh.Cube)
@@ -155,7 +155,8 @@ public class Game1 : Library.Game
         gBufferShader = new ShaderProgram
         (
             LibraryShaderLocation+"PostProcessing/vertex.glsl",
-            ShaderLocation+"lightingFragment.glsl"
+            ShaderLocation+"lightingFragment.glsl",
+            numLights: NUM_LIGHTS
         );
 
         sceneShader.Use();
@@ -211,7 +212,20 @@ public class Game1 : Library.Game
         if (keyboardState.IsKeyPressed(Keys.Enter))
         {
             Randomize();
-            
+        }
+
+        if (keyboardState.IsKeyPressed(Keys.Backspace))
+        {
+
+            gBuffer.Delete();
+            gBuffer = new GeometryBuffer(Window.Size/2)
+                .AddTexture(PixelInternalFormat.Rgba16f) // position
+                .AddTexture(PixelInternalFormat.Rgb16f)  // normal
+                .AddTexture(PixelInternalFormat.Rgba8)   // albedo & specular
+                .AddTexture(PixelInternalFormat.Rgb16f)  // TBN column 1
+                .AddTexture(PixelInternalFormat.Rgb16f)  // TBN column 2
+                .AddTexture(PixelInternalFormat.Rgb16f)  // TBN column 3
+                .Construct();
         }
         
         if (keyboardState.IsKeyDown(Keys.Right)) rotation+=Vector3.UnitY*(float)args.Time;
@@ -268,23 +282,23 @@ public class Game1 : Library.Game
 
         // use depth of gBuffer and draw other objects
         gBuffer.BlitDepth(Window.Size,true);
-
+        
         
         shader.Use();
 
 
         //cube.Draw(shader,new Vector3(10f,10f,10f));
         
-        /*for (int i = 0; i < lights.Length; i++)
+        for (int i = 0; i < lights.Length; i++)
         {
             shader.Uniform3("colour", lights[i].Diffuse);
             cube.UpdateTransform(shader,lights[i].Position,Vector3.Zero,0.2f);
             cube.Draw();
-        }*/
+        }
 
-        shader.Uniform3("colour", light.Diffuse);
-        cube.UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
-        cube.Draw();
+        //shader.Uniform3("colour", light.Diffuse);
+        //cube.UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
+        //cube.Draw();
 
 
         Window.SwapBuffers();

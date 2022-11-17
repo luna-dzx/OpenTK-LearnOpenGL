@@ -11,8 +11,7 @@ namespace Library;
 
 public abstract class Game : IDisposable
 {
-    protected static GameWindow Window;
-
+    protected GameWindow Window;
     
     private static void DebugCallback(DebugSource source,
         DebugType type,
@@ -29,18 +28,12 @@ public abstract class Game : IDisposable
         if (type == DebugType.DebugTypeError)
         {
             Console.WriteLine("Error");
-            Window.CursorState = CursorState.Normal;
-            throw new Exception();
+            throw new Exception(messageString);
         }
     }
     
     private static DebugProc _debugProcCallback = DebugCallback;
     private static GCHandle _debugProcCallbackHandle;
-    
-    
-    
-    
-    
 
     /// <summary>
     /// Create a new window based on settings
@@ -62,7 +55,7 @@ public abstract class Game : IDisposable
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
         }
-
+        
         return Window;
     }
     

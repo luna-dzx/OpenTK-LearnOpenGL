@@ -57,8 +57,6 @@ public class Shader
 
 public class ShaderProgram
 {
-
-    public int NUM_LIGHTS = 64;
     
     private readonly int handle;
     private Dictionary<string, int> uniforms;
@@ -150,10 +148,9 @@ public class ShaderProgram
         
         var (engineShader,engineShaderMain,postMain) = ReadEngineShader(shaderType);
 
-        lines[0] = "#version 330 core\n#define NUM_LIGHTS "+NUM_LIGHTS+"\n";
-        lines[0] += engineShader;
+        lines[0] = engineShader;
         lines[0] += "\nuniform int active"+shaderType+"Id;\n";
-        
+
         string outputText = "";
         string currentText = "";
 
@@ -260,20 +257,12 @@ public class ShaderProgram
     /// <param name="vertexPath">the path to a glsl vertex shader file</param>
     /// <param name="fragmentPath">the path to a glsl fragment shader file</param>
     /// <param name="useAutoProjection">enables the automatic calculation of lx_Transform</param>
-    /// <param name="numLights">the size of lx_Light arrays that you pass to functions</param>
-    public ShaderProgram(string vertexPath, string fragmentPath,bool useAutoProjection = false, int numLights = 64) : this()
+    public ShaderProgram(string vertexPath, string fragmentPath,bool useAutoProjection = false) : this()
     {
-        SetLightCount(numLights);
         LoadShader(vertexPath, ShaderType.VertexShader);
         LoadShader(fragmentPath, ShaderType.FragmentShader);
         Compile();
         if (useAutoProjection) EnableAutoProjection();
-    }
-
-    public ShaderProgram SetLightCount(int numLights)
-    {
-        NUM_LIGHTS = numLights;
-        return this;
     }
     
     /// <summary>

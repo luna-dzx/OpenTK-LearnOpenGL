@@ -110,175 +110,6 @@ vec3 lx_Phong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec2 texCoo
     return lx_BasePhong(normal,fragPos,cameraPos,texCoords,specTexCoords,2,material,light,lightMult);
 }
 
-
-vec3 lx_DeferredPhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec3 albedoInput, in float specularInput, in lx_Material material, in lx_Light light, float lightMult)
-{
-    normal = normalize(normal);
-
-    vec3 baseTexSample = albedoInput;
-    vec3 specTexSample = vec3(specularInput);
-
-    
-    if (lx_IsGammaCorrectionEnabled)
-    {
-        baseTexSample = lx_GammaCorrect(baseTexSample,2.2);
-        specTexSample = lx_GammaCorrect(specTexSample,2.2);
-    }
-
-    vec3 ambient = light.ambient * material.ambient * baseTexSample;
-    
-    vec3 lightDir = vec3(0.0);
-    
-    if (light.cutOff > 0)
-    {
-        lightDir = light.position - fragPos;
-    }
-    else
-    {
-        lightDir = -light.direction;
-    }
-    
-    float distance = length(lightDir);
-    float attenuation = 1.0 / dot(light.attenuation,vec3(1.0,distance,distance*distance));
-    
-    lightDir = lightDir/distance;
-    
-    float intensity = 1.0;
-    
-    if (light.cutOff < 1 && light.cutOff > 0) // if this light is a spotlight
-    {
-        float cosTheta = dot(lightDir, normalize(-light.direction));
-        
-        if (light.outerCutOff > 0) // fade out at edge of splotlight
-        {
-            intensity = clamp((cosTheta - light.outerCutOff) / (light.cutOff - light.outerCutOff), 0.0, 1.0);
-        }
-        
-        if(cosTheta < light.outerCutOff) // if angle > cutOff, but since it's cosine(angle), we use less than (cosine graph initially decreases)
-        {
-            return ambient;
-        }
-    }
-    
-    float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = light.diffuse * diff * material.diffuse * baseTexSample;
-    
-    vec3 viewDir = normalize(cameraPos - fragPos);
-    
-    //vec3 reflectDir = reflect(-lightDir, normal);
-    //float spec = pow(max(dot(viewDir, reflectDir), 0.0), material.shininess);
-    
-    vec3 halfwayDir = normalize(lightDir + viewDir);
-    float spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-    
-    vec3 specular = diff * light.specular * spec * material.specular * specTexSample;
-    
-    // fix buggy lighting
-    if (abs(diffuse.x)+abs(diffuse.y)+abs(diffuse.z) == 0){specular*=0;}
-
-    ambient  *= attenuation; 
-    diffuse  *= attenuation * intensity;
-    specular *= attenuation * intensity;
-
-    return ambient + lightMult * (diffuse + specular); 
-}
-
-
-vec3 lx_DeferredPhong(in vec3 normal, in vec3 fragPos, in vec3 cameraPos, in vec3 albedoInput, in float specularInput, in lx_Material material, in lx_Light lights[NUM_LIGHTS], in int lightCount, mat3 tbn, float lightMult)
-{
-    normal = normalize(normal);
-
-    vec3 baseTexSample = albedoInput;
-    vec3 specTexSample = vec3(specularInput);
-
-    
-    if (lx_IsGammaCorrectionEnabled)
-    {
-        baseTexSample = lx_GammaCorrect(baseTexSample,2.2);
-        specTexSample = lx_GammaCorrect(specTexSample,2.2);
-    }
-
-    vec3 ambient;
-    
-    vec3 lightDir = vec3(0.0);
-    
-    float distance;
-    float attenuation;
-     
-    float intensity = 1.0;
-    float diff;
-    vec3 diffuse;
-    vec3 viewDir;
-    
-    vec3 halfwayDir;
-    float spec;
-    vec3 specular;
-    
-    lx_Light light;
-    vec3 universalAmbient = material.ambient * baseTexSample;
-    vec3 outColour = vec3 (0.0);
-    
-    for(int i = 0; i < lightCount; i++)
-    {
-        light = lx_MoveLight(lights[i],tbn*lights[i].position);
-        
-        ambient = light.ambient;
-    
-        if (light.cutOff > 0)
-        {
-            lightDir = light.position - fragPos;
-        }
-        else
-        {
-            lightDir = -light.direction;
-        }
-        
-        distance = length(lightDir);
-        attenuation = 1.0 / dot(light.attenuation,vec3(1.0,distance,distance*distance));
-        
-        lightDir = lightDir/distance;
-        
-        if (light.cutOff < 1 && light.cutOff > 0) // if this light is a spotlight
-        {
-            float cosTheta = dot(lightDir, normalize(-light.direction));
-            
-            if (light.outerCutOff > 0) // fade out at edge of splotlight
-            {
-                intensity = clamp((cosTheta - light.outerCutOff) / (light.cutOff - light.outerCutOff), 0.0, 1.0);
-            }
-            
-            if(cosTheta < light.outerCutOff) // if angle > cutOff, but since it's cosine(angle), we use less than (cosine graph initially decreases)
-            {
-                continue;//return ambient;
-            }
-        }
-        
-        diff = max(dot(normal, lightDir), 0.0);
-        diffuse = light.diffuse * diff * material.diffuse * baseTexSample;
-        
-        viewDir = normalize(cameraPos - fragPos);
-        
-        halfwayDir = normalize(lightDir + viewDir);
-        spec = pow(max(dot(normal, halfwayDir), 0.0), material.shininess);
-        
-        specular = diff * light.specular * spec * material.specular * specTexSample * light.diffuse;
-        
-        // fix buggy lighting
-        if (abs(diffuse.x)+abs(diffuse.y)+abs(diffuse.z) == 0){specular*=0;}
-
-        diffuse  *= attenuation * intensity * ambient;
-        specular *= attenuation * intensity * ambient;
-        
-        outColour += lightMult * (diffuse + specular);
-    }
-
-    return universalAmbient + outColour; 
-}
-
-
-
-
-
 float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace)
 {
     vec3 projCoords = (fragPosLightSpace.xyz / fragPosLightSpace.w) * 0.5 + 0.5;
@@ -324,6 +155,50 @@ float lx_ShadowCalculation(sampler2D shadowTexture, vec4 fragPosLightSpace, floa
         
     return 1.0-shadow;
 }
+
+
+
+vec3 lx_SampleOffsetDirections[20] = vec3[]
+(
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+);   
+
+float lx_ShadowCalculation(samplerCube depthMap, vec3 fragPos, vec3 lightPos, vec3 cameraPos, float farPlane)
+{
+    vec3 fragToLight = fragPos - lightPos;
+    float closestDepth = texture(depthMap, fragToLight).r;
+    closestDepth *= farPlane;
+    float currentDepth = length(fragToLight);
+    
+    float bias = 0.15;
+    float shadow = currentDepth - bias > closestDepth ? 0.0 : 1.0;
+    
+    
+    if (shadow == 0.0)
+    {
+        int samples = 20;
+        float viewDistance = length(cameraPos - fragPos);
+        float diskRadius = (1.0 + (viewDistance / farPlane)) / 30.0; 
+        for(int i = 0; i < samples; ++i)
+        {
+            closestDepth = texture(depthMap, fragToLight + lx_SampleOffsetDirections[i] * diskRadius).r;
+            closestDepth *= farPlane;
+            if(currentDepth - bias < closestDepth)
+                shadow += 1.0;
+        }
+        shadow /= float(samples);
+    
+    }
+
+    
+    return shadow;
+}
+
+
 
 vec4 lx_MultiSample(sampler2DMS sampler, ivec2 texCoords, int numSamples)
 {
