@@ -17,19 +17,18 @@ in vec2 texCoords;
 void main()
 {
     vec4 inColour = texture(gPosition,texCoords);
-
     lx_DiscardBackground(inColour);
     
     vec3 fragPos = inColour.rgb;
     vec3 normal = texture(gNormal,texCoords).rgb;
     vec3 albedo = texture(gAlbedoSpec,texCoords).rgb;
     float specular = texture(gAlbedoSpec,texCoords).a;
-
-    vec3 matrixColumn0 = texture(tbnColumn0,texCoords).rgb;
-    vec3 matrixColumn1 = texture(tbnColumn1,texCoords).rgb;
-    vec3 matrixColumn2 = texture(tbnColumn2,texCoords).rgb;
     
-    mat3 TBN = lx_ConstructMatrix(matrixColumn0,matrixColumn1,matrixColumn2);
+    mat3 TBN = lx_ConstructMatrix(
+        texture(tbnColumn0,texCoords).rgb,
+        texture(tbnColumn1,texCoords).rgb,
+        texture(tbnColumn2,texCoords).rgb
+    );
     
     lx_FragColour = lx_Colour(lx_DeferredPhong(normal,fragPos,TBN*cameraPos,albedo,specular,material,lights,NUM_LIGHTS,TBN,1.0));
 }
