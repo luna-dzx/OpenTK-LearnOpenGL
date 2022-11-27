@@ -163,6 +163,12 @@ public class FirstPersonPlayer : Player
         get => Camera.Direction;
         set => Camera.Direction=value;
     }
+
+    public FirstPersonPlayer SetFov(float angle)
+    {
+        Camera.SetFov(angle);
+        return this;
+    }
     
     public FirstPersonPlayer UpdateProjection(int programId, int binding)
     {

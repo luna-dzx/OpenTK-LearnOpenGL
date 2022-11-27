@@ -69,7 +69,7 @@ public class PostProcessing
         
         
         BlitShader = new ShaderProgram()
-            .LoadShader(libraryShaderLocation + "PostProcessing/vertex.glsl", ShaderType.VertexShader)
+            .LoadPostProcessVertex()
             .LoadShaderText(GenerateBlitShader(colourAttachments.Length),ShaderType.FragmentShader)
             .Compile();
 
@@ -92,7 +92,6 @@ public class PostProcessing
                 // add to dictionary of effects
                 shaderPrograms[postProcessShader] = new ShaderProgram
                 (
-                    libraryShaderLocation + "PostProcessing/vertex.glsl",
                     libraryShaderLocation + "PostProcessing/gaussianFragment.glsl"
                 );
                 

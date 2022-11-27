@@ -270,16 +270,40 @@ public class ShaderProgram
         if (useAutoProjection) EnableAutoProjection();
     }
 
+
+    private const string PostProcessVertexPath = "../../../Library/Shaders/PostProcessing/vertex.glsl";
+    
+    /// <summary>
+    /// Create a post processing shader program from a fragment shader
+    /// </summary>
+    /// <param name="fragmentPath">the path to a glsl fragment shader file</param>
+    /// <param name="useAutoProjection">enables the automatic calculation of lx_Transform</param>
+    /// <param name="numLights">the size of lx_Light arrays that you pass to functions</param>
+    public ShaderProgram(string fragmentPath, bool useAutoProjection = false, int numLights = 64) : this()
+    {
+        SetLightCount(numLights);
+        LoadPostProcessVertex();
+        LoadShader(fragmentPath, ShaderType.FragmentShader);
+        Compile();
+        if (useAutoProjection) EnableAutoProjection();
+    }
+    
+    
+
     public ShaderProgram SetLightCount(int numLights)
     {
         NUM_LIGHTS = numLights;
         return this;
     }
-    
+
     /// <summary>
     /// Assign this shader pipeline for rendering
     /// </summary>
-    public void Use() => GL.UseProgram(handle);
+    public ShaderProgram Use()
+    {
+        GL.UseProgram(handle);
+        return this;
+    } 
 
     /// <summary>
     /// Load shader from file then format custom syntax and load to the shader program
@@ -288,6 +312,12 @@ public class ShaderProgram
     /// <param name="shaderType">the type of shader to use this as in the shader pipeline</param>
     /// <returns>current object for ease of use</returns>
     public ShaderProgram LoadShader(string path,ShaderType shaderType) => LoadShaderText(File.ReadAllText(path),shaderType);
+    
+    /// <summary>
+    /// Load post processing vertex shader from file then format custom syntax and load to the shader program
+    /// </summary>
+    /// <returns>current object for ease of use</returns>
+    public ShaderProgram LoadPostProcessVertex() => LoadShaderText(File.ReadAllText(PostProcessVertexPath),ShaderType.VertexShader);
         
     /// <summary>
     /// Format custom syntax in a shader (in plaintext) and load to the shader program
@@ -770,6 +800,15 @@ public class ShaderProgram
         Uniform3(name + ".diffuse", light.Diffuse);
         Uniform3(name + ".specular", light.Specular);
         Uniform3(name + ".attenuation", light.Attenuation);
+        return this;
+    }
+    
+    public ShaderProgram UniformLightArray(string name, Light[] lights)
+    {
+        for (int i = 0; i < lights.Length; i++)
+        {
+            UniformLight(name+"[" + i + "]", lights[i]);
+        }
         return this;
     }
 

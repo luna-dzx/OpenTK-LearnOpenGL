@@ -48,9 +48,9 @@ vec3 lx_NormalFlipVec(vec3 position, vec3 normal)
 // construct from columns
 mat3 lx_ConstructMatrix(vec3 a, vec3 b, vec3 c)
 {
-    mat3 output = mat3(0);
-    output[0] = a;
-    output[1] = b;
-    output[2] = c;
-    return output;
+    mat3 matrix = mat3(0);
+    matrix[0] = a;
+    matrix[1] = b;
+    matrix[2] = c;
+    return matrix;
 }
