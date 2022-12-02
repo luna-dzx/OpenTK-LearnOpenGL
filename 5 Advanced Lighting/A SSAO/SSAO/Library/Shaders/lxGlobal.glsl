@@ -1,5 +1,3 @@
-#version 330 core
-
 struct lx_Material
 {
     sampler2D baseTex;
@@ -45,4 +43,14 @@ vec3 lx_NormalFlipVec(vec3 position, vec3 normal)
         return normal * -1;
     }
     return normal;
+}
+
+// construct from columns
+mat3 lx_ConstructMatrix(vec3 a, vec3 b, vec3 c)
+{
+    mat3 matrix = mat3(0);
+    matrix[0] = a;
+    matrix[1] = b;
+    matrix[2] = c;
+    return matrix;
 }

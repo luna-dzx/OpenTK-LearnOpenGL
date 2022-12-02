@@ -56,20 +56,6 @@ public static class Objects
             SetShininess(shininess);
         }
 
-        public Material(
-            float ambient,
-            float diffuse,
-            float specular,
-            float shininess
-        )
-        {
-            SetAmbient(ambient);
-            SetDiffuse(diffuse);
-            SetSpecular(specular);
-            SetShininess(shininess);
-        }
-        
-
         public Material SetAmbient(Vector3 ambient) { Ambient = ambient; return this; }
         public Material SetAmbient(float r, float g, float b) { Ambient = new Vector3(r,g,b); return this; }
         public Material SetAmbient(float value) { Ambient = new Vector3(value,value,value); return this; }

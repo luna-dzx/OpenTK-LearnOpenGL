@@ -20,11 +20,8 @@ public class Camera
     //private int uProj;
     //private int uView;
 
-    private Matrix4 proj;
-    private Matrix4 view;
-
-    public Matrix4 GetProjMatrix() => proj;
-    public Matrix4 GetViewMatrix() => view;
+    public Matrix4 ProjMatrix;
+    public Matrix4 ViewMatrix;
 
     /// <summary>
     /// Create a new camera object for handling 3D projection
@@ -63,8 +60,8 @@ public class Camera
     public void UpdateProjection(int programId, int binding)
     {
         GL.UseProgram(programId);
-        proj = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, depthNear, depthFar);
-        GL.UniformMatrix4(binding,false,ref proj);
+        ProjMatrix = Matrix4.CreatePerspectiveFieldOfView(fov, aspect, depthNear, depthFar);
+        GL.UniformMatrix4(binding,false,ref ProjMatrix);
     }
 
     /// <summary>
@@ -124,8 +121,8 @@ public class Camera
     public void UpdateView(int programId, int binding, bool flipCamera = false)
     {
         GL.UseProgram(programId);
-        view = Matrix4.LookAt(Position, Position + Direction, ((flipCamera)?-1:1) * up);
-        GL.UniformMatrix4(binding,false,ref view);
+        ViewMatrix = Matrix4.LookAt(Position, Position + Direction, ((flipCamera)?-1:1) * up);
+        GL.UniformMatrix4(binding,false,ref ViewMatrix);
     }
 
 }

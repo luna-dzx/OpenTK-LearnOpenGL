@@ -11,7 +11,8 @@ namespace Library;
 
 public abstract class Game : IDisposable
 {
-    protected GameWindow Window;
+    protected static GameWindow Window;
+
     
     private static void DebugCallback(DebugSource source,
         DebugType type,
@@ -28,12 +29,18 @@ public abstract class Game : IDisposable
         if (type == DebugType.DebugTypeError)
         {
             Console.WriteLine("Error");
-            throw new Exception(messageString);
+            Window.CursorState = CursorState.Normal;
+            throw new Exception();
         }
     }
     
     private static DebugProc _debugProcCallback = DebugCallback;
     private static GCHandle _debugProcCallbackHandle;
+    
+    
+    
+    
+    
 
     /// <summary>
     /// Create a new window based on settings
@@ -55,7 +62,7 @@ public abstract class Game : IDisposable
             GL.Enable(EnableCap.DebugOutput);
             GL.Enable(EnableCap.DebugOutputSynchronous);
         }
-        
+
         return Window;
     }
     
@@ -98,10 +105,24 @@ public abstract class Game : IDisposable
     #region Functions To Override
     
     /// <summary>
-    /// Called before the first frame is rendered
-    /// <para>initialize -> <b>Load()</b> -> run</para>
+    /// Called at program startup before Load. Here you can initialize all of your variables
+    /// <para>Initialize() -> <b>Load()</b> -> run</para>
+    /// </summary>
+    protected virtual void Initialize(){}
+    
+    /// <summary>
+    /// Called at program startup after Initialize. Here you can load up data to the GPU
+    /// <para>Initialize() -> <b>Load()</b> -> run</para>
     /// </summary>
     protected virtual void Load(){}
+
+    private void Boot()
+    {
+        Initialize();
+        Load();
+        SetMouseOrigin();
+    }
+    
     
     /// <summary>
     /// Called before destroying the window
@@ -162,8 +183,8 @@ public abstract class Game : IDisposable
     /// <summary>
     /// Called upon resizing the window
     /// </summary>
-    /// <param name="newSize">the new window size after moving</param>
-    protected virtual void Resize(ResizeEventArgs newSize){}
+    /// <param name="newWin">the new window size after moving</param>
+    protected virtual void Resize(ResizeEventArgs newWin){}
     
     /// <summary>
     /// Called when files are dropped onto the window
@@ -274,8 +295,7 @@ public abstract class Game : IDisposable
     /// </summary>
     private void SetFunctions()
     {
-        Window.Load += Load;
-        Window.Load += SetMouseOrigin;
+        Window.Load += Boot;
         Window.Unload += Unload;
         Window.RenderFrame += RenderFrame;
         Window.UpdateFrame += ExtraPerFrameFunctions;

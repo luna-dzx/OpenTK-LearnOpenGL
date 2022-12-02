@@ -323,8 +323,8 @@ public class FrameBuffer
 /// </summary>
 public class GeometryBuffer : FrameBuffer
 {
-    
     private List<TextureBuffer> colourAttachmentsList;
+    private DrawBuffersEnum[] drawBuffers;
 
     public GeometryBuffer(Vector2i size, bool readableDepth = false) : base()
     {
@@ -332,7 +332,6 @@ public class GeometryBuffer : FrameBuffer
         colourAttachmentsList = new List<TextureBuffer>();
 
         usingPreset = true;
-
 
         if (readableDepth)
         {
@@ -350,6 +349,13 @@ public class GeometryBuffer : FrameBuffer
         }
 
 
+    }
+
+    public FrameBuffer SetDrawBuffers()
+    {
+        this.WriteMode();
+        GL.DrawBuffers(drawBuffers.Length,drawBuffers);
+        return this;
     }
 
 
@@ -372,7 +378,7 @@ public class GeometryBuffer : FrameBuffer
     {
         NumColourAttachments = colourAttachmentsList.Count;
         colourAttachments = colourAttachmentsList.ToArray();
-        
+        drawBuffers = OpenGL.GetDrawBuffers(NumColourAttachments);
         
         CheckCompletion();
         ReadMode();

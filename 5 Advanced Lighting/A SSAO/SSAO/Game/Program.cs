@@ -2,7 +2,7 @@
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.Desktop;
 
-namespace Ambient_Occlusion.Game;
+namespace SSAO.Game;
 
 internal static class Program
 {
@@ -30,10 +30,9 @@ internal static class Program
 
         #endregion
 
-
         using var game = new Game1();
         game.InitWindow(gameSettings, uiSettings)
-            .CursorState = CursorState.Grabbed;
+            .CursorState = CursorState.Normal;
         game.Run();
     }
 }

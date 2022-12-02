@@ -400,7 +400,6 @@ public class Model : VertexArray
         }
         else
         {
-            if (scale == 0f) scale = 1f;
             UpdateTransform(program, position, rotation, scale);
         }
         
