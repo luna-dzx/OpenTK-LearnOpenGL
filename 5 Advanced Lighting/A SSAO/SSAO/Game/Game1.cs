@@ -15,7 +15,8 @@ public class Game1 : Library.Game
 
     ShaderProgram shader;
     ShaderProgram sceneShader;
-    ShaderProgram gBufferShader;
+    ShaderProgram ssaoShader;
+    ShaderProgram lightingShader;
 
     FirstPersonPlayer player;
     Model backpack;
@@ -25,7 +26,6 @@ public class Game1 : Library.Game
     Objects.Material material;
 
     Texture texture;
-    Texture normalMap;
     Texture specular;
 
     GeometryBuffer gBuffer;
@@ -42,6 +42,7 @@ public class Game1 : Library.Game
     FrameBuffer blurBuffer;
     ShaderProgram blurShader;
 
+    bool ambientOcclusion = true;
 
     protected override void Initialize()
     {
@@ -67,10 +68,9 @@ public class Game1 : Library.Game
         const string BackpackDir = "../../../../../../0 Assets/backpack/";
         backpack = Model.FromFile(BackpackDir,"backpack.obj",out _ , postProcessFlags: PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
 
-        texture = new Texture(BackpackDir+"diffuse.bmp",0);
-        specular = new Texture(BackpackDir+"specular.bmp",1);
-        normalMap = new Texture(BackpackDir+"normal.bmp",2);
-    
+        texture = new Texture(BackpackDir+"diffuse.bmp",4);
+        specular = new Texture(BackpackDir+"specular.bmp",5);
+
         material = PresetMaterial.Silver.SetAmbient(0.01f);
         
         cube = new Model(PresetMesh.Cube.FlipNormals());
@@ -80,10 +80,13 @@ public class Game1 : Library.Game
         gBuffer = new GeometryBuffer(Window.Size)
             .AddTexture(PixelInternalFormat.Rgb16f)  // position
             .AddTexture(PixelInternalFormat.Rgb16f)  // normal
+            .AddTexture(PixelInternalFormat.Rg16f)  // texCoords
             .Construct();
     
     
-        gBufferShader = new ShaderProgram(ShaderLocation+"lightingFragment.glsl");
+        ssaoShader = new ShaderProgram(ShaderLocation+"ssaoFragment.glsl");
+        lightingShader = new ShaderProgram(ShaderLocation+"lightingFragment.glsl");
+        
         light = new Objects.Light().PointMode().SetPosition(3f,5f,6f);
 
         Random r = new Random();
@@ -143,11 +146,17 @@ public class Game1 : Library.Game
 
         texture.Use();
 
-        sceneShader.Use().UniformMaterial("material",material,texture,specular).UniformTexture("normalMap",normalMap);
-        gBufferShader.UniformVec3Array("samples", ssaoKernel);
-        gBufferShader.Uniform2("noiseScale", new Vector2(Window.Size.X / 4f, Window.Size.Y / 4f));
+        sceneShader.Use();
+        ssaoShader.UniformVec3Array("samples", ssaoKernel);
+        ssaoShader.Uniform2("noiseScale", new Vector2(Window.Size.X / 4f, Window.Size.Y / 4f));
 
-        gBuffer.UniformTextures((int)gBufferShader, new[] { "gPosition", "gNormal", "gAlbedoSpec", "tbnColumn0", "tbnColumn1", "tbnColumn2" });
+        gBuffer.UniformTextures((int)ssaoShader, new[] { "gPosition", "gNormal", "noiseTex"});
+        gBuffer.UniformTextures((int)lightingShader, new[] { "gPosition", "gNormal", "gTexCoords", "ssaoTex"});
+
+        lightingShader.UniformMaterial("material", material, texture, specular);
+        lightingShader.UniformLight("light", light);
+        
+        lightingShader.Uniform1("ambientOcclusion", ambientOcclusion ? 1 : 0);
     }
 
     protected override void Resize(ResizeEventArgs newWin)
@@ -161,11 +170,12 @@ public class Game1 : Library.Game
         gBuffer = new GeometryBuffer(Window.Size)
             .AddTexture(PixelInternalFormat.Rgb16f)  // position
             .AddTexture(PixelInternalFormat.Rgb16f)  // normal
+            .AddTexture(PixelInternalFormat.Rg16f)  // texCoords
             .Construct();
 
         blurBuffer = new FrameBuffer(newWin.Size, TextureTarget.Texture2D);
         
-        gBufferShader.Uniform2("noiseScale", new Vector2(newWin.Size.X / 4f, newWin.Size.Y / 4f));
+        ssaoShader.Uniform2("noiseScale", new Vector2(newWin.Size.X / 4f, newWin.Size.Y / 4f));
     }
 
     protected override void UpdateFrame(FrameEventArgs args)
@@ -173,8 +183,6 @@ public class Game1 : Library.Game
         player.Update(sceneShader, args, Window.KeyboardState, GetRelativeMouse()*2f);
         shader.Use();
         GL.UniformMatrix4(shader.DefaultView,false,ref player.Camera.ViewMatrix);
-
-        gBufferShader.Uniform3("cameraPos", player.Position);
     }
 
     protected override void KeyboardHandling(FrameEventArgs args, KeyboardState k)
@@ -183,6 +191,12 @@ public class Game1 : Library.Game
         if (k.IsKeyDown(Keys.Left))  rotation-=Vector3.UnitY*(float)args.Time;
         if (k.IsKeyDown(Keys.Up))    rotation+=Vector3.UnitX*(float)args.Time;
         if (k.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
+
+        if (k.IsKeyPressed(Keys.Enter))
+        {
+            ambientOcclusion = !ambientOcclusion;
+            lightingShader.Uniform1("ambientOcclusion", ambientOcclusion ? 1 : 0);
+        }
 
         backpack.UpdateTransform(sceneShader, Vector3.Zero, rotation, new Vector3(0.8f));
     }
@@ -197,18 +211,14 @@ public class Game1 : Library.Game
         
             sceneShader.Use();
             gBuffer.SetDrawBuffers();
-            
-            // since we're also using texture channels 0 and 1 for the framebuffer
-            // we need to bind our normal textures back to channels 0 and 1 with this
-            texture.Use();
-            specular.Use();
-            normalMap.Use();
 
             GL.ClearColor(0f,0f,0f,0f);
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
+            sceneShader.SetActive(ShaderType.FragmentShader, "backpack");
             backpack.Draw(sceneShader);
        
+            sceneShader.SetActive(ShaderType.FragmentShader, "cube");
             GL.CullFace(CullFaceMode.Front);
             cube.UpdateTransform(sceneShader,Vector3.Zero,Vector3.Zero,3f);
             cube.Draw();
@@ -230,8 +240,8 @@ public class Game1 : Library.Game
         
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-        gBufferShader.Use();
-        gBufferShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
+        ssaoShader.Use();
+        ssaoShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
         gBuffer.UseTexture();
         
         GL.ActiveTexture(TextureUnit.Texture2);
@@ -242,9 +252,24 @@ public class Game1 : Library.Game
 
         blurBuffer.ReadMode();
 
+        
         blurBuffer.UseTexture();
-        blurShader.Use();
+
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
+        lightingShader.UniformMat4("view", ref player.Camera.ViewMatrix);
+        lightingShader.Use();
+        gBuffer.UseTexture();
+        
+        GL.ActiveTexture(TextureUnit.Texture3);
+        blurBuffer.UseTexture(0);
+
+        texture.Use();
+
+        specular.Use();
+
         PostProcessing.Draw();
+        
         
         #endregion
         
@@ -268,13 +293,12 @@ public class Game1 : Library.Game
         cube.Delete();
         
         texture.Delete();
-        normalMap.Delete();
         specular.Delete();
         
         gBuffer.Delete();
         
         shader.Delete();
         sceneShader.Delete();
-        gBufferShader.Delete();
+        ssaoShader.Delete();
     }
 }

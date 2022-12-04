@@ -347,6 +347,14 @@ vec4 lx_Colour(vec3 colour)
 {
     return vec4(colour,1.0);
 }
+vec4 lx_Colour(vec2 colour)
+{
+    return vec4(colour,1.0,1.0);
+}
+vec4 lx_Colour(float colour)
+{
+    return vec4(colour);
+}
 
 vec2 lx_ParallaxMapping(sampler2D depthMap, vec2 texCoords, vec3 viewDir, float heightScale, float minLayers, float maxLayers)
 { 

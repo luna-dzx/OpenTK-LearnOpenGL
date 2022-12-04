@@ -150,7 +150,7 @@ public class ShaderProgram
         
         var (engineShader,engineShaderMain,postMain) = ReadEngineShader(shaderType);
 
-        lines[0] = "#version 420 core\n#define NUM_LIGHTS "+NUM_LIGHTS+"\n";
+        lines[0] = "#version 330 core\n#define NUM_LIGHTS "+NUM_LIGHTS+"\n";
         lines[0] += engineShader;
         lines[0] += "\nuniform int active"+shaderType+"Id;\n";
         
