@@ -38,6 +38,10 @@ public class Game1 : Library.Game
 
     int noiseTexture;
 
+    // TODO: rework my postprocessing code - can't seem to get it to work here with so many framebuffers :(
+    FrameBuffer blurBuffer;
+    ShaderProgram blurShader;
+
 
     protected override void Initialize()
     {
@@ -117,6 +121,8 @@ public class Game1 : Library.Game
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapS,(int)TextureWrapMode.Repeat);
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapT,(int)TextureWrapMode.Repeat);
 
+        blurBuffer = new FrameBuffer(Window.Size,TextureTarget.Texture2D);
+        blurShader = new ShaderProgram(ShaderLocation + "blurFragment.glsl");
     }
 
     protected override void Load()
@@ -207,9 +213,11 @@ public class Game1 : Library.Game
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         
         #region Colour Render
+
+        blurBuffer.WriteMode();
         
-        
-        // draw gBuffer to screen
+        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+
         gBufferShader.Use();
         gBufferShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
         gBuffer.UseTexture();
@@ -220,17 +228,15 @@ public class Game1 : Library.Game
         PostProcessing.Draw();
 
 
+        blurBuffer.ReadMode();
 
-        // use depth of gBuffer and draw other objects
-        gBuffer.BlitDepth(Window.Size,true);
+        blurBuffer.UseTexture();
+        blurShader.Use();
+        PostProcessing.Draw();
         
+        #endregion
         
-        shader.Use();
-        
-        shader.Uniform3("colour", light.Diffuse);
-        cube.UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
-        cube.Draw();
-        
+        #region blur
         
         GL.CullFace(CullFaceMode.Front);
         shader.Uniform3("colour", 0.8f*Vector3.One);
@@ -239,8 +245,8 @@ public class Game1 : Library.Game
         
         GL.CullFace(CullFaceMode.Back);
         
-        
         #endregion
+        
 
         Window.SwapBuffers();
     }

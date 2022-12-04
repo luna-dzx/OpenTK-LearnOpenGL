@@ -144,7 +144,7 @@ public class ShaderProgram
     {
         string[] lines = shaderText.Split('\n');
 
-        if (lines[0].Substring(9, 7) != "luma-dx") return shaderText;
+        if (lines[0].Length > 17 && lines[0].Substring(9, 7) != " luma-dx") return shaderText;
 
         usesCustomSynax[(int)shaderType] = true;
         
