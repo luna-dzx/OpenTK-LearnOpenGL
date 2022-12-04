@@ -150,7 +150,7 @@ public class ShaderProgram
         
         var (engineShader,engineShaderMain,postMain) = ReadEngineShader(shaderType);
 
-        lines[0] = "#version 330 core\n#define NUM_LIGHTS "+NUM_LIGHTS+"\n";
+        lines[0] = "#version 420 core\n#define NUM_LIGHTS "+NUM_LIGHTS+"\n";
         lines[0] += engineShader;
         lines[0] += "\nuniform int active"+shaderType+"Id;\n";
         
@@ -709,6 +709,16 @@ public class ShaderProgram
         for (int i = 0; i < matrices.Length; i++)
         {
             GL.UniformMatrix4(GetUniform(name+"["+i+"]"),false,ref matrices[i]);
+        }
+
+        return this;
+    }
+    
+    public ShaderProgram UniformVec3Array(string name, Vector3[] vectors)
+    {
+        for (int i = 0; i < vectors.Length; i++)
+        {
+            GL.Uniform3(GetUniform(name+"["+i+"]"),vectors[i]);
         }
 
         return this;

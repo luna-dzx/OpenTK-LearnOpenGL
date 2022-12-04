@@ -60,7 +60,9 @@ public class PostProcessing
     
     private static readonly DrawBuffersEnum[] DefaultAttachments = { DrawBuffersEnum.ColorAttachment0 };
     
-    public PostProcessing(string libraryShaderLocation, PostProcessShader postProcessEffects, Vector2i frameBufferSize, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, DrawBuffersEnum[]? colourAttachments = null)
+    private const string LibraryShaderPath = "../../../Library/Shaders/";
+    
+    public PostProcessing(PostProcessShader postProcessEffects, Vector2i frameBufferSize, PixelInternalFormat internalFormat = PixelInternalFormat.Rgba8, DrawBuffersEnum[]? colourAttachments = null)
     {
         colourAttachments ??= DefaultAttachments;
         
@@ -92,7 +94,7 @@ public class PostProcessing
                 // add to dictionary of effects
                 shaderPrograms[postProcessShader] = new ShaderProgram
                 (
-                    libraryShaderLocation + "PostProcessing/gaussianFragment.glsl"
+                    LibraryShaderPath + "PostProcessing/gaussianFragment.glsl"
                 );
                 
                 WriteFbo.UniformTexture((int)shaderPrograms[postProcessShader], "texture0", 1);

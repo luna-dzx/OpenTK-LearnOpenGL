@@ -72,4 +72,8 @@ public class Maths
 
         return (tangent, biTangent);
     }
+
+
+    public static float Lerp(float a, float b, float f) => a + f * (b - a);
+
 }

@@ -27,6 +27,13 @@ lx_Light lx_MoveLight(lx_Light light, vec3 position)
     return lightTemp;
 }
 
+lx_Light lx_TransformLight(lx_Light light, mat3 transform)
+{
+    lx_Light lightTemp = light;
+    lightTemp.position = transform*light.position;
+    return lightTemp;
+}
+
 float lx_NormalFlip(vec3 position, vec3 normal)
 {
     if (dot (normal, position) < 0.0) // approximation, almost always true
