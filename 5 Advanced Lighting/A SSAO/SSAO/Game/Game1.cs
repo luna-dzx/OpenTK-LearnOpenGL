@@ -72,8 +72,9 @@ public class Game1 : Library.Game
         normalMap = new Texture(BackpackDir+"normal.bmp",2);
     
         material = PresetMaterial.Silver.SetAmbient(0.01f);
-    
-        cube = new Model(PresetMesh.Cube);
+        
+        cube = new Model(PresetMesh.Cube.FlipNormals());
+        
     
         // TODO: make resizing this better, requires re-doing all the framebuffer objects though
         gBuffer = new GeometryBuffer(Window.Size)
@@ -144,6 +145,7 @@ public class Game1 : Library.Game
 
         sceneShader.Use().UniformMaterial("material",material,texture,specular).UniformTexture("normalMap",normalMap);
         gBufferShader.UniformVec3Array("samples", ssaoKernel);
+        gBufferShader.Uniform2("noiseScale", new Vector2(Window.Size.X / 4f, Window.Size.Y / 4f));
 
         gBuffer.UniformTextures((int)gBufferShader, new[] { "gPosition", "gNormal", "gAlbedoSpec", "tbnColumn0", "tbnColumn1", "tbnColumn2" });
     }
@@ -160,6 +162,10 @@ public class Game1 : Library.Game
             .AddTexture(PixelInternalFormat.Rgb16f)  // position
             .AddTexture(PixelInternalFormat.Rgb16f)  // normal
             .Construct();
+
+        blurBuffer = new FrameBuffer(newWin.Size, TextureTarget.Texture2D);
+        
+        gBufferShader.Uniform2("noiseScale", new Vector2(newWin.Size.X / 4f, newWin.Size.Y / 4f));
     }
 
     protected override void UpdateFrame(FrameEventArgs args)
@@ -177,7 +183,7 @@ public class Game1 : Library.Game
         if (k.IsKeyDown(Keys.Left))  rotation-=Vector3.UnitY*(float)args.Time;
         if (k.IsKeyDown(Keys.Up))    rotation+=Vector3.UnitX*(float)args.Time;
         if (k.IsKeyDown(Keys.Down))  rotation-=Vector3.UnitX*(float)args.Time;
-        
+
         backpack.UpdateTransform(sceneShader, Vector3.Zero, rotation, new Vector3(0.8f));
     }
 
@@ -202,6 +208,12 @@ public class Game1 : Library.Game
             GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
             backpack.Draw(sceneShader);
+       
+            GL.CullFace(CullFaceMode.Front);
+            cube.UpdateTransform(sceneShader,Vector3.Zero,Vector3.Zero,3f);
+            cube.Draw();
+
+            GL.CullFace(CullFaceMode.Back);
             
             GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
             
@@ -238,10 +250,6 @@ public class Game1 : Library.Game
         
         #region blur
         
-        GL.CullFace(CullFaceMode.Front);
-        shader.Uniform3("colour", 0.8f*Vector3.One);
-        cube.UpdateTransform(shader,Vector3.Zero,Vector3.Zero,10f);
-        cube.Draw();
         
         GL.CullFace(CullFaceMode.Back);
         

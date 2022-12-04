@@ -32,7 +32,7 @@ internal static class Program
 
         using var game = new Game1();
         game.InitWindow(gameSettings, uiSettings)
-            .CursorState = CursorState.Normal;
+            .CursorState = CursorState.Grabbed;
         game.Run();
     }
 }

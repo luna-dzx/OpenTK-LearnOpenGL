@@ -29,10 +29,19 @@ public static class Objects
             Normals = normals;
             Tangents = tangents;
         }
+        
+        public Mesh FlipNormals()
+        {
+            for (int i = 0; i < Normals.Length; i++)
+            {
+                Normals[i] *= -1;
+            }
+
+            return this;
+        }
 
     }
-
-
+    
     public class Material
     {
         public Vector3 Ambient;

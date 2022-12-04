@@ -11,7 +11,7 @@ uniform vec3 samples[64];
 in vec2 texCoords;
 
 // tile noise texture over screen, based on screen dimensions divided by noise size
-const vec2 noiseScale = vec2(1600.0/4.0, 900.0/4.0);
+uniform vec2 noiseScale;
 
 void main()
 {
