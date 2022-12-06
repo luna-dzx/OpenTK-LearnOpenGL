@@ -16,7 +16,7 @@ public class PostProcessing
         // go up from here in powers of 2 so it's possible to use | on this
     }
 
-    private Dictionary<PostProcessShader,ShaderProgram> shaderPrograms;
+    public Dictionary<PostProcessShader,ShaderProgram> shaderPrograms;
 
     public ShaderProgram BlitShader;
 
@@ -54,7 +54,7 @@ public class PostProcessing
         
         Console.WriteLine(output);
 
-       return output;
+        return output;
     }
     
     
@@ -69,11 +69,18 @@ public class PostProcessing
         WriteFbo = new FrameBuffer(frameBufferSize,internalFormat: internalFormat,numColourAttachments:colourAttachments.Length);
         ReadFbo = new FrameBuffer(frameBufferSize,internalFormat: internalFormat,numColourAttachments:colourAttachments.Length);
         
+        shaderPrograms = new Dictionary<PostProcessShader, ShaderProgram>();
         
         BlitShader = new ShaderProgram()
             .LoadPostProcessVertex()
             .LoadShaderText(GenerateBlitShader(colourAttachments.Length),ShaderType.FragmentShader)
             .Compile();
+        
+        shaderPrograms[PostProcessShader.GaussianBlur] = new ShaderProgram
+        (
+            LibraryShaderPath + "PostProcessing/gaussianFragment.glsl"
+        );
+        
 
         for (int i = 0; i < colourAttachments.Length; i++)
         {
@@ -83,7 +90,7 @@ public class PostProcessing
         ReadFbo.SetDrawBuffers(colourAttachments);
         WriteFbo.SetDrawBuffers(colourAttachments);
 
-        shaderPrograms = new Dictionary<PostProcessShader, ShaderProgram>();
+        /*
 
         // loop through post processing effects
         foreach (var postProcessShader in Enum.GetValues(typeof(PostProcessShader)).Cast<PostProcessShader>())
@@ -97,9 +104,9 @@ public class PostProcessing
                     LibraryShaderPath + "PostProcessing/gaussianFragment.glsl"
                 );
                 
-                WriteFbo.UniformTexture((int)shaderPrograms[postProcessShader], "texture0", 1);
+                WriteFbo.UniformTexture((int)shaderPrograms[postProcessShader], "texture0", 0);
             }
-        }
+        }*/
 
     }
     
@@ -128,17 +135,23 @@ public class PostProcessing
     
     private void GaussianBlurStep(DrawBuffersEnum[] colourAttachments, BlurDirection direction)
     {
+        GL.DepthFunc(DepthFunction.Always);
+        ReadFbo.ReadMode();
+        
         shaderPrograms[PostProcessShader.GaussianBlur].Uniform1("blurDirection", (int)direction);
         WriteFbo.WriteMode();
         WriteFbo.SetDrawBuffers(colourAttachments);
+
         GL.Clear(ClearBufferMask.ColorBufferBit);
-        
+
         ReadFbo.UseTexture();
         Draw();
         
         WriteFbo.ReadMode();
 
+
         BlitFbo();
+
     }
     
     
@@ -154,18 +167,15 @@ public class PostProcessing
             GaussianBlurStep(colourAttachments, BlurDirection.Vertical);
 
         }
-        
-        
-        
 
 
         return this;
     }
 
 
-    public PostProcessing ReadTexture()
+    public PostProcessing ReadTexture(int unit = -1)
     {
-        ReadFbo.UseTexture();
+        ReadFbo.UseTexture(unit);
         return this;
     }
 
@@ -183,6 +193,13 @@ public class PostProcessing
         GL.DepthMask(depthMask);
         BlitFbo();
         return this;
+    }
+    
+    // TODO: make this not necessary, the depth functions are a plague :(
+    public static void Finalize(bool depthMask = true, DepthFunction depthFunction = DepthFunction.Less)
+    {
+        GL.DepthMask(depthMask);
+        GL.DepthFunc(depthFunction);
     }
 
     public PostProcessing UniformTexture(ShaderProgram program, string name, int binding)

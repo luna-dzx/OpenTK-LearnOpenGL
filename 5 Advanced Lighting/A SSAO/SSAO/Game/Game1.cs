@@ -37,10 +37,8 @@ public class Game1 : Library.Game
     float[] ssaoNoise;
 
     int noiseTexture;
-
-    // TODO: rework my postprocessing code - can't seem to get it to work here with so many framebuffers :(
-    FrameBuffer blurBuffer;
-    ShaderProgram blurShader;
+    
+    PostProcessing postProcessor;
 
     bool ambientOcclusion = true;
 
@@ -125,8 +123,7 @@ public class Game1 : Library.Game
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapS,(int)TextureWrapMode.Repeat);
         GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapT,(int)TextureWrapMode.Repeat);
 
-        blurBuffer = new FrameBuffer(Window.Size,TextureTarget.Texture2D);
-        blurShader = new ShaderProgram(ShaderLocation + "blurFragment.glsl");
+        postProcessor = new PostProcessing(PostProcessing.PostProcessShader.GaussianBlur, Window.Size);
     }
 
     protected override void Load()
@@ -173,7 +170,7 @@ public class Game1 : Library.Game
             .AddTexture(PixelInternalFormat.Rg16f)  // texCoords
             .Construct();
 
-        blurBuffer = new FrameBuffer(newWin.Size, TextureTarget.Texture2D);
+        postProcessor = new PostProcessing(PostProcessing.PostProcessShader.GaussianBlur, newWin.Size);
         
         ssaoShader.Uniform2("noiseScale", new Vector2(newWin.Size.X / 4f, newWin.Size.Y / 4f));
     }
@@ -205,7 +202,7 @@ public class Game1 : Library.Game
     protected override void RenderFrame(FrameEventArgs args)
     {
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-
+        
         #region Geometry Render
         gBuffer.WriteMode();
         
@@ -236,7 +233,7 @@ public class Game1 : Library.Game
         
         #region Colour Render
 
-        blurBuffer.WriteMode();
+        postProcessor.StartSceneRender();
         
         GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
@@ -248,21 +245,20 @@ public class Game1 : Library.Game
         GL.BindTexture(TextureTarget.Texture2D,noiseTexture);
         
         PostProcessing.Draw();
-
-
-        blurBuffer.ReadMode();
-
         
-        blurBuffer.UseTexture();
+        postProcessor.EndSceneRender();
+        
+        // blur the SSAO texture to remove noise (noise is there to prevent banding)
+        postProcessor.RenderEffect(PostProcessing.PostProcessShader.GaussianBlur);
+        PostProcessing.Finalize();
 
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
         lightingShader.UniformMat4("view", ref player.Camera.ViewMatrix);
         lightingShader.Use();
         gBuffer.UseTexture();
         
         GL.ActiveTexture(TextureUnit.Texture3);
-        blurBuffer.UseTexture(0);
+        postProcessor.ReadTexture(0);
 
         texture.Use();
 
