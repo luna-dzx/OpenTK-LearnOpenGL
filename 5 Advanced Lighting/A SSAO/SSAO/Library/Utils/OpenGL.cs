@@ -57,5 +57,12 @@ public class OpenGL
 
         return buffers;
     }
+
+
+    public static void BindTexture(int unit, TextureTarget target, int texture)
+    {
+        GL.ActiveTexture(TextureUnit.Texture0 + unit);
+        GL.BindTexture(target,texture);
+    }
     
 }

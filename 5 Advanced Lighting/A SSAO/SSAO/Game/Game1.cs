@@ -1,11 +1,9 @@
-﻿using System.Runtime.InteropServices;
-using Assimp;
+﻿using Assimp;
 using Library;
 using OpenTK.Graphics.OpenGL4;
 using OpenTK.Mathematics;
 using OpenTK.Windowing.Common;
 using OpenTK.Windowing.GraphicsLibraryFramework;
-using TextureWrapMode = OpenTK.Graphics.OpenGL4.TextureWrapMode;
 
 namespace SSAO.Game;
 
@@ -31,10 +29,9 @@ public class Game1 : Library.Game
     GeometryBuffer gBuffer;
     Vector3 rotation = Vector3.Zero;
 
-    const int SampleNum = 64;
+    const int SampleCount = 64;
     const int NoiseWidth = 4;
     Vector3[] ssaoKernel;
-    float[] ssaoNoise;
 
     int noiseTexture;
     
@@ -42,9 +39,12 @@ public class Game1 : Library.Game
 
     bool ambientOcclusion = true;
 
+    StateHandler glState;
+
     protected override void Initialize()
     {
-        GL.ClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glState = new StateHandler();
+        glState.ClearColor = Color4.Black; // in reality, i'm overwriting the clear colour in my lighting calculations for this demo
 
         shader = new ShaderProgram
         (
@@ -87,41 +87,8 @@ public class Game1 : Library.Game
         
         light = new Objects.Light().PointMode().SetPosition(3f,5f,6f);
 
-        Random r = new Random();
-        ssaoKernel = new Vector3[SampleNum];
-        ssaoNoise = new float[NoiseWidth*NoiseWidth*3];
-
-        // random vectors in positive Z and any X,Y direction, of length 0.0 to 1.0
-        // (random positions in hemisphere of positive Z)
-        for (int i = 0; i < SampleNum; i++)
-        {
-            // scale for favouring points closer to the centre of the hemisphere
-            float scale = (float)i/64f;
-            // interpolate
-            scale = Maths.Lerp(0.1f, 1.0f, scale * scale);
-
-            ssaoKernel[i] = (
-                new Vector3(
-                    (float)r.NextDouble() * 2f - 1f,
-                    (float)r.NextDouble() * 2f - 1f,
-                    (float)r.NextDouble()
-                ).Normalized()
-            ) * (float)r.NextDouble() * scale;
-        }
-
-        for (int i = 0; i < NoiseWidth*NoiseWidth*3; i+=3)
-        {
-            ssaoNoise[i] = (float)r.NextDouble() * 2f - 1f;
-            ssaoNoise[i + 1] = (float)r.NextDouble() * 2f - 1f;
-        }
-
-        noiseTexture = GL.GenTexture();
-        GL.BindTexture(TextureTarget.Texture2D,noiseTexture);
-        GL.TexImage2D(TextureTarget.Texture2D,0,PixelInternalFormat.Rgba16f,NoiseWidth,NoiseWidth,0,PixelFormat.Rgb,PixelType.Float,ssaoNoise);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMinFilter,(int)TextureMinFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureMagFilter,(int)TextureMagFilter.Nearest);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapS,(int)TextureWrapMode.Repeat);
-        GL.TexParameter(TextureTarget.Texture2D,TextureParameterName.TextureWrapT,(int)TextureWrapMode.Repeat);
+        ssaoKernel = RandUtils.SsaoKernel(SampleCount);
+        noiseTexture = TexUtils.GenSsaoNoiseTex(NoiseWidth);
 
         postProcessor = new PostProcessing(PostProcessing.PostProcessShader.GaussianBlur, Window.Size);
     }
@@ -134,10 +101,6 @@ public class Game1 : Library.Game
         GL.UniformMatrix4(shader.DefaultProjection,false,ref player.Camera.ProjMatrix);
 
         cube.UpdateTransform(shader,new Vector3(10f,10f,10f),Vector3.Zero,0.2f);
-
-        GL.Enable(EnableCap.DepthTest);
-        GL.Enable(EnableCap.CullFace);
-        GL.DepthMask(true);
 
         sceneShader.EnableGammaCorrection();
 
@@ -201,56 +164,57 @@ public class Game1 : Library.Game
 
     protected override void RenderFrame(FrameEventArgs args)
     {
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        glState.Clear();
         
         #region Geometry Render
+        
         gBuffer.WriteMode();
         
-            sceneShader.Use();
-            gBuffer.SetDrawBuffers();
+        sceneShader.Use();
+        gBuffer.SetDrawBuffers();
 
-            GL.ClearColor(0f,0f,0f,0f);
-            GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
 
-            sceneShader.SetActive(ShaderType.FragmentShader, "backpack");
-            backpack.Draw(sceneShader);
-       
-            sceneShader.SetActive(ShaderType.FragmentShader, "cube");
-            GL.CullFace(CullFaceMode.Front);
-            cube.UpdateTransform(sceneShader,Vector3.Zero,Vector3.Zero,3f);
-            cube.Draw();
+        glState.Clear();
 
-            GL.CullFace(CullFaceMode.Back);
-            
-            GL.ClearColor(0.01f, 0.01f, 0.01f, 1.0f);
-            
+        sceneShader.SetActive(ShaderType.FragmentShader, "backpack");
+        backpack.Draw(sceneShader);
+   
+        sceneShader.SetActive(ShaderType.FragmentShader, "cube");
         
+        glState.CullFace = CullFaceMode.Front;
+        cube.UpdateTransform(sceneShader,Vector3.Zero,Vector3.Zero,3f);
+        cube.Draw();
+
+        glState.CullFace = CullFaceMode.Back;
+
+
         gBuffer.ReadMode();
+        
         #endregion
 
         
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        glState.Clear();
         
         #region Colour Render
 
         postProcessor.StartSceneRender();
         
-        GL.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        glState.Clear();
 
         ssaoShader.Use();
         ssaoShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
         gBuffer.UseTexture();
-        
-        GL.ActiveTexture(TextureUnit.Texture2);
-        GL.BindTexture(TextureTarget.Texture2D,noiseTexture);
-        
+
+        OpenGL.BindTexture(2,TextureTarget.Texture2D,noiseTexture);
+
         PostProcessing.Draw();
-        
+
+        glState.DepthTest = false;
         postProcessor.EndSceneRender();
         
         // blur the SSAO texture to remove noise (noise is there to prevent banding)
         postProcessor.RenderEffect(PostProcessing.PostProcessShader.GaussianBlur);
-        PostProcessing.Finalize();
+        glState.DepthTest = true;
 
 
         lightingShader.UniformMat4("view", ref player.Camera.ViewMatrix);
@@ -269,13 +233,8 @@ public class Game1 : Library.Game
         
         #endregion
         
-        #region blur
-        
-        
         GL.CullFace(CullFaceMode.Back);
-        
-        #endregion
-        
+
 
         Window.SwapBuffers();
     }
@@ -290,7 +249,6 @@ public class Game1 : Library.Game
         
         texture.Delete();
         specular.Delete();
-        
         gBuffer.Delete();
         
         shader.Delete();

@@ -135,7 +135,6 @@ public class PostProcessing
     
     private void GaussianBlurStep(DrawBuffersEnum[] colourAttachments, BlurDirection direction)
     {
-        GL.DepthFunc(DepthFunction.Always);
         ReadFbo.ReadMode();
         
         shaderPrograms[PostProcessShader.GaussianBlur].Uniform1("blurDirection", (int)direction);
@@ -186,21 +185,13 @@ public class PostProcessing
         WriteFbo.WriteMode();
         return this;
     }
-    public PostProcessing EndSceneRender(bool depthMask = false)
+    public PostProcessing EndSceneRender()
     {
         WriteFbo.ReadMode();
-        // no need to measure depth since nothing beyond this point actually renders in 3d
-        GL.DepthMask(depthMask);
         BlitFbo();
         return this;
     }
     
-    // TODO: make this not necessary, the depth functions are a plague :(
-    public static void Finalize(bool depthMask = true, DepthFunction depthFunction = DepthFunction.Less)
-    {
-        GL.DepthMask(depthMask);
-        GL.DepthFunc(depthFunction);
-    }
 
     public PostProcessing UniformTexture(ShaderProgram program, string name, int binding)
     {
