@@ -121,6 +121,8 @@ public class Game1 : Library.Game
 
     protected override void Resize(ResizeEventArgs newWin)
     {
+        startMousePos = Window.Size / 2;
+        
         player.Camera.Resize(sceneShader, newWin.Size);
             
         shader.Use();
@@ -196,40 +198,45 @@ public class Game1 : Library.Game
         glState.Clear();
         
         #region Colour Render
-
-        postProcessor.StartSceneRender();
         
-        glState.Clear();
+        postProcessor.StartSceneRender();
+        #region Initial Render
+        
+            glState.Clear();
 
-        ssaoShader.Use();
-        ssaoShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
-        gBuffer.UseTexture();
+            ssaoShader.Use();
+            ssaoShader.UniformMat4("proj", ref player.Camera.ProjMatrix);
+            gBuffer.UseTexture();
 
-        OpenGL.BindTexture(2,TextureTarget.Texture2D,noiseTexture);
+            OpenGL.BindTexture(2,TextureTarget.Texture2D,noiseTexture);
 
-        PostProcessing.Draw();
+            PostProcessing.Draw();
 
+        #endregion
+        
         glState.DepthTest = false;
         postProcessor.EndSceneRender();
-        
+
         // blur the SSAO texture to remove noise (noise is there to prevent banding)
         postProcessor.RenderEffect(PostProcessing.PostProcessShader.GaussianBlur);
         glState.DepthTest = true;
 
-
-        lightingShader.UniformMat4("view", ref player.Camera.ViewMatrix);
-        lightingShader.Use();
-        gBuffer.UseTexture();
+        #region Final Render
         
-        GL.ActiveTexture(TextureUnit.Texture3);
-        postProcessor.ReadTexture(0);
+            lightingShader.UniformMat4("view", ref player.Camera.ViewMatrix);
+            lightingShader.Use();
+            gBuffer.UseTexture();
+            
+            // read blurred SSAO texture into slot 3
+            GL.ActiveTexture(TextureUnit.Texture3);
+            postProcessor.ReadTexture(0);
+            
+            texture.Use();
+            specular.Use();
 
-        texture.Use();
-
-        specular.Use();
-
-        PostProcessing.Draw();
-        
+            PostProcessing.Draw();
+            
+        #endregion
         
         #endregion
         
