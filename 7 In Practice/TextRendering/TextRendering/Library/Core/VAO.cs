@@ -70,6 +70,25 @@ public class VertexArray
     }
 
     /// <summary>
+    /// Creates an empty buffer for loading data to GPU Memory
+    /// </summary>
+    /// <param name="size">the size of the buffer in bytes</param>
+    /// <param name="target">the type of data we are sending</param>
+    /// <param name="buffer">what VBO to load this data to (-1 means create new buffer)</param>
+    /// <returns>the VBO id where we allocated this memory</returns>
+    public int EmptyBuffer(int size, BufferTarget target, int buffer = -1)
+    {
+        if (buffer == -1) { buffer = GL.GenBuffer(); }
+        // bind buffer for storing data
+        GL.BindBuffer(target,buffer);
+        
+        // allocate space for the buffer in memory
+        GL.BufferData(target,size,IntPtr.Zero,_bufferUsageHint);
+        
+        return buffer;
+    }
+
+    /// <summary>
     /// Creates a buffer on the GPU and then sets up that buffer for data storage
     /// </summary>
     /// <param name="layoutLocation">shader layout location of data input</param>
@@ -129,7 +148,7 @@ public class VertexArray
     /// <param name="layoutLocation">shader layout location of data input</param>
     /// <param name="type">the type of data that is to be loaded to this buffer</param>
     /// <param name="dataLength">number of variables per one group of data</param>
-    /// <param name="stride">number of variable between each group of data</param>
+    /// <param name="stride">number of variables between each group of data</param>
     /// <param name="offset">number of variables to offset the start of the reading from</param>
     /// <param name="normalized">sets all data to length 1</param>
     public void SetupBuffer(int layoutLocation, Type type, int dataLength=3, int stride = 3, int offset=0, bool normalized = false)

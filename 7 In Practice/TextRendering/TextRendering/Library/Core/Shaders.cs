@@ -596,7 +596,9 @@ public class ShaderProgram
     /// <param name="v1">y component value</param>
     /// <returns>current object for ease of use</returns>
     public ShaderProgram Uniform2(string name, uint v0, uint v1) { GL.Uniform2(GetUniform(name), v0,v1); return this; }
-        
+
+    public ShaderProgram UniformMat2(string name, ref Matrix2 matrix) { GL.UniformMatrix2(GetUniform(name), false, ref matrix); return this; }
+    
     #endregion
         
     #region 3D uniform

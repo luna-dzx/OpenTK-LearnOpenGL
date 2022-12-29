@@ -16,6 +16,10 @@ public struct GlState
     public Color4 ClearColor;
     public ClearBufferMask ClearBuffers;
 
+    public bool Blending;
+    public BlendingFactor BlendSrc;
+    public BlendingFactor BlendDst;
+
 
     public GlState()
     {
@@ -28,6 +32,10 @@ public struct GlState
 
         ClearColor = Color4.Transparent;
         ClearBuffers = ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit;
+
+        Blending = false;
+        BlendSrc = BlendingFactor.SrcAlpha;
+        BlendDst = BlendingFactor.OneMinusSrcAlpha;
     }
 }
 
@@ -57,6 +65,10 @@ public class StateHandler
 
         ClearColor = _state.ClearColor;
         ClearBuffers = _state.ClearBuffers;
+
+        Blending = _state.Blending;
+        BlendSrc = _state.BlendSrc;
+        BlendDst = _state.BlendDst;
     }
     
     
@@ -138,9 +150,44 @@ public class StateHandler
     }
 
     public void Clear() {GL.Clear(ClearBuffers);}
+
+    public bool Blending
+    {
+        set
+        {
+            _state.Blending = value;
+            if (value) GL.Enable(EnableCap.Blend);
+            else GL.Disable(EnableCap.Blend);
+        }
+        get => _state.Blending;
+    }
+
+
+    public BlendingFactor BlendSrc
+    {
+        set
+        {
+            GL.BlendFunc(value,_state.BlendDst);
+            _state.BlendSrc = value;
+        }
+        get => _state.BlendSrc;
+    }
     
+    public BlendingFactor BlendDst
+    {
+        set
+        {
+            GL.BlendFunc(_state.BlendSrc,value);
+            _state.BlendDst = value;
+        }
+        get => _state.BlendDst;
+    }
 
-
+    public void BlendFunc(BlendingFactor sFactor, BlendingFactor dFactor)
+    {
+        BlendSrc = sFactor;
+        BlendDst = dFactor;
+    }
 
 
 

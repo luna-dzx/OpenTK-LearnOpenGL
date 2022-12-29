@@ -62,6 +62,31 @@ public class Texture
                 .Wrapping(TextureParameterName.TextureWrapR,TextureWrapMode.ClampToEdge)
             ;
     }
+
+
+    public Texture LoadPtr(IntPtr pointer, int width, int height,
+        PixelInternalFormat internalFormat = PixelInternalFormat.Rgba,
+        PixelFormat pixelFormat = PixelFormat.Rgba,
+        PixelType pixelType = PixelType.UnsignedByte)
+    {
+        this.Use();
+        
+        GL.TexImage2D
+        (
+            target,
+            0,
+            internalFormat,
+            width,
+            height,
+            0,
+            pixelFormat,
+            pixelType,
+            pointer
+        );
+
+        return this;
+    }
+    
     
 
     public Texture LoadFile(string path, bool flipOnLoad = true)
@@ -153,6 +178,26 @@ public class Texture
     /// </summary>
     /// <param name="filter">the filter for how surrounding pixels should be sampled (if at all)</param>
     public Texture MagFilter(TextureMagFilter filter) { this.Use(); GL.TexParameter(target,TextureParameterName.TextureMagFilter,(int)filter); return this; }
+
+    public enum TextureFilter // simplify the crossover of MagFilter and MinFilter
+    {
+        /// <summary>[requires: v1.0] Original was GL_NEAREST = 0x2600</summary>
+        Nearest = 9728, // 0x00002600
+        /// <summary>[requires: v1.0] Original was GL_LINEAR = 0x2601</summary>
+        Linear = 9729, // 0x00002601
+    }
+
+    /// <summary>
+    /// Set parameters for how textures are displayed which take up less/more pixels on screen than the number of pixels in the texture image
+    /// </summary>
+    /// <param name="filter">the filter for how surrounding pixels should be sampled (if at all)</param>
+    public Texture Filter(TextureFilter filter)
+    {
+        MinFilter((TextureMinFilter)filter);
+        MagFilter((TextureMagFilter)filter);
+        return this;
+    }
+    
     
     /// <summary>
     /// Set parameters for how mipmapping should be handled (lower res textures further away)

@@ -13,6 +13,8 @@
         <PackageReference Include="BmpSharp" Version="0.2.0" />
         <PackageReference Include="OpenTK" Version="4.7.4" />
         <PackageReference Include="StbImageSharp" Version="2.27.8" />
+        <PackageReference Include="SharpFontCore" Version="0.1.1" />
+        <PackageReference Include="SpaceWizards.SharpFont" Version="1.0.1" />
     </ItemGroup>
 
 </Project>
