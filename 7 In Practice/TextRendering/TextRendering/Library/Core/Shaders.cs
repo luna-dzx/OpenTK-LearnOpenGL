@@ -70,6 +70,9 @@ public class ShaderProgram
 
     // only works if using custom syntax on a vertex shader
     private bool autoProjection = false;
+    
+    // set to true on compilation for checking whether this ShaderProgram object has actually been made yet
+    public bool Compiled = false;
 
     /// <summary>
     /// Enables the automatic calculation of lx_Transform
@@ -352,6 +355,7 @@ public class ShaderProgram
     public ShaderProgram Compile()
     {
         LoadShaders(shaders.ToArray());
+        Compiled = true;
         return this;
     }
     

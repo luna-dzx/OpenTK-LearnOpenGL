@@ -25,8 +25,8 @@ public class TextRenderer
             LibraryShaderPath+"Text/fragment.glsl",
             true).Use();
         
+        textShader.Uniform2("screenSize", new Vector2(screenSize.X,screenSize.Y));
         
-        textShader.Uniform2("screenSize", screenSize);
         
         SharpFont.Library ft = new SharpFont.Library();
         Face face = new Face(ft, "../../../../../../0 Assets/fonts/IBMPlexSans-Regular.ttf", 0);
@@ -147,7 +147,7 @@ public class TextRenderer
 
     public void UpdateScreenSize(Vector2i screenSize)
     {
-        textShader.Uniform2("screenSize", screenSize);
+        if (textShader.Compiled) textShader.Uniform2("screenSize", new Vector2(screenSize.X,screenSize.Y));
     }
 
     public void Delete()
