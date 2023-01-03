@@ -19,15 +19,13 @@ public class Game1 : Library.Game
     ShaderProgram shader;
 
     FirstPersonPlayer player;
-    Model backpack;
+    Model man;
     Model cube;
 
     Objects.Light light;
     Objects.Material material;
 
     Texture texture;
-    Texture normalMap;
-    Texture specular;
 
     private Vector3 rotation = Vector3.Zero;
     
@@ -35,7 +33,7 @@ public class Game1 : Library.Game
     protected override void Initialize()
     {
         glState = new StateHandler();
-        glState.ClearColor = Color4.Teal;
+        glState.ClearColor = new Color4(121, 139, 189, 255);
         
         shader = new ShaderProgram(
             ShaderLocation + "vertex.glsl", 
@@ -46,16 +44,14 @@ public class Game1 : Library.Game
             .SetPosition(new Vector3(0,0,6))
             .SetDirection(new Vector3(0, 0, 1));
         
-        const string BackpackDir = "../../../../../../0 Assets/backpack/";
-        backpack = Model.FromFile(BackpackDir,"backpack.obj",out _ ,
-            postProcessFlags: PostProcessSteps.Triangulate | PostProcessSteps.FlipUVs | PostProcessSteps.CalculateTangentSpace);
+        const string BackpackDir = "../../../../../../0 Assets/RumbaDancing/";
+        man = Model.FromFile(BackpackDir,"model.dae",out _ ,
+            postProcessFlags: PostProcessSteps.Triangulate | PostProcessSteps.CalculateTangentSpace);
 
-        texture = new Texture(BackpackDir+"diffuse.bmp",0);
-        specular = new Texture(BackpackDir+"specular.bmp",1);
-        normalMap = new Texture(BackpackDir+"normal.bmp",2);
-        
-        light = new Objects.Light().PointMode().SetPosition(new Vector3(-2f,2f,5f)).SetAmbient(0.1f);
-        material = PresetMaterial.Silver.SetAmbient(0.01f);
+        texture = new Texture(BackpackDir+"diffuse.png",0);
+
+        light = new Objects.Light().PointMode().SetPosition(new Vector3(-3f,5f,3f)).SetAmbient(0.1f);
+        material = PresetMaterial.Obsidian;
         
         cube = new Model(PresetMesh.Cube)
             .UpdateTransform(shader,light.Position,Vector3.Zero,0.2f);
@@ -67,10 +63,9 @@ public class Game1 : Library.Game
         shader.EnableGammaCorrection();
 
 
-        
-        shader.UniformMaterial("material",material,texture,specular)
-            .UniformLight("light",light)
-            .UniformTexture("normalMap",normalMap);
+
+        shader.UniformMaterial("material", material, texture)
+            .UniformLight("light", light);
 
 
         glState.Blending = true;
@@ -113,13 +108,13 @@ public class Game1 : Library.Game
         texture.Use();
         
         shader.SetActive(ShaderType.FragmentShader, "scene");
-        backpack.Draw(shader,rotation:rotation,scale:1f);
+        man.Draw(shader,new Vector3(0f,-2f,0f),rotation,0.04f);
 
         shader.SetActive(ShaderType.FragmentShader, "light");
         cube.Draw(shader);
 
-        textRenderer.Draw("+", Window.Size.X/2f, Window.Size.Y/2f, 0.5f, new Vector3(0f));
-        textRenderer.Draw("Hello World!", 10f, Window.Size.Y - 48f, 1f, new Vector3(0.5f, 0.8f, 0.2f), false);
+        textRenderer.Draw("+", Window.Size.X/2f, Window.Size.Y/2f, 0.5f, Vector3.Zero);
+        textRenderer.Draw("KeyFrame: 0", 10f, Window.Size.Y - 48f, 1f, Vector3.Zero, false);
 
         Window.SwapBuffers();
     }
@@ -129,7 +124,9 @@ public class Game1 : Library.Game
         GL.BindVertexArray(0);
         GL.UseProgram(0);
 
-        backpack.Delete();
+        texture.Delete();
+        
+        man.Delete();
         cube.Delete();
 
         shader.Delete();
